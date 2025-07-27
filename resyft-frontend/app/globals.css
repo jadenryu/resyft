@@ -1,0 +1,236 @@
+@import "tailwindcss";
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 84% 4.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 222.2 84% 4.9%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 224.3 76.3% 94.1%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-inter), "Inter", system-ui, -apple-system, sans-serif;
+  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "clig" 1, "ss01" 1;
+  font-optical-sizing: auto;
+  font-variant-ligatures: common-ligatures contextual;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Modern scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
+
+/* Smooth animations */
+* {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Enhanced Inter font utility classes */
+.font-inter {
+  font-family: var(--font-inter), "Inter", system-ui, -apple-system, sans-serif;
+  font-optical-sizing: auto;
+  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1;
+  text-rendering: optimizeLegibility;
+}
+
+/* Dynamic font weights with enhanced features */
+.inter-thin {
+  font-family: var(--font-inter), "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 100;
+  font-style: normal;
+  letter-spacing: 0.02em;
+  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
+}
+
+.inter-light {
+  font-family: var(--font-inter), "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-style: normal;
+  letter-spacing: 0.015em;
+  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
+}
+
+.inter-regular {
+  font-family: var(--font-inter), "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: 0.01em;
+  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
+  line-height: 1.6;
+}
+
+.inter-medium {
+  font-family: var(--font-inter), "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+  letter-spacing: 0.005em;
+  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
+}
+
+.inter-semibold {
+  font-family: var(--font-inter), "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: 0em;
+  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
+}
+
+.inter-bold {
+  font-family: var(--font-inter), "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: -0.005em;
+  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
+}
+
+.inter-extrabold {
+  font-family: var(--font-inter), "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-style: normal;
+  letter-spacing: -0.01em;
+  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
+  line-height: 1.1;
+}
+
+.inter-black {
+  font-family: var(--font-inter), "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 900;
+  font-style: normal;
+  letter-spacing: -0.015em;
+  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
+  line-height: 1.05;
+}
+
+/* Advanced typography classes */
+.text-display {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1, "cv01" 1;
+  text-rendering: optimizeLegibility;
+}
+
+.text-headline {
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
+}
+
+.text-subhead {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
+}
+
+.text-body-premium {
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.65;
+  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
+  text-rendering: optimizeLegibility;
+}
+
+.text-caption-enhanced {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+}
+
+/* Dynamic text effects */
+.text-dynamic {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Sophisticated hover effects */
+.text-hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.text-hover-lift:hover {
+  transform: translateY(-1px);
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  letter-spacing: 0.02em;
+}
