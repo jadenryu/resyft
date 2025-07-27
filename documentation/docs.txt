@@ -1,0 +1,29 @@
+Resyft is a modern app that quickly extracts and distills essential data from research papers—like methods,
+sample sizes, key statistics, and conclusions—into clear, easy-to-read summaries. 
+It helps researchers and professionals get to the core insights without reading entire studies, 
+saving time and improving decision-making. A user should be able to upload a link to a research paper, and Resyft will automatically
+pull the necessary information based on the users needs. for example, the info can be all numerical data, important quotes, 
+important details, and such. It should also be able to give a score for the reliability of the source, as well as relevance and support to the argument.
+
+
+Here is how the app should flow. A new user goes to the website, they are greeted with a similar front page as GPTZero, allowing 
+them to paste text and upload a prompt (which type of info they want) and basically use the website without an account.
+However, with an account, you can create projects, allowing you to focus your model on pulling information that supports your research 
+argument of your project, which you have typed in beforehand. In addition, you can change the behavior of your model to favor
+statistical information > qualitative info or vice versa. It should be a straightfoward app that is easy to use, easy to play with,
+and free for all.
+
+Here is a list of features the website should have:
+
+1. Users being able to create a project
+2. Within the project, being able to to upload research papers/websites, as well as define their research topic/question which the model will 
+take into consideration when summarizing the paper. A thesis field should be optional.
+3. Once they upload a source, Resyft should show a detailed summary
+4. The features or characteristics of the summary should be tweakable in the project settings. For examples, the user can decide what type of info the model should pick out.
+5. For example, one "configuration" may consist of the user inputting that each paper should yield two strong quotes that support the research question, one statistic, and 
+a summary that takes specific examples from the paper. This "configuration" should be tweakable in the project settings. Resyft is better than ChatGPT and 
+Quillbot in this research paper summarization aspect, where in the summary, the model should also provide potential snippets of text that can be directly incorporated 
+within whatever the user is writing. Researchers often need to cite other studies to better support their own claims. What this means is that:
+6. Resyft should be able to take the research question/topic the user put in the project, as well as thesis (if provided), and then write out the direct text
+the user should copy paste within their own research paper using the source provided. For example, the response can incorporate quotes, numbers, and whatever the user desires, 
+chosen in the "configuration"
