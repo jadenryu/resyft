@@ -11,6 +11,7 @@ import { motion } from 'framer-motion'
 import { Plus, FolderOpen, Settings, FileText, BarChart3, LogOut, Zap } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { DashboardLayout } from '@/components/dashboard-layout'
 
 interface Project {
   id: string
@@ -131,29 +132,8 @@ export default function Projects() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
-      {/* Header */}
-      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl text-headline bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-              Resyft
-            </span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600 inter-medium">Welcome, {user.email}</span>
-            <Button variant="outline" onClick={handleSignOut} size="sm">
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8">
+    <DashboardLayout breadcrumbs={[{ label: "Projects" }]}>
+      <div>
         {/* Page Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -350,6 +330,6 @@ export default function Projects() {
           </div>
         )}
       </div>
-    </div>
+    </DashboardLayout>
   )
 }
