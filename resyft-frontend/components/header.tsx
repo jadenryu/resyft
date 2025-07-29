@@ -10,8 +10,13 @@ export function Header() {
   return (
     <header className="border-b bg-white">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="text-2xl font-bold text-gray-900">
-          Resyft
+        <Link href="/" className="flex items-center space-x-2">
+          <img 
+            src="/resyft-2.png" 
+            alt="Resyft Icon" 
+            className="w-8 h-8 object-contain"
+          />
+          <span className="text-2xl font-bold text-gray-900">Resyft</span>
         </Link>
         
         <nav className="flex items-center gap-4">

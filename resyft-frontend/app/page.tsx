@@ -110,9 +110,11 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center space-x-2"
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center">
-              <Brain className="w-5 h-5 text-white" />
-            </div>
+            <img 
+              src="/resyft-2.png" 
+              alt="Resyft Icon" 
+              className="w-8 h-8 object-contain"
+            />
             <span className="text-xl text-headline bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
               Resyft
             </span>
