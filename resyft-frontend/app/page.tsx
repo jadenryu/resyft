@@ -45,8 +45,10 @@ export default function Home() {
   const [progress, setProgress] = useState(0)
 
   const handleAnalyze = async () => {
+    console.log('🔥 BUTTON CLICKED! handleAnalyze called') // Debug: Check if button click works
     if ((!url.trim() && analysisType === 'url') || (!text.trim() && analysisType === 'text')) return
     
+    console.log('✅ Validation passed, starting analysis...') // Debug: Check if validation passes
     setLoading(true)
     setAnalysis(null)
     setProgress(0)
@@ -63,34 +65,41 @@ export default function Home() {
     }, 200)
 
     try {
-      const response = await fetch('http://localhost:8000/api/extract', {
+      const response = await fetch(`http://localhost:8001/extract?t=${Date.now()}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
         },
         body: JSON.stringify({ 
-          url: analysisType === 'url' ? url : undefined,
-          text: analysisType === 'text' ? text : undefined,
-          prompt: prompt || 'Extract key findings, methods, sample size, and conclusions'
+          paper_url: analysisType === 'url' ? url : undefined,
+          paper_text: analysisType === 'text' ? text : undefined,
+          extraction_type: 'all',
+          custom_prompt: prompt || 'Extract key findings, methods, sample size, and conclusions',
+          use_pydantic_agent: true
         }),
       })
 
       const result = await response.json()
+      console.log('API Response:', result) // Debug: Log the actual API response
       setProgress(100)
       
-      // Simulate enhanced analysis result
+      // Use actual extracted results from the API response
       setAnalysis({
-        methods: result.result?.methods || 'Mixed-methods randomized controlled trial',
-        sample_size: result.result?.sample_size || 1247,
-        conclusions: result.result?.conclusions || 'Significant improvement observed in primary outcomes with high statistical significance.',
-        important_quotes: result.result?.important_quotes || [
-          '"The intervention showed a 23% improvement over control group (p < 0.001)"',
-          '"These findings support the efficacy of the proposed method in clinical settings"'
-        ],
-        reliability_score: result.result?.reliability_score || 0.92,
-        relevance_score: result.result?.relevance_score || 0.88,
-        suggested_text: 'Research by Smith et al. (2024) demonstrates significant improvements using this methodology, with participants showing a 23% improvement over control groups (p < 0.001). The study\'s robust design with 1,247 participants supports the efficacy of this approach in clinical settings.'
+        methods: result.methods || 'No methodology information extracted',
+        sample_size: result.sample_size || null,
+        conclusions: result.conclusions || 'No conclusions extracted from the paper',
+        important_quotes: result.important_quotes || ['No quotes extracted from the paper'],
+        reliability_score: result.reliability_score || 0,
+        relevance_score: result.relevance_score || 0,
+        suggested_text: result._full_result?.suggested_text || 'Analysis completed - check results above'
       })
+      console.log('Updated analysis state:', {
+        methods: result.methods || 'No methodology information extracted',
+        sample_size: result.sample_size || null,
+        conclusions: result.conclusions || 'No conclusions extracted from the paper',
+        important_quotes: result.important_quotes || ['No quotes extracted from the paper']
+      }) // Debug: Log what we're setting in state
     } catch (error) {
       console.error('Error:', error)
     } finally {
@@ -125,7 +134,7 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center space-x-4"
           >
-            <Link href="/signin">
+            <Link href="/login">
               <Button variant="ghost" className="text-gray-600 hover:text-gray-900 inter-medium">
                 Sign In
               </Button>
@@ -267,6 +276,7 @@ export default function Home() {
                 transition={{ duration: 0.6 }}
                 className="mt-8 max-w-4xl mx-auto"
               >
+                {console.log('Rendering analysis:', analysis)} {/* Debug: Log analysis when rendering */}
                 <Card className="shadow-2xl border-0">
                   <CardContent className="p-8">
                     <h3 className="text-2xl text-headline text-gray-900 mb-6 flex items-center">

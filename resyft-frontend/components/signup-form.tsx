@@ -90,7 +90,7 @@ export function SignupForm({
       
       <div className="text-center text-sm">
         Already have an account?{" "}
-        <a href="/signin" className="underline underline-offset-4 text-blue-600 hover:text-blue-700">
+        <a href="/login" className="underline underline-offset-4 text-blue-600 hover:text-blue-700">
           Sign in
         </a>
       </div>

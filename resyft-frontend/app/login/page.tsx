@@ -14,7 +14,7 @@ export default function LoginPage() {
         <div className="flex justify-center gap-2 md:justify-start">
           <a href="/" className="flex items-center gap-2 font-medium">
             <img 
-              src="/resyft.png" 
+              src="/resyft-2.png" 
               alt="Resyft Logo" 
               className="w-8 h-8 object-contain"
             />
