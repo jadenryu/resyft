@@ -1,6 +1,5 @@
-"use client"
-
-import type { LucideIcon } from "lucide-react"
+import * as React from "react"
+import { type LucideIcon } from "lucide-react"
 
 import {
   SidebarGroup,

@@ -133,9 +133,9 @@ export default function Projects() {
 
   return (
     <DashboardLayout breadcrumbs={[{ label: "Projects" }]}>
-      <div>
+      <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl text-display text-gray-900 mb-2">My Projects</h1>
             <p className="text-gray-600 text-body-premium">

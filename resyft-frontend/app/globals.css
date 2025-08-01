@@ -24,6 +24,8 @@
   --input: 214.3 31.8% 91.4%;
   --ring: 221.2 83.2% 53.3%;
   --radius: 0.75rem;
+  --sidebar-width: 16rem;
+  --sidebar-width-icon: 3rem;
   --sidebar: hsl(0 0% 98%);
   --sidebar-foreground: hsl(240 5.3% 26.1%);
   --sidebar-primary: hsl(240 5.9% 10%);
@@ -243,6 +245,21 @@ body {
   100% { background-position: 0% 50%; }
 }
 
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slide-up {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
 /* Sophisticated hover effects */
 .text-hover-lift {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -254,7 +271,29 @@ body {
   letter-spacing: 0.02em;
 }
 
-@theme inline {
+@theme {
+  --font-sans: var(--font-inter), "Inter", system-ui, -apple-system, sans-serif;
+  --font-inter: var(--font-inter), "Inter", sans-serif;
+  
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -263,13 +302,58 @@ body {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  
+  --radius: 0.75rem;
+  
+  --animate-fade-in: fade-in 0.5s ease-in-out;
+  --animate-slide-up: slide-up 0.3s ease-out;
+  --animate-pulse-subtle: pulse-subtle 2s ease-in-out infinite;
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
   body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Sidebar animations */
+[data-sidebar="sidebar"] {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Animate sidebar content opacity when collapsing */
+.group[data-state="collapsed"] [data-sidebar="content"] > * {
+  @apply transition-opacity duration-200;
+  opacity: 0;
+}
+
+.group[data-state="expanded"] [data-sidebar="content"] > * {
+  @apply transition-opacity duration-300 delay-150;
+  opacity: 1;
+}
+
+/* Smooth icon transitions */
+.group[data-collapsible="icon"] [data-sidebar="menu-button"] svg {
+  @apply transition-transform duration-300;
+}
+
+/* Add subtle scale effect on hover */
+[data-sidebar="menu-button"]:hover {
+  @apply scale-[1.01];
+}
+
+/* Smooth transitions for sidebar labels */
+[data-sidebar="group-label"] {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Sidebar gap smooth transition */
+[data-slot="sidebar-gap"] {
+  @apply transition-[width] duration-300 ease-in-out;
+}
+
+/* Sidebar container smooth sliding */
+[data-slot="sidebar-container"] {
+  @apply transition-[left,right,width,transform] duration-300 ease-in-out;
+}
+
