@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { 
@@ -21,7 +22,14 @@ import {
   CheckCircle,
   Upload,
   Link as LinkIcon,
-  Settings
+  Settings,
+  Star,
+  Clock,
+  BookOpen,
+  TrendingUp,
+  Award,
+  Target,
+  ChevronDown
 } from 'lucide-react'
 
 interface AnalysisResult {
@@ -45,10 +53,8 @@ export default function Home() {
   const [progress, setProgress] = useState(0)
 
   const handleAnalyze = async () => {
-    console.log('🔥 BUTTON CLICKED! handleAnalyze called') // Debug: Check if button click works
     if ((!url.trim() && analysisType === 'url') || (!text.trim() && analysisType === 'text')) return
     
-    console.log('✅ Validation passed, starting analysis...') // Debug: Check if validation passes
     setLoading(true)
     setAnalysis(null)
     setProgress(0)
@@ -65,7 +71,7 @@ export default function Home() {
     }, 200)
 
     try {
-      const response = await fetch(`http://localhost:8001/extract?t=${Date.now()}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'}/extract?t=${Date.now()}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,10 +87,8 @@ export default function Home() {
       })
 
       const result = await response.json()
-      console.log('API Response:', result) // Debug: Log the actual API response
       setProgress(100)
       
-      // Use actual extracted results from the API response
       setAnalysis({
         methods: result.methods || 'No methodology information extracted',
         sample_size: result.sample_size || null,
@@ -94,12 +98,6 @@ export default function Home() {
         relevance_score: result.relevance_score || 0,
         suggested_text: result._full_result?.suggested_text || 'Analysis completed - check results above'
       })
-      console.log('Updated analysis state:', {
-        methods: result.methods || 'No methodology information extracted',
-        sample_size: result.sample_size || null,
-        conclusions: result.conclusions || 'No conclusions extracted from the paper',
-        important_quotes: result.important_quotes || ['No quotes extracted from the paper']
-      }) // Debug: Log what we're setting in state
     } catch (error) {
       console.error('Error:', error)
     } finally {
@@ -124,7 +122,7 @@ export default function Home() {
               alt="Resyft Icon" 
               className="w-8 h-8 object-contain"
             />
-            <span className="text-xl text-headline bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
               Resyft
             </span>
           </motion.div>
@@ -135,7 +133,7 @@ export default function Home() {
             className="flex items-center space-x-4"
           >
             <Link href="/login">
-              <Button variant="ghost" className="text-gray-600 hover:text-gray-900 inter-medium">
+              <Button variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium">
                 Sign In
               </Button>
             </Link>
@@ -163,12 +161,12 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="max-w-4xl mx-auto"
           >
-            <Badge variant="secondary" className="mb-6 px-4 py-2 text-sm inter-medium">
+            <Badge variant="secondary" className="mb-6 px-4 py-2 text-sm font-medium">
               <Sparkles className="w-4 h-4 mr-2" />
               AI-Powered Research Analysis
             </Badge>
             
-            <h1 className="text-6xl md:text-7xl mb-8 text-display text-hover-lift">
+            <h1 className="text-6xl md:text-7xl font-bold mb-8">
               <span className="bg-gradient-to-r from-gray-900 via-blue-900 to-cyan-900 bg-clip-text text-transparent">
                 Extract Research
               </span>
@@ -178,7 +176,7 @@ export default function Home() {
               </span>
             </h1>
             
-            <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed text-body-premium">
+            <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
               Paste a research paper URL or text, and get instant analysis with methods, statistics, and ready-to-cite text for your research.
             </p>
             
@@ -238,7 +236,7 @@ export default function Home() {
                 {loading && (
                   <div className="mb-6">
                     <Progress value={progress} className="h-2" />
-                    <p className="text-sm text-gray-600 mt-2 inter-regular">
+                    <p className="text-sm text-gray-600 mt-2">
                       {progress < 30 ? 'Processing document...' :
                        progress < 60 ? 'Extracting key information...' :
                        progress < 90 ? 'Analyzing content...' :
@@ -251,7 +249,7 @@ export default function Home() {
                 <Button
                   onClick={handleAnalyze}
                   disabled={loading || (analysisType === 'url' ? !url.trim() : !text.trim())}
-                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-lg inter-semibold"
+                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-lg font-semibold"
                 >
                   {loading ? (
                     <>
@@ -276,10 +274,9 @@ export default function Home() {
                 transition={{ duration: 0.6 }}
                 className="mt-8 max-w-4xl mx-auto"
               >
-                {console.log('Rendering analysis:', analysis)} {/* Debug: Log analysis when rendering */}
                 <Card className="shadow-2xl border-0">
                   <CardContent className="p-8">
-                    <h3 className="text-2xl text-headline text-gray-900 mb-6 flex items-center">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
                       <BarChart3 className="w-6 h-6 mr-3 text-green-600" />
                       Analysis Results
                     </h3>
@@ -288,31 +285,31 @@ export default function Home() {
                       {/* Key Metrics */}
                       <div className="space-y-4">
                         <div>
-                          <h4 className="text-subhead text-gray-900 mb-2">Methods</h4>
-                          <p className="text-gray-700 text-body-premium">{analysis.methods}</p>
+                          <h4 className="text-lg font-semibold text-gray-900 mb-2">Methods</h4>
+                          <p className="text-gray-700">{analysis.methods}</p>
                         </div>
                         
                         <div>
-                          <h4 className="text-subhead text-gray-900 mb-2">Sample Size</h4>
+                          <h4 className="text-lg font-semibold text-gray-900 mb-2">Sample Size</h4>
                           <Badge variant="secondary" className="text-lg px-3 py-1">
                             {analysis.sample_size?.toLocaleString()} participants
                           </Badge>
                         </div>
                         
                         <div>
-                          <h4 className="text-subhead text-gray-900 mb-2">Reliability & Relevance</h4>
+                          <h4 className="text-lg font-semibold text-gray-900 mb-2">Reliability & Relevance</h4>
                           <div className="flex gap-4">
                             <div className="text-center">
-                              <div className="text-2xl inter-bold text-blue-600">
+                              <div className="text-2xl font-bold text-blue-600">
                                 {((analysis.reliability_score || 0) * 100).toFixed(0)}%
                               </div>
-                              <div className="text-caption-enhanced text-gray-500">Reliability</div>
+                              <div className="text-sm text-gray-500">Reliability</div>
                             </div>
                             <div className="text-center">
-                              <div className="text-2xl inter-bold text-green-600">
+                              <div className="text-2xl font-bold text-green-600">
                                 {((analysis.relevance_score || 0) * 100).toFixed(0)}%
                               </div>
-                              <div className="text-caption-enhanced text-gray-500">Relevance</div>
+                              <div className="text-sm text-gray-500">Relevance</div>
                             </div>
                           </div>
                         </div>
@@ -321,16 +318,16 @@ export default function Home() {
                       {/* Key Insights */}
                       <div className="space-y-4">
                         <div>
-                          <h4 className="text-subhead text-gray-900 mb-2">Conclusions</h4>
-                          <p className="text-gray-700 text-body-premium">{analysis.conclusions}</p>
+                          <h4 className="text-lg font-semibold text-gray-900 mb-2">Conclusions</h4>
+                          <p className="text-gray-700">{analysis.conclusions}</p>
                         </div>
                         
                         <div>
-                          <h4 className="text-subhead text-gray-900 mb-2">Key Quotes</h4>
+                          <h4 className="text-lg font-semibold text-gray-900 mb-2">Key Quotes</h4>
                           <div className="space-y-2">
                             {analysis.important_quotes?.map((quote, index) => (
                               <div key={index} className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500">
-                                <p className="text-gray-700 text-body-premium italic">{quote}</p>
+                                <p className="text-gray-700 italic">{quote}</p>
                               </div>
                             ))}
                           </div>
@@ -341,18 +338,17 @@ export default function Home() {
                     {/* Ready-to-Use Text */}
                     {analysis.suggested_text && (
                       <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg border border-green-200">
-                        <h4 className="text-subhead text-gray-900 mb-3 flex items-center">
+                        <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
                           <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
                           Ready-to-Cite Text
                         </h4>
-                        <p className="text-gray-800 text-body-premium leading-relaxed mb-4">
+                        <p className="text-gray-800 leading-relaxed mb-4">
                           {analysis.suggested_text}
                         </p>
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => navigator.clipboard.writeText(analysis.suggested_text || '')}
-                          className="inter-medium"
                         >
                           Copy to Clipboard
                         </Button>
@@ -373,10 +369,10 @@ export default function Home() {
               >
                 <Card className="max-w-2xl mx-auto border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50">
                   <CardContent className="p-6">
-                    <h3 className="text-xl text-headline text-gray-900 mb-3">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">
                       Want more powerful analysis?
                     </h3>
-                    <p className="text-gray-600 text-body-premium mb-4">
+                    <p className="text-gray-600 mb-4">
                       Create a project to customize analysis settings, save sources, and get AI text that perfectly supports your research thesis.
                     </p>
                     <Link href="/signup">
@@ -402,10 +398,10 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl text-headline text-gray-900 mb-6">
+            <h2 className="text-4xl font-bold text-gray-900 mb-6">
               Why Researchers Choose Resyft
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto text-body-premium">
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Powerful AI tools designed specifically for academic research and analysis
             </p>
           </motion.div>
@@ -460,10 +456,10 @@ export default function Home() {
                     <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${feature.gradient} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
                       <feature.icon className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="text-xl text-subhead text-gray-900 mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-600 text-body-premium">
+                    <p className="text-gray-600">
                       {feature.description}
                     </p>
                   </CardContent>
@@ -474,18 +470,310 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center">
-                <Brain className="w-5 h-5 text-white" />
+      {/* Stats Section */}
+      <section className="py-20 px-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white">
+        <div className="container mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            {[
+              { number: "10K+", label: "Papers Analyzed" },
+              { number: "95%", label: "Accuracy Rate" },
+              { number: "30s", label: "Average Analysis Time" },
+              { number: "500+", label: "Research Teams" }
+            ].map((stat, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+              >
+                <div className="text-4xl font-bold mb-2">{stat.number}</div>
+                <div className="text-blue-100">{stat.label}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Reviews Section */}
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="container mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold text-gray-900 mb-6">
+              Trusted by Researchers Worldwide
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              See what researchers say about their experience with Resyft
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                quote: "Resyft has transformed my literature review process. What used to take hours now takes minutes, and I get better quality extracts.",
+                author: "Dr. Sarah Johnson",
+                role: "Associate Professor, Stanford University",
+                rating: 5,
+              },
+              {
+                quote: "The AI analysis is incredibly accurate. It captures nuances in research papers that I might have missed in a quick read.",
+                author: "Michael Chen",
+                role: "PhD Candidate, MIT",
+                rating: 5,
+              },
+              {
+                quote: "The ready-to-cite text feature has saved me countless hours of formatting. Perfect for systematic reviews.",
+                author: "Dr. Emily Rodriguez",
+                role: "Research Scientist, Johns Hopkins",
+                rating: 5,
+              },
+              {
+                quote: "We've tried other research tools, but Resyft's accuracy and speed are unmatched. Essential for our workflow.",
+                author: "Dr. David Kim",
+                role: "Principal Investigator, Harvard Medical",
+                rating: 5,
+              },
+              {
+                quote: "The reliability scoring helps me quickly identify the most credible sources. Like having a research assistant.",
+                author: "Lisa Patel",
+                role: "Graduate Student, UC Berkeley",
+                rating: 5,
+              },
+              {
+                quote: "Implementation was seamless. Our research team's productivity has increased by 40% since using Resyft.",
+                author: "Dr. James Wilson",
+                role: "Research Director, Mayo Clinic",
+                rating: 5,
+              },
+            ].map((review, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+              >
+                <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <CardContent className="p-6">
+                    <div className="flex mb-4">
+                      {Array(review.rating)
+                        .fill(0)
+                        .map((_, i) => (
+                          <Star key={i} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                        ))}
+                    </div>
+                    <p className="text-gray-700 mb-6 leading-relaxed">{review.quote}</p>
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-3">
+                        {review.author.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{review.author}</p>
+                        <p className="text-sm text-gray-600">{review.role}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 px-4 bg-white">
+        <div className="container mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold text-gray-900 mb-6">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Everything you need to know about Resyft and research analysis
+            </p>
+          </motion.div>
+
+          <div className="max-w-3xl mx-auto">
+            <Accordion type="single" collapsible className="w-full">
+              {[
+                {
+                  question: "How accurate is Resyft's AI analysis?",
+                  answer: "Resyft achieves 95% accuracy in extracting key research elements like methods, sample sizes, and conclusions. Our AI is specifically trained on academic papers and continuously improves with each analysis."
+                },
+                {
+                  question: "What types of research papers does Resyft support?",
+                  answer: "Resyft works with papers from all major academic databases including PubMed, arXiv, IEEE, and more. We support PDFs, direct URLs, and text input for maximum flexibility."
+                },
+                {
+                  question: "How does the reliability scoring work?",
+                  answer: "Our reliability scoring evaluates factors like sample size, methodology rigor, peer review status, and citation quality. Each paper receives a score from 0-100% to help you assess source credibility."
+                },
+                {
+                  question: "Can I customize what information is extracted?",
+                  answer: "Yes! You can provide custom prompts to extract specific information relevant to your research. Whether you need statistical data, quotes, or methodological details, Resyft adapts to your needs."
+                },
+                {
+                  question: "Is my research data secure and private?",
+                  answer: "Absolutely. We use enterprise-grade encryption and never store your research content. All analyses are processed securely and deleted after completion. Your intellectual property remains completely private."
+                },
+                {
+                  question: "How fast is the analysis process?",
+                  answer: "Most papers are analyzed in under 30 seconds. Complex documents may take up to 2 minutes. Our AI processes information much faster than manual reading while maintaining high accuracy."
+                },
+                {
+                  question: "Do you offer institutional licenses?",
+                  answer: "Yes, we provide special pricing for universities, research institutions, and organizations. Contact our sales team for volume discounts and custom enterprise features."
+                },
+                {
+                  question: "Can I export or cite the extracted information?",
+                  answer: "Definitely! Resyft provides properly formatted, ready-to-cite text that you can copy directly into your research. We follow standard academic citation formats and include source attribution."
+                }
+              ].map((faq, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                >
+                  <AccordionItem value={`item-${index}`} className="border-b border-gray-200">
+                    <AccordionTrigger className="text-left font-semibold text-gray-900 hover:text-blue-600 py-6 text-lg">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-gray-600 pb-6 leading-relaxed">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                </motion.div>
+              ))}
+            </Accordion>
+          </div>
+
+        </div>
+      </section>
+
+      {/* Still Have Questions Section */}
+      <section className="py-16 px-4 bg-gray-50">
+        <div className="container mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center"
+          >
+            <Card className="max-w-2xl mx-auto border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  Still have questions?
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Our research specialists are here to help you get the most out of Resyft.
+                </p>
+                <Link href="/contact">
+                  <Button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700">
+                    Contact Support
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* CTA Section - Matching Screenshot Design */}
+      <section className="py-20 px-4 bg-gray-900">
+        <div className="container mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-4xl mx-auto"
+          >
+            <div className="border border-gray-700 rounded-lg p-12 text-center">
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+                Ready to Accelerate Your Research?
+              </h2>
+              <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+                Join thousands of researchers who have streamlined their literature review process and discovered insights faster than ever before.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+                <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 rounded-full h-12 px-8 text-base font-semibold">
+                  Start Free Trial
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+                <Button size="lg" variant="outline" className="border-white bg-transparent text-white hover:bg-white hover:text-gray-900 rounded-full h-12 px-8 text-base font-semibold">
+                  Schedule a Demo
+                </Button>
               </div>
-              <span className="text-xl text-headline">Resyft</span>
+              <p className="text-sm text-gray-400">
+                No credit card required. 14-day free trial. Cancel anytime.
+              </p>
             </div>
-            <div className="text-gray-400 inter-regular">
-              © 2024 Resyft. All rights reserved.
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-black text-white">
+        <div className="container mx-auto px-4 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="md:col-span-2">
+              <div className="flex items-center space-x-3 mb-6">
+                <img 
+                  src="/resyft-2.png" 
+                  alt="Resyft Icon" 
+                  className="w-10 h-10 object-contain"
+                />
+                <span className="text-2xl font-semibold text-white">
+                  Resyft
+                </span>
+              </div>
+              <p className="text-gray-400 max-w-md mb-6 leading-relaxed">
+                AI-powered research analysis platform that extracts insights from academic papers in seconds. 
+                Accelerate your research with intelligent document processing and citation-ready text generation.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-4">Product</h3>
+              <ul className="space-y-3">
+                <li><Link href="/features" className="text-gray-400 hover:text-white transition-colors">Features</Link></li>
+                <li><Link href="/pricing" className="text-gray-400 hover:text-white transition-colors">Pricing</Link></li>
+                <li><Link href="/api" className="text-gray-400 hover:text-white transition-colors">API</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-4">Company</h3>
+              <ul className="space-y-3">
+                <li><Link href="/about" className="text-gray-400 hover:text-white transition-colors">About</Link></li>
+                <li><Link href="/blog" className="text-gray-400 hover:text-white transition-colors">Blog</Link></li>
+                <li><Link href="/contact" className="text-gray-400 hover:text-white transition-colors">Contact</Link></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-700 pt-8 mt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <div className="text-gray-400 text-sm">
+                © 2024 Resyft. All rights reserved.
+              </div>
+              <div className="flex items-center space-x-4 mt-4 md:mt-0">
+                <Badge variant="secondary" className="bg-white/10 text-white border-white/20">
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  AI Powered
+                </Badge>
+                <div className="text-gray-400 text-sm">
+                  Made with ❤️ for researchers
+                </div>
+              </div>
             </div>
           </div>
         </div>
