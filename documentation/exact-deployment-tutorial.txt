@@ -1,247 +1,328 @@
-🎯 EXACT STEP-BY-STEP DEPLOYMENT TUTORIAL
-==========================================
+🎯 RESYFT DEPLOYMENT TUTORIAL - YOUR EXACT SETUP
+================================================
 
-This tutorial assumes you know nothing and will walk you through every single click and command.
+This tutorial is specifically designed for YOUR Resyft repository with YOUR existing environment variables.
+I can see you already have Supabase configured and are using OpenRouter for AI.
 
-WHAT YOU NEED BEFORE STARTING:
-- Your Namecheap account login
-- A GitHub account (create one at github.com if you don't have it)
-- Your computer with the Resyft project
+WHAT YOU'LL DEPLOY:
+- resyft-frontend (Next.js) → Vercel
+- resyft-backend (Node.js/TypeScript) → Railway  
+- resyft-ai-service (Python/FastAPI) → Railway
+- Database: Already configured with Supabase ✅
 
-📋 STEP 1: PREPARE YOUR CODE
-===========================
+📋 PHASE 1: PREPARE YOUR CODE
+============================
 
-1.1 Open Terminal/Command Prompt
-   - Mac: Press Cmd+Space, type "Terminal", press Enter
-   - Windows: Press Win+R, type "cmd", press Enter
-
-1.2 Navigate to your project folder
-   Type exactly this (replace with your actual path):
-   cd /Users/jadenryu/Documents/resyft/resyft-frontend
-
-1.3 Test that your project builds
-   Type exactly this:
-   npm run build
-   
-   If you see errors, STOP and fix them first. If it says "Build successful" or similar, continue.
-
-🐙 STEP 2: PUT YOUR CODE ON GITHUB
-=================================
-
-2.1 Go to github.com in your browser
-2.2 Click the green "New" button (top left)
-2.3 Repository name: "resyft"
-2.4 Make it Public
-2.5 Click "Create repository"
-
-2.6 Back in Terminal, navigate to your main project folder:
+1.1 Open Terminal and navigate to your project
    cd /Users/jadenryu/Documents/resyft
 
-2.7 Type these commands ONE BY ONE:
+1.2 Test your frontend builds
+   cd resyft-frontend
+   npm run build
+   
+   ✅ If successful, continue
+   ❌ If errors, fix them first
+
+1.3 Go back to main directory
+   cd ..
+
+🐙 PHASE 2: PUT YOUR CODE ON GITHUB
+==================================
+
+2.1 Create GitHub Repository
+   - Go to github.com → Sign in
+   - Click "New" button → Repository name: "resyft"
+   - Make it Public → Click "Create repository"
+
+2.2 Upload Your Code (Remove sensitive data first!)
+   
+   IMPORTANT: Remove .env files from git:
+   echo ".env" >> .gitignore
+   echo ".env.*" >> .gitignore
+   echo "*.env" >> .gitignore
+   
+   Then upload:
    git init
    git add .
-   git commit -m "Initial commit - frontend and backend"
+   git commit -m "Initial Resyft deployment"
    git branch -M main
    git remote add origin https://github.com/YOUR_USERNAME/resyft.git
    git push -u origin main
 
-   (Replace YOUR_USERNAME with your actual GitHub username)
+🤖 PHASE 3: DEPLOY AI SERVICE (PYTHON FASTAPI)
+==============================================
 
-🚀 STEP 3: DEPLOY TO VERCEL (FRONTEND)
-=====================================
+3.1 Go to Railway
+   - railway.app → Login with GitHub
+   - Allow repository access
 
-3.1 Go to vercel.com in your browser
-3.2 Click "Sign Up" (top right)
-3.3 Choose "Continue with GitHub"
-3.4 Allow Vercel to access your repositories
+3.2 Deploy AI Service
+   - "New Project" → "Deploy from GitHub repo"
+   - Select "resyft" → "Deploy"
 
-3.5 Import your project:
-   - Click "Add New..." → "Project"
-   - Find "resyft" in the list
-   - Click "Import"
+3.3 Configure AI Service Settings
+   Railway dashboard → Settings:
+   - Root Directory: resyft-ai-service
+   - Start Command: uvicorn main:app --host 0.0.0.0 --port $PORT
+   - Python Version: 3.11
 
-3.6 Configure the project:
+3.4 Add AI Service Environment Variables
+   Variables tab, add these FROM YOUR EXISTING .ENV:
+
+   Variable Name: PORT
+   Value: 8001
+
+   Variable Name: OPENROUTER_API_KEY
+   Value: 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
+
+   Variable Name: OPENROUTER_MODEL
+   Value: google/gemini-2.5-flash-lite
+
+   Variable Name: PYDANTIC_AI_API_KEY
+   Value: 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
+
+   Variable Name: SUPABASE_URL
+   Value: https://xygcqrunijtcwrryipmi.supabase.co
+
+   Variable Name: SUPABASE_KEY
+   Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5Z2NxcnVuaWp0Y3dycnlpcG1pIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzY0OTIzNiwiZXhwIjoyMDY5MjI1MjM2fQ.TuVaAlWcBG0mG_r6o0RtN8eO1nd8P21vwTtB-cllfGA
+
+   OPTIONAL - Get real Gemini key:
+   Variable Name: GEMINI_API_KEY
+   Value: [Get from aistudio.google.com - currently placeholder]
+
+   SKIP Redis for now (Railway has managed Redis if needed later)
+
+3.5 Get Your AI Service URL
+   After deployment → Settings → Domains
+   Copy URL like: https://resyft-ai-service-production.up.railway.app
+   WRITE THIS DOWN!
+
+🔧 PHASE 4: DEPLOY BACKEND (NODE.JS API)
+=======================================
+
+4.1 Create Second Railway Project
+   Railway dashboard → "New Project" → "Deploy from GitHub repo"
+   Select "resyft" again (same repo, different service)
+
+4.2 Configure Backend Settings
+   Settings tab:
+   - Root Directory: resyft-backend
+   - Start Command: npm start
+   - Build Command: npm run build
+   - Node Version: 18+
+
+4.3 Add Backend Environment Variables
+   Variables tab, add FROM YOUR EXISTING .ENV:
+
+   Variable Name: PORT
+   Value: 8000
+
+   Variable Name: SUPABASE_URL
+   Value: https://xygcqrunijtcwrryipmi.supabase.co
+
+   Variable Name: SUPABASE_SERVICE_KEY
+   Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5Z2NxcnVuaWp0Y3dycnlpcG1pIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzY0OTIzNiwiZXhwIjoyMDY5MjI1MjM2fQ.TuVaAlWcBG0mG_r6o0RtN8eO1nd8P21vwTtB-cllfGA
+
+   Variable Name: DATABASE_URL
+   Value: postgresql://postgres.xygcqrunijtcwrryipmi:F1owluvssnow!@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+
+   Variable Name: AI_SERVICE_URL
+   Value: [YOUR AI SERVICE URL FROM STEP 3.5]
+
+   Variable Name: NODE_ENV
+   Value: production
+
+   SKIP Redis for now
+
+4.4 Get Your Backend URL
+   Settings → Domains
+   Copy URL like: https://resyft-backend-production.up.railway.app
+   WRITE THIS DOWN!
+
+🌐 PHASE 5: DEPLOY FRONTEND (NEXT.JS WEBSITE)
+============================================
+
+5.1 Go to Vercel
+   vercel.com → "Sign Up" → "Continue with GitHub"
+
+5.2 Import Project
+   "Add New..." → "Project" → Find "resyft" → "Import"
+
+5.3 Configure Frontend Settings
+   CRITICAL SETTINGS:
    - Project Name: resyft-frontend
-   - Framework Preset: Next.js (should auto-detect)
-   - Root Directory: resyft-frontend
+   - Framework: Next.js
+   - Root Directory: resyft-frontend ⬅️ IMPORTANT!
    - Build Command: npm run build
    - Output Directory: .next
-   - Install Command: npm install
 
-3.7 Click "Deploy"
-   - Wait for deployment (2-3 minutes)
-   - You'll get a URL like: https://resyft-frontend-abc123.vercel.app
-   - WRITE DOWN THIS URL - you'll need it
+5.4 Add Frontend Environment Variables
+   Environment Variables section, add these:
 
-3.8 Test your deployed site:
-   - Click "Visit" to see your site live
-   - Test the main page loads
-   - Note: The analysis won't work yet (no backend)
+   ✅ ALREADY HAVE (from your Supabase):
+   Name: NEXT_PUBLIC_SUPABASE_URL
+   Value: https://xygcqrunijtcwrryipmi.supabase.co
+   Environment: Production
 
-🔧 STEP 4: DEPLOY BACKEND TO RAILWAY
-===================================
+   Name: NEXT_PUBLIC_SUPABASE_ANON_KEY
+   Value: [Need the PUBLIC/ANON key - see step 5.5]
+   Environment: Production
 
-4.1 Go to railway.app in your browser
-4.2 Click "Login" → "Login with GitHub"
-4.3 Allow Railway to access your repositories
+   🔄 NEED TO UPDATE (currently placeholders):
+   Name: NEXT_PUBLIC_API_URL
+   Value: [YOUR BACKEND URL FROM STEP 4.4]/api
+   Environment: Production
 
-4.4 Create a new project for your backend:
-   - Click "New Project"
-   - Click "Deploy from GitHub repo"
-   - Find "resyft" in the list (your repo with both frontend and backend)
-   - Click "Deploy"
+   Name: NEXT_PUBLIC_BACKEND_URL
+   Value: [YOUR BACKEND URL FROM STEP 4.4]
+   Environment: Production
 
-4.5 Configure Railway deployment:
-   - Railway will try to auto-detect the framework
-   - You need to tell it to use the backend folder
-   - In Railway dashboard, go to "Settings"
-   - Set "Root Directory" to your backend folder name (e.g., "backend" or whatever your Python folder is called)
-   - Set "Build Command" if needed (usually automatic for Python)
-   - Set "Start Command" to run your Python server (e.g., "python main.py" or "uvicorn main:app --host 0.0.0.0 --port $PORT")
+   Name: NEXTAUTH_URL
+   Value: https://yourdomain.com
+   Environment: Production
 
-4.4 Set up environment variables:
-   - Go to your Railway project dashboard
-   - Click "Variables" tab
-   - Add these variables one by one:
-     * OPENAI_API_KEY = your_openai_key_here
-     * PORT = 8000
-     * CORS_ORIGINS = your_vercel_url_from_step_3.7
+   Name: NEXTAUTH_SECRET
+   Value: [Generate random 32-character string]
+   Environment: Production
 
-4.5 Get your Railway URL:
-   - Go to "Settings" tab
-   - Look for "Domains"
-   - Copy the URL (like: https://your-app.railway.app)
-   - WRITE DOWN THIS URL
+5.5 Get Supabase ANON Key (you have service key, need public key)
+   - Go to supabase.com → Your project
+   - Settings (gear icon) → API
+   - Copy "anon public" key (different from service_role key)
+   - Add to Vercel NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-🔗 STEP 5: CONNECT FRONTEND TO BACKEND
+5.6 Deploy Frontend
+   Click "Deploy" → Wait 2-3 minutes
+   Get URL like: https://resyft-frontend-abc123.vercel.app
+
+🌍 PHASE 6: CONNECT YOUR CUSTOM DOMAIN
 =====================================
 
-5.1 Go back to Vercel dashboard
-5.2 Click on your "resyft-frontend" project
-5.3 Go to "Settings" tab
-5.4 Click "Environment Variables" in left sidebar
+6.1 Add Domain to Vercel
+   Vercel project → Settings → Domains → "Add Domain"
+   Enter your domain → "Add"
 
-5.5 Add environment variable:
-   - Name: NEXT_PUBLIC_API_URL
-   - Value: YOUR_RAILWAY_URL_FROM_STEP_4.5
-   - Environment: Production
-   - Click "Save"
+6.2 Get DNS Records
+   Vercel shows DNS records like:
+   - A Record: @ → 76.76.19.61
+   - CNAME: www → cname.vercel-dns.com
+   COPY THESE!
 
-5.6 Redeploy your frontend:
-   - Go to "Deployments" tab
-   - Click the three dots (...) on latest deployment
-   - Click "Redeploy"
-   - Wait for redeployment
+6.3 Configure Namecheap DNS
+   namecheap.com → Domain List → Manage → Advanced DNS
+   DELETE existing A/CNAME records
+   ADD Vercel's records exactly
 
-5.7 Test the connection:
-   - Visit your Vercel URL
-   - Try the analysis tool
-   - It should now work with your backend!
+6.4 Update CORS for Your Domain
+   Railway Backend → Variables → Add:
+   Variable Name: CORS_ORIGINS
+   Value: https://yourdomain.com,https://www.yourdomain.com
 
-🌐 STEP 6: CONNECT YOUR CUSTOM DOMAIN
-====================================
+6.5 Update Frontend Environment Variables
+   Vercel → Settings → Environment Variables → Edit:
+   NEXTAUTH_URL: Change to https://yourdomain.com
+   NEXT_PUBLIC_SITE_URL: Add https://yourdomain.com
 
-6.1 Get DNS records from Vercel:
-   - In Vercel dashboard, go to your project
-   - Click "Settings" tab
-   - Click "Domains" in left sidebar
-   - Click "Add Domain"
-   - Type your domain: resyft.com (replace with yours)
-   - Click "Add"
+6.6 Wait for DNS (2-24 hours)
+   Check at whatsmydns.net
 
-6.2 Vercel will show you DNS records. WRITE THESE DOWN:
-   Example:
-   - Type: A, Name: @, Value: 76.76.19.61
-   - Type: CNAME, Name: www, Value: cname.vercel-dns.com
+🧪 PHASE 7: FINAL TESTING & FIXES
+================================
 
-6.3 Go to Namecheap:
-   - Login to namecheap.com
-   - Click "Domain List" in left sidebar
-   - Find your domain, click "Manage"
+7.1 Test Your Live Site
+   - https://yourdomain.com loads ✅
+   - Sign up works ✅
+   - Research analysis works ✅
+   - All features functional ✅
 
-6.4 Configure DNS in Namecheap:
-   - Click "Advanced DNS" tab
-   - Delete any existing A records and CNAME records
-   - Click "Add New Record"
+7.2 Common Issues to Fix:
    
-   For each record from Vercel:
-   - Type: A (or CNAME)
-   - Host: @ (or www)
-   - Value: [paste from Vercel]
-   - TTL: Automatic
-   - Click checkmark to save
+   Issue: "AI analysis not working"
+   Fix: Check AI_SERVICE_URL in backend points to your Railway AI service
+   
+   Issue: "CORS errors"
+   Fix: Make sure CORS_ORIGINS includes your domain
+   
+   Issue: "Database connection errors"
+   Fix: Verify DATABASE_URL is correct in backend
 
-6.5 Wait for DNS propagation:
-   - This takes 2-24 hours
-   - Check progress at: whatsmydns.net
-   - Enter your domain and check if it points to Vercel
+📊 YOUR PRODUCTION ARCHITECTURE
+==============================
 
-🧪 STEP 7: FINAL TESTING
+LIVE SYSTEM:
+┌─ Frontend (Vercel) ─ https://yourdomain.com
+│  └─ Next.js with Supabase auth
+│
+├─ Backend (Railway) ─ https://backend-url.railway.app  
+│  └─ Node.js API + PostgreSQL
+│
+├─ AI Service (Railway) ─ https://ai-service-url.railway.app
+│  └─ Python FastAPI + OpenRouter/Gemini
+│
+└─ Database (Supabase) ─ PostgreSQL (already configured)
+
+🔄 WHAT YOU STILL NEED TO DO
+============================
+
+REQUIRED CHANGES FOR PRODUCTION:
+□ Get Supabase ANON key (step 5.5) - Your current .env uses service_role key, need public anon key
+□ Update NEXT_PUBLIC_API_URL with your Railway backend URL from step 4.4
+□ Update NEXT_PUBLIC_BACKEND_URL with your Railway backend URL from step 4.4  
+□ Update NEXTAUTH_URL with your domain name
+□ Generate NEXTAUTH_SECRET (32 random characters) - Use: openssl rand -base64 32
+□ Configure CORS_ORIGINS in backend with your domain
+□ Update AI_SERVICE_URL in backend with your Railway AI service URL from step 3.5
+
+CRITICAL NOTES:
+• Your backend needs requirements.txt or Procfile for Railway deployment
+• Your backend uses TypeScript - Railway needs "npm run build" then "npm start"
+• Make sure backend has proper build script in package.json ✅ (already configured)
+
+OPTIONAL IMPROVEMENTS:
+□ Get real Gemini API key from aistudio.google.com (currently using OpenRouter only)
+□ Set up Redis if you need caching (both services have Redis dependencies)
+□ Add Google Analytics ID
+□ Set up monitoring
+
+💰 YOUR MONTHLY COSTS
+====================
+
+- Domain: ~$1/month (paid)
+- Railway AI Service: ~$5/month
+- Railway Backend: ~$5/month  
+- Vercel Frontend: Free
+- Supabase: Free (already using)
+- OpenRouter API: ~$10-30/month (usage-based)
+TOTAL: ~$21-41/month
+
+🎯 QUICK START CHECKLIST
 =======================
 
-7.1 Test your custom domain:
-   - Try http://yourdomain.com
-   - Try https://yourdomain.com
-   - Try https://www.yourdomain.com
+Ready to deploy? Follow these phases in order:
+□ Phase 1: Test builds locally
+□ Phase 2: Upload to GitHub (remove .env files!)
+□ Phase 3: Deploy AI service to Railway
+□ Phase 4: Deploy backend to Railway  
+□ Phase 5: Deploy frontend to Vercel
+□ Phase 6: Connect your domain
+□ Phase 7: Test everything
 
-7.2 Test all functionality:
-   - Homepage loads correctly
-   - Analysis tool works
-   - All sections display properly
-   - Mobile view works
+🆘 TROUBLESHOOTING YOUR SETUP
+============================
 
-7.3 Check SSL certificate:
-   - Make sure you see the lock icon in browser
-   - Certificate should be automatic
+Problem: "OpenRouter API errors"
+Solution: Verify OPENROUTER_API_KEY is valid and has credits
 
-🎉 YOU'RE LIVE!
-==============
+Problem: "Supabase connection issues"  
+Solution: Check your Supabase project is active and keys are correct
 
-Your Resyft website should now be live on your custom domain!
+Problem: "Backend can't reach AI service"
+Solution: Verify AI_SERVICE_URL in backend matches your Railway AI service URL
 
-⚠️ TROUBLESHOOTING COMMON ISSUES:
+Problem: "CORS errors in browser"
+Solution: Make sure CORS_ORIGINS in backend includes your exact domain
 
-Issue: "Domain not working after 24 hours"
-Solution: 
-1. Check DNS records match exactly
-2. Try clearing browser cache
-3. Check whatsmydns.net for propagation status
+Your Resyft platform is ready to go live! 🚀
 
-Issue: "Analysis tool not working"
-Solution:
-1. Check Railway backend is running (green status)
-2. Verify NEXT_PUBLIC_API_URL in Vercel settings
-3. Check Railway logs for errors
-
-Issue: "Site loads but looks broken"
-Solution:
-1. Check Vercel deployment logs for errors
-2. Rebuild and redeploy
-3. Clear browser cache
-
-Issue: "Backend errors"
-Solution:
-1. Check Railway logs
-2. Verify all environment variables are set
-3. Check database connections if applicable
-
-📞 WHEN TO GET HELP:
-- Vercel issues: vercel.com/support
-- Railway issues: railway.app/help  
-- DNS issues: Namecheap support chat
-- Code issues: Check the logs first
-
-EXPECTED TIMELINE:
-- Steps 1-3: 30 minutes
-- Steps 4-5: 45 minutes  
-- Step 6: 5 minutes (then wait for DNS)
-- Step 7: 15 minutes
-- Total: ~2 hours + DNS wait time
-
-COSTS:
-- Vercel: Free
-- Railway: ~$5/month
-- Domain: Already paid
-- Total ongoing: ~$5/month
-
-Remember: Take it slow, follow each step exactly, and don't skip steps!
+The main thing you need is to get the URLs from Railway deployments and update your environment variables accordingly. Everything else is already configured!
