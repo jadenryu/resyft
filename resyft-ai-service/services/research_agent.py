@@ -90,13 +90,15 @@ openai_model = OpenAIModel(
 
 # Removed unused imports
 
+# Production-grade agent configuration following Context7 best practices
 research_agent = Agent(
     openai_model,
     deps_type=ResearchAgentDeps,
-    output_type=ResearchAnalysisOutput,  # Direct model - no wrapper needed for simplicity
+    output_type=ResearchAnalysisOutput,  # Structured output validation
     system_prompt=(
         "You are a research paper analyzer. Extract the requested information from the research paper text provided. "
-        "Only use information that is explicitly stated in the paper. If something is not mentioned, set it to null or empty."
+        "Only use information that is explicitly stated in the paper. If something is not mentioned, set it to null or empty. "
+        "Provide accurate, reliable analysis based solely on the paper content."
     ),
 )
 
