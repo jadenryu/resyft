@@ -90,11 +90,10 @@ openai_model = OpenAIModel(
 
 # Removed unused imports
 
-# Production-grade agent configuration following Context7 best practices
+# Production-grade agent configuration following Context7 best practices for v0.0.49
 research_agent = Agent(
     openai_model,
     deps_type=ResearchAgentDeps,
-    output_type=ResearchAnalysisOutput,  # Structured output validation
     system_prompt=(
         "You are a research paper analyzer. Extract the requested information from the research paper text provided. "
         "Only use information that is explicitly stated in the paper. If something is not mentioned, set it to null or empty. "
@@ -183,9 +182,11 @@ async def analyze_research_paper(
         # Use message capture for debugging
         with capture_run_messages() as messages:
             try:
+                # Apply structured output validation at runtime for v0.0.49 compatibility
                 result = await research_agent.run(
                     "Please analyze the research paper provided in the system prompt and extract the requested information according to the settings.",
-                    deps=deps
+                    deps=deps,
+                    output_type=ResearchAnalysisOutput  # Runtime output type validation
                 )
                 
                 print(f"🔍 DEBUG - Agent output: {result.output}")
