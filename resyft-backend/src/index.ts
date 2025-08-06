@@ -7,7 +7,7 @@ import { authMiddleware } from './middlewares/auth'
 
 dotenv.config()
 
-const app = express()
+const app = express()  // Production-ready backend service
 const PORT = process.env.PORT || 8000
 
 app.use(cors())
