@@ -22,17 +22,17 @@ router.post('/', async (req, res) => {
     // Add job to queue
     const job = await queueService.addExtractionJob(data)
     
-    res.json({ 
+    return res.json({ 
       jobId: job.id,
       status: 'queued',
       message: 'Extraction job queued successfully' 
     })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors })
+      return res.status(400).json({ error: error.issues })
     }
     console.error('Extraction error:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    return res.status(500).json({ error: 'Internal server error' })
   }
 })
 
@@ -49,7 +49,7 @@ router.get('/status/:jobId', async (req, res) => {
     const result = job.returnvalue
     const failedReason = job.failedReason
 
-    res.json({
+    return res.json({
       jobId: job.id,
       state,
       progress,
@@ -58,7 +58,7 @@ router.get('/status/:jobId', async (req, res) => {
     })
   } catch (error) {
     console.error('Status check error:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    return res.status(500).json({ error: 'Internal server error' })
   }
 })
 
