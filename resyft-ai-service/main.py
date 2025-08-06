@@ -12,7 +12,7 @@ from services.extractor import PaperExtractor
 from services.scraper import PaperScraper
 from services.agent_integration import agent_integration
 
-app = FastAPI(title="Resyft AI Service")
+app = FastAPI(title="Resyft AI Service")  # Production-ready AI service
 
 app.add_middleware(
     CORSMiddleware,

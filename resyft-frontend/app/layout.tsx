@@ -12,7 +12,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Resyft - Research Paper Analysis",
-  description: "Extract and distill essential data from research papers quickly and accurately",
+  description: "Extract and distill essential data from research papers quickly and accurately",  // Production-ready frontend
 };
 
 export default function RootLayout({
