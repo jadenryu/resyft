@@ -37,10 +37,10 @@ router.get('/', async (req: AuthRequest, res) => {
 
     if (error) throw error
 
-    res.json(data)
+    return res.json(data)
   } catch (error) {
     console.error('Get projects error:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    return res.status(500).json({ error: 'Internal server error' })
   }
 })
 
@@ -59,13 +59,13 @@ router.post('/', async (req: AuthRequest, res) => {
 
     if (error) throw error
 
-    res.status(201).json(project)
+    return res.status(201).json(project)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors })
+      return res.status(400).json({ error: error.issues })
     }
     console.error('Create project error:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    return res.status(500).json({ error: 'Internal server error' })
   }
 })
 
