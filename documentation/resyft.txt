@@ -1,0 +1,38 @@
+Resyft is an online research platform that streamlines research summarization for both students and researchers. It enables academic individuals to get the grasp
+of what a study is presenting through concise summaries, accurate quotes, and in-text statistics. Without reading the whole study, the individual should be able
+to fully understnad the summary through the summary provided by Resyft. Resyft can revolutionize the research space by greatly cutting down the time required to fully
+understand an outside study. Thus, it is imperative that Resyft provided structured output with accurate information every time, facilitated by output structuring
+by Pydantic AI and the Gemini 2.5 Flash Lite model. The aesthetic should match that of GPTZero, with modern spacing, professional attributes, and appealing 
+design. However, Resyft's appeal is for research studies, where one can paste the text or url of a study, and Resyft will automatically summarize it for you,
+along with quotes, statistics, and anything else important to the study. The user can also customize the number of quotes or statistics wanted, as well as the 
+length of the summary. Each source uploaded will be a part of a project the user creates, except the main page upload function. A project will have multiple sourcces
+within it, much like the structure of NoodleTools. In each project, a user can define a thesis and/or a topic, which will help Resyft find the most relevant information
+from each study. By leveraging agentic AI, Resyft helps streamline the research parsing process for so many people. 
+
+The workflow will look like this:
+There is already a main page. A user signs up, and is greeted with a short, five question preference quiz. This will help gauge the "default settings" for the customizable
+settings of quotes, stats, as soon as the user signs up. The questions will be along the lines of "Which do you prefer?" and will show options of "no numerical stats", 
+"some stats", and "lots of stats", but should obviously use professional language. 
+
+After this quiz, the user should be greeted by the Agent dashboard, where a format similar to ChatGPT will be presented, however, it should have like 
+buttons on the right side of the screen to guide the user. For example, "Start your first project", or "upload your first source" and stuff like that. GPTZero has a 
+great format you should take inspiration from, but not copy exactly. There is already an existing retractable sidebar. I would prefer the sidebar to be defaulted 
+to unextended.
+
+One thing that should be added is missing pages. For example, in the sidebar, the upload paper page is missing, as well as many others, including those shown
+when a user clicks their user profile in the bottom left of the sidebar. Please create these pages using professional, modern themes that reflect the current theme
+of Resyft. Try to minimize gradient use. Keep it professional and minimal. Try to reflect GPTZero's design. 
+
+Resyft should be a modern, startup-like, and appealing platform for young students. It makes it so that they don't have to waste their time reading research papers.
+The main advantage over ChatGPT is that Resyft offers actual information, which means pulls relevant information from the study. The material extracted goes through 
+rigorous structural tests and is scored for relevance and accuracy. This is facilitated by Pydantic AI, as described earlier. 
+
+Another big part is error checking. Some examples are making sure that "text" isn't pasted in the URL field, or vice versa. This is just one example, make sure
+there is a robust error checking system to streamline user experience throughout the website. The users should never feel lost or stuck in Resyft. For example, 
+if a user tries to upload a paper in the "upload paper" function, it should also tell the user that they recommend them to start a project instead if it's a long term thing.
+Just add any error checking messages that can enhance user retainment and engagement . 
+
+Please feel free to add any more features that would help Resyft become an appealing app for researchers, it should focus on technological streamlining, agile and 
+fast response times, and a modern website interface. It should also NOT be something that is basic and easy to replicate. Although the summarization part is 
+basic, the material contained, as well as the relevance of the information extracted, is something that Resyft highly values. 
+

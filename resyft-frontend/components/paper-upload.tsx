@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from './ui/button'
 import { Textarea } from './ui/textarea'
-import { Select } from './ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { useMutation } from '@tanstack/react-query'
 import { ExtractionRequest } from '@/types'
 
@@ -55,14 +55,18 @@ export function PaperUpload() {
             What information do you need?
           </label>
           <Select
-            id="extraction-type"
             value={extractionType}
-            onChange={(e) => setExtractionType(e.target.value as ExtractionRequest['extraction_type'])}
+            onValueChange={(value) => setExtractionType(value as ExtractionRequest['extraction_type'])}
           >
-            <option value="all">All Information</option>
-            <option value="numerical">Numerical Data</option>
-            <option value="quotes">Important Quotes</option>
-            <option value="details">Key Details</option>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Information</SelectItem>
+              <SelectItem value="numerical">Numerical Data</SelectItem>
+              <SelectItem value="quotes">Important Quotes</SelectItem>
+              <SelectItem value="details">Key Details</SelectItem>
+            </SelectContent>
           </Select>
         </div>
 

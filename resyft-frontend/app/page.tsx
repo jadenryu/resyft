@@ -71,7 +71,7 @@ export default function Home() {
     }, 200)
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'}/extract?t=${Date.now()}`, {
+      const response = await fetch(`/api/extract?t=${Date.now()}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

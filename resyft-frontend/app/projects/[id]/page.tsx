@@ -1,511 +1,769 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import { createClient } from '@/lib/supabase'
-import { motion } from 'framer-motion'
-import { 
-  ArrowLeft, 
-  Plus, 
-  FileText, 
-  BarChart3, 
-  Settings, 
-  Copy,
-  ExternalLink,
+import { useState, useEffect } from "react"
+import { useRouter, useParams } from "next/navigation"
+import { motion } from "framer-motion"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { AppSidebar } from "@/components/app-sidebar"
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
+import {
+  Target,
+  Plus,
+  Search,
+  Calendar,
+  FileText,
+  Users,
   Clock,
-  CheckCircle2,
+  ArrowUpDown,
+  Grid,
+  List,
+  Hash,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Download,
+  ExternalLink,
+  Star,
+  BookOpen,
+  BarChart3,
+  Quote,
+  Settings,
+  Share,
+  Filter,
+  SortAsc,
+  Eye,
+  CheckCircle,
   AlertCircle,
-  Zap
-} from 'lucide-react'
-import { useRouter, useParams } from 'next/navigation'
-import Link from 'next/link'
+  Upload,
+  Copy
+} from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
-interface Source {
+interface Paper {
   id: string
-  url: string
   title: string
-  status: 'processing' | 'completed' | 'failed'
-  added_at: string
-  analysis: {
-    methods?: string
-    sample_size?: number
-    conclusions?: string
-    important_quotes?: string[]
-    reliability_score?: number
-    relevance_score?: number
-    suggested_text?: string
-    custom_analysis?: string
-  }
+  authors: string[]
+  journal: string
+  year: number
+  doi?: string
+  url?: string
+  addedAt: string
+  status: 'processing' | 'completed' | 'error'
+  summary?: string
+  quotes?: string[]
+  statistics?: string[]
+  relevanceScore: number
+  tags: string[]
 }
 
 interface Project {
   id: string
   name: string
   description: string
-  research_question: string
-  thesis?: string
-  configuration: {
-    extract_quotes: boolean
-    extract_statistics: boolean
-    extract_methods: boolean
-    preferred_info_type: 'statistical' | 'qualitative' | 'balanced'
-    custom_instructions?: string
-  }
+  thesis: string
+  field: string
+  deadline?: string
+  collaborators: string[]
+  tags: string[]
+  createdAt: string
+  papers: Paper[]
+  status: 'active' | 'archived' | 'completed'
 }
 
-export default function ProjectDetail() {
-  const params = useParams()
+export default function ProjectDetailPage() {
   const router = useRouter()
-  const supabase = createClient()
+  const params = useParams()
+  const projectId = params.id as string
   
   const [project, setProject] = useState<Project | null>(null)
-  const [sources, setSources] = useState<Source[]>([])
+  const [papers, setPapers] = useState<Paper[]>([])
+  const [filteredPapers, setFilteredPapers] = useState<Paper[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [sortBy, setSortBy] = useState<string>("recent")
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list")
   const [loading, setLoading] = useState(true)
-  const [newSourceUrl, setNewSourceUrl] = useState('')
-  const [addingSource, setAddingSource] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [activeTab, setActiveTab] = useState("overview")
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/signin')
-      } else {
-        setUser(user)
-        loadProject()
-      }
-    }
-    getUser()
-  }, [params.id, supabase, router])
-
-  const loadProject = async () => {
-    setLoading(true)
-    // Simulate loading project data
-    setTimeout(() => {
-      setProject({
-        id: params.id as string,
-        name: 'Machine Learning in Healthcare',
-        description: 'Research on AI applications in medical diagnosis',
-        research_question: 'How effective are machine learning models in early disease detection?',
-        thesis: 'ML models significantly improve diagnostic accuracy when combined with traditional methods.',
-        configuration: {
-          extract_quotes: true,
-          extract_statistics: true,
-          extract_methods: true,
-          preferred_info_type: 'statistical',
-          custom_instructions: 'Focus on diagnostic accuracy metrics and patient outcomes'
-        }
-      })
-      
-      setSources([
-        {
-          id: '1',
-          url: 'https://arxiv.org/abs/2301.12345',
-          title: 'Deep Learning Approaches for Medical Image Analysis',
-          status: 'completed',
-          added_at: '2024-01-20T10:00:00Z',
-          analysis: {
-            methods: 'Convolutional Neural Networks with 5-fold cross-validation',
-            sample_size: 5432,
-            conclusions: 'CNNs achieved 94.2% accuracy in detecting early-stage tumors, significantly outperforming traditional methods.',
-            important_quotes: [
-              '"The proposed CNN architecture demonstrated a 94.2% accuracy rate in tumor detection (p < 0.001)"',
-              '"Early detection capabilities showed 15% improvement over conventional radiological assessment"'
-            ],
-            reliability_score: 0.94,
-            relevance_score: 0.91,
-            suggested_text: 'Recent advances in deep learning have shown remarkable promise for medical diagnosis. Smith et al. (2024) demonstrated that convolutional neural networks achieved 94.2% accuracy in detecting early-stage tumors (p < 0.001), representing a 15% improvement over conventional radiological assessment. This finding strongly supports the thesis that ML models significantly enhance diagnostic accuracy when integrated with traditional medical practices.',
-            custom_analysis: 'This study directly supports your thesis by providing quantitative evidence of ML superiority in diagnostic accuracy. The large sample size (n=5432) and rigorous methodology strengthen the reliability of these findings for your research argument.'
-          }
-        },
-        {
-          id: '2',
-          url: 'https://pubmed.ncbi.nlm.nih.gov/example',
-          title: 'Clinical Implementation of AI Diagnostic Tools',
-          status: 'processing',
-          added_at: '2024-01-21T14:30:00Z',
-          analysis: {}
-        }
-      ])
-      setLoading(false)
-    }, 1000)
-  }
-
-  const addSource = async () => {
-    if (!newSourceUrl.trim()) return
-    
-    setAddingSource(true)
-    
-    const newSource: Source = {
-      id: Date.now().toString(),
-      url: newSourceUrl,
-      title: 'Processing...',
-      status: 'processing',
-      added_at: new Date().toISOString(),
-      analysis: {}
-    }
-    
-    setSources([newSource, ...sources])
-    setNewSourceUrl('')
-    
-    // Simulate processing
-    setTimeout(() => {
-      setSources(prev => prev.map(source => 
-        source.id === newSource.id 
-          ? {
-              ...source,
-              title: 'AI-Driven Predictive Models in Healthcare',
-              status: 'completed' as const,
-              analysis: {
-                methods: 'Machine learning ensemble with random forest and SVM',
-                sample_size: 2847,
-                conclusions: 'Predictive models reduced diagnostic errors by 23% and improved patient outcomes.',
-                important_quotes: [
-                  '"Implementation of AI models resulted in 23% reduction in diagnostic errors"',
-                  '"Patient outcome metrics improved significantly with AI-assisted diagnosis (p = 0.003)"'
-                ],
-                reliability_score: 0.89,
-                relevance_score: 0.87,
-                suggested_text: 'Additional evidence for ML efficacy comes from Johnson et al. (2024), whose implementation of AI models resulted in a 23% reduction in diagnostic errors and significantly improved patient outcomes (p = 0.003). This research reinforces the argument that machine learning integration enhances traditional diagnostic approaches.',
-                custom_analysis: 'This source provides excellent complementary evidence to your thesis, focusing on real-world implementation rather than just theoretical performance. The 23% error reduction metric is particularly valuable for supporting your argument about ML improving diagnostic accuracy.'
-              }
+    const loadProject = () => {
+      // Load project from localStorage
+      const savedProjects = localStorage.getItem('resyft_projects')
+      if (savedProjects) {
+        const projects = JSON.parse(savedProjects)
+        const foundProject = projects.find((p: Project) => p.id === projectId)
+        if (foundProject) {
+          // Generate demo papers for the project
+          const demoPapers: Paper[] = [
+            {
+              id: "paper-1",
+              title: "Deep Learning Applications in Medical Imaging: A Comprehensive Review",
+              authors: ["Zhang, L.", "Chen, M.", "Rodriguez, A."],
+              journal: "Nature Medicine",
+              year: 2024,
+              doi: "10.1038/s41591-024-12345-6",
+              url: "https://doi.org/10.1038/s41591-024-12345-6",
+              addedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+              status: "completed",
+              summary: "This comprehensive review examines the current state and future potential of deep learning applications in medical imaging. The authors analyze 127 studies and demonstrate that deep learning models achieve diagnostic accuracy comparable to experienced radiologists across multiple medical imaging domains.",
+              quotes: [
+                "Deep learning models have demonstrated unprecedented accuracy in medical image analysis, achieving diagnostic performance comparable to experienced radiologists.",
+                "The integration of AI into clinical workflows requires careful consideration of ethical implications and regulatory compliance."
+              ],
+              statistics: [
+                "Accuracy: 94.2% (95% CI: 92.1-96.3)",
+                "Sensitivity: 96.7%",
+                "Specificity: 91.8%",
+                "Studies analyzed: 127"
+              ],
+              relevanceScore: 92,
+              tags: ["deep-learning", "medical-imaging", "AI"]
+            },
+            {
+              id: "paper-2",
+              title: "Machine Learning Algorithms for Early Disease Detection: A Systematic Meta-Analysis",
+              authors: ["Johnson, K.", "Patel, S.", "Williams, R.", "Lee, H."],
+              journal: "The Lancet Digital Health",
+              year: 2024,
+              doi: "10.1016/S2589-7500(24)00123-4",
+              addedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+              status: "completed",
+              summary: "A systematic meta-analysis of 127 studies examining machine learning approaches for early disease detection across various medical conditions. The research demonstrates superior performance of ML algorithms compared to traditional screening methods.",
+              quotes: [
+                "Machine learning algorithms showed superior performance in detecting early-stage diseases compared to traditional screening methods.",
+                "The pooled sensitivity across all studies was 0.89 (95% CI: 0.85-0.92) with a specificity of 0.84 (95% CI: 0.81-0.87)."
+              ],
+              statistics: [
+                "Pooled sensitivity: 89% (95% CI: 85-92%)",
+                "Pooled specificity: 84% (95% CI: 81-87%)",
+                "Studies included: 127",
+                "Total patients: 2,847,392"
+              ],
+              relevanceScore: 88,
+              tags: ["machine-learning", "early-detection", "meta-analysis"]
+            },
+            {
+              id: "paper-3",
+              title: "Ethical Considerations in AI-Driven Healthcare: Current Challenges and Future Directions",
+              authors: ["Brown, T.", "Garcia, M."],
+              journal: "AI & Medicine Ethics",
+              year: 2024,
+              addedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+              status: "processing",
+              relevanceScore: 76,
+              tags: ["ethics", "healthcare", "AI"]
             }
-          : source
-      ))
-      setAddingSource(false)
-    }, 3000)
+          ]
+          
+          setProject(foundProject)
+          setPapers(demoPapers)
+          setFilteredPapers(demoPapers)
+        }
+      }
+      setLoading(false)
+    }
+
+    if (projectId) {
+      loadProject()
+    }
+  }, [projectId])
+
+  useEffect(() => {
+    let filtered = [...papers]
+
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(paper =>
+        paper.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        paper.authors.some(author => author.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        paper.journal.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        paper.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    }
+
+    // Apply status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(paper => paper.status === statusFilter)
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "recent":
+          return new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()
+        case "title":
+          return a.title.localeCompare(b.title)
+        case "relevance":
+          return b.relevanceScore - a.relevanceScore
+        case "year":
+          return b.year - a.year
+        default:
+          return 0
+      }
+    })
+
+    setFilteredPapers(filtered)
+  }, [searchQuery, statusFilter, sortBy, papers])
+
+  const handleDeletePaper = (paperId: string) => {
+    const updatedPapers = papers.filter(p => p.id !== paperId)
+    setPapers(updatedPapers)
   }
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
   }
 
-  if (!user || loading) {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-700'
+      case 'processing':
+        return 'bg-yellow-100 text-yellow-700'
+      case 'error':
+        return 'bg-red-100 text-red-700'
+      default:
+        return 'bg-gray-100 text-gray-700'
+    }
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="w-4 h-4" />
+      case 'processing':
+        return <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></div>
+      case 'error':
+        return <AlertCircle className="w-4 h-4" />
+      default:
+        return null
+    }
+  }
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <SidebarProvider defaultOpen={false}>
+        <AppSidebar />
+        <SidebarInset>
+          <div className="flex h-screen items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading project...</p>
+            </div>
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
     )
   }
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl text-headline text-gray-900 mb-2">Project Not Found</h2>
-          <Link href="/projects">
-            <Button variant="outline">Back to Projects</Button>
-          </Link>
-        </div>
-      </div>
+      <SidebarProvider defaultOpen={false}>
+        <AppSidebar />
+        <SidebarInset>
+          <div className="flex h-screen items-center justify-center">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Project Not Found</h2>
+              <p className="text-gray-600 mb-4">The project you're looking for doesn't exist.</p>
+              <Button onClick={() => router.push('/projects')}>
+                Back to Projects
+              </Button>
+            </div>
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
-      {/* Header */}
-      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link href="/projects">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Projects
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-xl text-headline text-gray-900">{project.name}</h1>
-                <p className="text-sm text-gray-600 text-body-premium">{project.description}</p>
+    <SidebarProvider defaultOpen={false}>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b">
+          <div className="flex h-16 items-center gap-4 px-6">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="h-6" />
+            <div className="flex-1">
+              <div className="flex items-center gap-3">
+                <Target className="w-5 h-5 text-blue-600" />
+                <div>
+                  <h1 className="text-lg font-semibold">{project.name}</h1>
+                  <p className="text-sm text-gray-600">{papers.length} papers</p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Link href={`/projects/${project.id}/settings`}>
-                <Button variant="outline" size="sm">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Settings
-                </Button>
-              </Link>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm">
+                <Share className="w-4 h-4 mr-2" />
+                Share
+              </Button>
+              <Button onClick={() => router.push('/upload')} size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Paper
+              </Button>
             </div>
           </div>
-        </div>
-      </div>
+        </header>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Project Info Sidebar */}
-          <div className="lg:col-span-1">
-            <Card className="shadow-xl border-0 sticky top-24">
-              <CardHeader>
-                <CardTitle className="text-headline">Project Overview</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h4 className="text-sm text-subhead text-gray-700 mb-2">Research Question</h4>
-                  <p className="text-sm text-gray-900 text-body-premium">
-                    {project.research_question}
-                  </p>
-                </div>
-                
-                {project.thesis && (
-                  <div>
-                    <h4 className="text-sm text-subhead text-gray-700 mb-2">Thesis</h4>
-                    <p className="text-sm text-gray-900 text-body-premium">
-                      {project.thesis}
-                    </p>
-                  </div>
-                )}
-                
-                <div>
-                  <h4 className="text-sm text-subhead text-gray-700 mb-2">Analysis Configuration</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {project.configuration.extract_quotes && (
-                      <Badge variant="secondary" className="text-xs">Quotes</Badge>
-                    )}
-                    {project.configuration.extract_statistics && (
-                      <Badge variant="secondary" className="text-xs">Statistics</Badge>
-                    )}
-                    {project.configuration.extract_methods && (
-                      <Badge variant="secondary" className="text-xs">Methods</Badge>
-                    )}
-                    <Badge variant="outline" className="text-xs capitalize">
-                      {project.configuration.preferred_info_type}
-                    </Badge>
-                  </div>
-                </div>
-                
-                {project.configuration.custom_instructions && (
-                  <div>
-                    <h4 className="text-sm text-subhead text-gray-700 mb-2">Custom Instructions</h4>
-                    <p className="text-xs text-gray-600 text-body-premium">
-                      {project.configuration.custom_instructions}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+        <main className="flex-1 p-6">
+          <div className="max-w-7xl mx-auto">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="overview" className="flex items-center gap-2">
+                  <Eye className="w-4 h-4" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="papers" className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Papers ({papers.length})
+                </TabsTrigger>
+                <TabsTrigger value="insights" className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Insights
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="flex items-center gap-2">
+                  <Settings className="w-4 h-4" />
+                  Settings
+                </TabsTrigger>
+              </TabsList>
 
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Add Source Section */}
-            <Card className="shadow-xl border-0">
-              <CardHeader>
-                <CardTitle className="text-headline flex items-center">
-                  <Plus className="w-5 h-5 mr-2 text-blue-600" />
-                  Add New Source
-                </CardTitle>
-                <CardDescription className="text-body-premium">
-                  Add research papers and sources to analyze with your project's custom configuration
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-3">
-                  <Input
-                    placeholder="https://arxiv.org/abs/... or PubMed URL"
-                    value={newSourceUrl}
-                    onChange={(e) => setNewSourceUrl(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button
-                    onClick={addSource}
-                    disabled={addingSource || !newSourceUrl.trim()}
-                    className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
-                  >
-                    {addingSource ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Adding...
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="w-4 h-4 mr-2" />
-                        Analyze
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Sources List */}
-            <div className="space-y-4">
-              <h2 className="text-2xl text-headline text-gray-900">
-                Sources ({sources.length})
-              </h2>
-              
-              {sources.length === 0 ? (
-                <Card className="text-center py-12 shadow-lg border-2 border-dashed border-gray-300">
-                  <CardContent>
-                    <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-xl text-headline text-gray-900 mb-2">No Sources Yet</h3>
-                    <p className="text-gray-600 text-body-premium">
-                      Add your first research source to start analyzing with this project's configuration
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                sources.map((source, index) => (
-                  <motion.div
-                    key={source.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                  >
-                    <Card className="shadow-lg border-0 overflow-hidden">
+              {/* Overview Tab */}
+              <TabsContent value="overview" className="space-y-6 mt-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Project Info */}
+                  <div className="lg:col-span-2 space-y-6">
+                    <Card>
                       <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <CardTitle className="text-lg text-headline text-gray-900 mb-2 flex items-center">
-                              {source.status === 'completed' && <CheckCircle2 className="w-5 h-5 text-green-600 mr-2" />}
-                              {source.status === 'processing' && <Clock className="w-5 h-5 text-blue-600 mr-2 animate-spin" />}
-                              {source.status === 'failed' && <AlertCircle className="w-5 h-5 text-red-600 mr-2" />}
-                              {source.title}
-                            </CardTitle>
-                            <div className="flex items-center space-x-2 text-sm text-gray-600">
-                              <ExternalLink className="w-4 h-4" />
-                              <a href={source.url} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600">
-                                {source.url}
-                              </a>
-                            </div>
-                          </div>
-                          <Badge variant={
-                            source.status === 'completed' ? 'default' :
-                            source.status === 'processing' ? 'secondary' : 'destructive'
-                          }>
-                            {source.status}
-                          </Badge>
+                        <CardTitle className="flex items-center gap-2">
+                          <Target className="w-5 h-5" />
+                          Research Overview
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <h4 className="font-medium text-gray-900 mb-2">Description</h4>
+                          <p className="text-gray-600">{project.description}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-gray-900 mb-2">Research Thesis</h4>
+                          <p className="text-gray-600 italic">"{project.thesis}"</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {project.tags.map(tag => (
+                            <Badge key={tag} variant="outline">
+                              <Hash className="w-3 h-3 mr-1" />
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Recent Papers */}
+                    <Card>
+                      <CardHeader>
+                        <div className="flex justify-between items-center">
+                          <CardTitle>Recent Papers</CardTitle>
+                          <Button variant="ghost" size="sm" onClick={() => setActiveTab("papers")}>
+                            View All
+                          </Button>
                         </div>
                       </CardHeader>
-                      
-                      {source.status === 'processing' && (
-                        <CardContent>
-                          <Progress value={60} className="h-2" />
-                          <p className="text-sm text-gray-600 mt-2 inter-regular">
-                            Analyzing with your project configuration...
-                          </p>
-                        </CardContent>
-                      )}
-                      
-                      {source.status === 'completed' && source.analysis && (
-                        <CardContent className="space-y-6">
-                          {/* Analysis Results */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-4">
-                              {source.analysis.methods && (
-                                <div>
-                                  <h4 className="text-subhead text-gray-900 mb-2">Methods</h4>
-                                  <p className="text-gray-700 text-body-premium">{source.analysis.methods}</p>
-                                </div>
-                              )}
-                              
-                              {source.analysis.sample_size && (
-                                <div>
-                                  <h4 className="text-subhead text-gray-900 mb-2">Sample Size</h4>
-                                  <Badge variant="secondary" className="text-base px-3 py-1">
-                                    {source.analysis.sample_size.toLocaleString()} participants
+                      <CardContent>
+                        <div className="space-y-3">
+                          {papers.slice(0, 3).map(paper => (
+                            <div key={paper.id} className="flex items-center justify-between p-3 border rounded-lg">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-sm line-clamp-1">{paper.title}</h4>
+                                <p className="text-xs text-gray-600">
+                                  {paper.authors[0]} et al. • {paper.journal} • {paper.year}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge className={getStatusColor(paper.status)}>
+                                  <div className="flex items-center gap-1">
+                                    {getStatusIcon(paper.status)}
+                                    {paper.status}
+                                  </div>
+                                </Badge>
+                                {paper.status === 'completed' && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {paper.relevanceScore}% match
                                   </Badge>
-                                </div>
-                              )}
-                              
-                              {(source.analysis.reliability_score || source.analysis.relevance_score) && (
-                                <div>
-                                  <h4 className="text-subhead text-gray-900 mb-2">Scores</h4>
-                                  <div className="flex gap-4">
-                                    {source.analysis.reliability_score && (
-                                      <div className="text-center">
-                                        <div className="text-xl inter-bold text-blue-600">
-                                          {(source.analysis.reliability_score * 100).toFixed(0)}%
-                                        </div>
-                                        <div className="text-caption-enhanced text-gray-500">Reliability</div>
-                                      </div>
-                                    )}
-                                    {source.analysis.relevance_score && (
-                                      <div className="text-center">
-                                        <div className="text-xl inter-bold text-green-600">
-                                          {(source.analysis.relevance_score * 100).toFixed(0)}%
-                                        </div>
-                                        <div className="text-caption-enhanced text-gray-500">Relevance</div>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
+                                )}
+                              </div>
                             </div>
-                            
-                            <div className="space-y-4">
-                              {source.analysis.conclusions && (
-                                <div>
-                                  <h4 className="text-subhead text-gray-900 mb-2">Conclusions</h4>
-                                  <p className="text-gray-700 text-body-premium">{source.analysis.conclusions}</p>
-                                </div>
-                              )}
-                              
-                              {source.analysis.important_quotes && source.analysis.important_quotes.length > 0 && (
-                                <div>
-                                  <h4 className="text-subhead text-gray-900 mb-2">Key Quotes</h4>
-                                  <div className="space-y-2">
-                                    {source.analysis.important_quotes.map((quote, idx) => (
-                                      <div key={idx} className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500">
-                                        <p className="text-gray-700 text-body-premium italic">{quote}</p>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          
-                          {/* Custom Analysis for Project */}
-                          {source.analysis.custom_analysis && (
-                            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-6 rounded-lg border border-purple-200">
-                              <h4 className="text-subhead text-gray-900 mb-3 flex items-center">
-                                <BarChart3 className="w-5 h-5 mr-2 text-purple-600" />
-                                Analysis for Your Project
-                              </h4>
-                              <p className="text-gray-800 text-body-premium leading-relaxed mb-4">
-                                {source.analysis.custom_analysis}
-                              </p>
-                            </div>
-                          )}
-                          
-                          {/* Ready-to-Use Text */}
-                          {source.analysis.suggested_text && (
-                            <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg border border-green-200">
-                              <h4 className="text-subhead text-gray-900 mb-3 flex items-center">
-                                <CheckCircle2 className="w-5 h-5 mr-2 text-green-600" />
-                                Ready-to-Cite Text
-                              </h4>
-                              <p className="text-gray-800 text-body-premium leading-relaxed mb-4">
-                                {source.analysis.suggested_text}
-                              </p>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => copyToClipboard(source.analysis.suggested_text!)}
-                                className="inter-medium"
-                              >
-                                <Copy className="w-4 h-4 mr-2" />
-                                Copy to Clipboard
-                              </Button>
-                            </div>
-                          )}
-                        </CardContent>
-                      )}
+                          ))}
+                        </div>
+                      </CardContent>
                     </Card>
-                  </motion.div>
-                ))
-              )}
-            </div>
+                  </div>
+
+                  {/* Sidebar */}
+                  <div className="space-y-6">
+                    {/* Project Stats */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Project Statistics</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-blue-500" />
+                            <span className="text-sm">Total Papers</span>
+                          </div>
+                          <span className="font-semibold">{papers.length}</span>
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <span className="text-sm">Analyzed</span>
+                          </div>
+                          <span className="font-semibold">
+                            {papers.filter(p => p.status === 'completed').length}
+                          </span>
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <Quote className="w-4 h-4 text-purple-500" />
+                            <span className="text-sm">Quotes Extracted</span>
+                          </div>
+                          <span className="font-semibold">
+                            {papers.reduce((acc, p) => acc + (p.quotes?.length || 0), 0)}
+                          </span>
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <BarChart3 className="w-4 h-4 text-orange-500" />
+                            <span className="text-sm">Statistics Found</span>
+                          </div>
+                          <span className="font-semibold">
+                            {papers.reduce((acc, p) => acc + (p.statistics?.length || 0), 0)}
+                          </span>
+                        </div>
+
+                        {project.deadline && (
+                          <>
+                            <Separator />
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-sm">
+                                <Calendar className="w-4 h-4 text-gray-500" />
+                                <span>Deadline: {new Date(project.deadline).toLocaleDateString()}</span>
+                              </div>
+                              <Progress 
+                                value={Math.min(100, ((Date.now() - new Date(project.createdAt).getTime()) / (new Date(project.deadline).getTime() - new Date(project.createdAt).getTime())) * 100)} 
+                                className="h-2" 
+                              />
+                            </div>
+                          </>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Collaborators */}
+                    {project.collaborators.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <Users className="w-4 h-4" />
+                            Collaborators
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            {project.collaborators.map(email => (
+                              <div key={email} className="flex items-center gap-2 text-sm">
+                                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                                  <span className="text-xs font-medium text-blue-700">
+                                    {email.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                                <span>{email}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Papers Tab */}
+              <TabsContent value="papers" className="space-y-6 mt-6">
+                {/* Controls */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      placeholder="Search papers..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="w-[130px]">
+                        <Filter className="w-4 h-4 mr-2" />
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="processing">Processing</SelectItem>
+                        <SelectItem value="error">Error</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger className="w-[130px]">
+                        <SortAsc className="w-4 h-4 mr-2" />
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="recent">Most Recent</SelectItem>
+                        <SelectItem value="title">Title</SelectItem>
+                        <SelectItem value="relevance">Relevance</SelectItem>
+                        <SelectItem value="year">Year</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push('/upload')}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Add Paper
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Papers List */}
+                <div className="space-y-4">
+                  {filteredPapers.length === 0 ? (
+                    <Card className="text-center py-12">
+                      <CardContent>
+                        <BookOpen className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                        <h3 className="font-semibold text-lg mb-2">No papers found</h3>
+                        <p className="text-gray-600 mb-4">
+                          {searchQuery ? "Try adjusting your search terms" : "Start by adding your first research paper"}
+                        </p>
+                        <Button onClick={() => router.push('/upload')}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Paper
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    filteredPapers.map((paper, index) => (
+                      <motion.div
+                        key={paper.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                      >
+                        <Card className="hover:shadow-md transition-shadow">
+                          <CardContent className="p-6">
+                            <div className="flex justify-between items-start mb-4">
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-lg mb-2 hover:text-blue-600 cursor-pointer">
+                                  {paper.title}
+                                </h3>
+                                <p className="text-gray-600 text-sm mb-2">
+                                  {paper.authors.join(", ")} • {paper.journal} • {paper.year}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <Badge className={getStatusColor(paper.status)}>
+                                    <div className="flex items-center gap-1">
+                                      {getStatusIcon(paper.status)}
+                                      {paper.status}
+                                    </div>
+                                  </Badge>
+                                  {paper.status === 'completed' && (
+                                    <Badge variant="outline">
+                                      {paper.relevanceScore}% relevance
+                                    </Badge>
+                                  )}
+                                  <span className="text-xs text-gray-500">
+                                    Added {new Date(paper.addedAt).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreVertical className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  {paper.url && (
+                                    <DropdownMenuItem>
+                                      <ExternalLink className="w-4 h-4 mr-2" />
+                                      View Original
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuItem>
+                                    <Download className="w-4 h-4 mr-2" />
+                                    Export Analysis
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => handleDeletePaper(paper.id)}
+                                    className="text-red-600"
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Remove
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+
+                            {paper.status === 'completed' && (
+                              <div className="space-y-4">
+                                {paper.summary && (
+                                  <div>
+                                    <h4 className="font-medium text-sm mb-2">Summary</h4>
+                                    <p className="text-gray-600 text-sm">{paper.summary}</p>
+                                  </div>
+                                )}
+
+                                {paper.quotes && paper.quotes.length > 0 && (
+                                  <div>
+                                    <h4 className="font-medium text-sm mb-2">Key Quotes</h4>
+                                    <div className="space-y-2">
+                                      {paper.quotes.map((quote, idx) => (
+                                        <div key={idx} className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500 relative group">
+                                          <blockquote className="text-sm text-gray-700 italic">
+                                            "{quote}"
+                                          </blockquote>
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => copyToClipboard(quote)}
+                                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                          >
+                                            <Copy className="w-3 h-3" />
+                                          </Button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {paper.statistics && paper.statistics.length > 0 && (
+                                  <div>
+                                    <h4 className="font-medium text-sm mb-2">Key Statistics</h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                      {paper.statistics.map((stat, idx) => (
+                                        <div key={idx} className="text-sm bg-gray-50 p-2 rounded group relative">
+                                          {stat}
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => copyToClipboard(stat)}
+                                            className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                          >
+                                            <Copy className="w-3 h-3" />
+                                          </Button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {paper.tags.length > 0 && (
+                                  <div>
+                                    <div className="flex flex-wrap gap-1">
+                                      {paper.tags.map(tag => (
+                                        <Badge key={tag} variant="outline" className="text-xs">
+                                          {tag}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Insights Tab */}
+              <TabsContent value="insights" className="space-y-6 mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Research Insights</CardTitle>
+                    <CardDescription>
+                      AI-generated insights from your analyzed papers
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-12">
+                      <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Insights Coming Soon</h3>
+                      <p className="text-gray-600">
+                        Advanced analytics and insights will be available once you have more analyzed papers.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Settings Tab */}
+              <TabsContent value="settings" className="space-y-6 mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Project Settings</CardTitle>
+                    <CardDescription>
+                      Manage project configuration and preferences
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-12">
+                      <Settings className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Settings Panel</h3>
+                      <p className="text-gray-600">
+                        Project-specific settings and extraction preferences will be available here.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
-        </div>
-      </div>
-    </div>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

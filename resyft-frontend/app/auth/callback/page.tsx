@@ -19,7 +19,14 @@ export default function AuthCallback() {
           console.error('Auth callback error:', error)
           router.push('/signin?error=auth_failed')
         } else {
-          router.push('/projects')
+          // Check if user has completed onboarding
+          const hasCompletedOnboarding = localStorage.getItem('resyft_preferences')
+          
+          if (hasCompletedOnboarding) {
+            router.push('/dashboard')
+          } else {
+            router.push('/onboarding')
+          }
         }
       } catch (err) {
         console.error('Unexpected error:', err)

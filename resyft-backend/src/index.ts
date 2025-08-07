@@ -10,7 +10,17 @@ dotenv.config()
 const app = express()  // Production-ready backend service
 const PORT = process.env.PORT || 8000
 
-app.use(cors())
+// Configure CORS for production
+const corsOrigins = process.env.CORS_ORIGINS?.split(',') || [
+  'http://localhost:3000', // Development
+  'https://resyft.co',     // Production
+  'https://www.resyft.co'  // Production with www
+]
+
+app.use(cors({
+  origin: corsOrigins,
+  credentials: true
+}))
 app.use(express.json())
 
 // Health check

@@ -96,6 +96,8 @@ WHAT YOU'LL DEPLOY:
 3.5 Get Your AI Service URL
    After deployment → Settings → Domains
    Copy URL like: https://resyft-ai-service-production.up.railway.app
+
+   resyft-production.up.railway.app
    WRITE THIS DOWN!
 
 🔧 PHASE 4: DEPLOY BACKEND (NODE.JS API)
@@ -140,6 +142,8 @@ WHAT YOU'LL DEPLOY:
    Copy URL like: https://resyft-backend-production.up.railway.app
    WRITE THIS DOWN!
 
+
+resyft-production-c00e.up.railway.app
 🌐 PHASE 5: DEPLOY FRONTEND (NEXT.JS WEBSITE)
 ============================================
 
@@ -185,7 +189,7 @@ WHAT YOU'LL DEPLOY:
    Name: NEXTAUTH_SECRET
    Value: [Generate random 32-character string]
    Environment: Production
-
+a8f2k9m6p3r7t5w1x4z9c2e6h8j3n5q7
 5.5 Get Supabase ANON Key (you have service key, need public key)
    - Go to supabase.com → Your project
    - Settings (gear icon) → API
@@ -195,7 +199,7 @@ WHAT YOU'LL DEPLOY:
 5.6 Deploy Frontend
    Click "Deploy" → Wait 2-3 minutes
    Get URL like: https://resyft-frontend-abc123.vercel.app
-
+https://resyft-frontend.vercel.app
 🌍 PHASE 6: CONNECT YOUR CUSTOM DOMAIN
 =====================================
 
