@@ -1,335 +1,514 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { createClient } from '@/lib/supabase'
-import { motion } from 'framer-motion'
-import { Plus, FolderOpen, Settings, FileText, BarChart3, LogOut, Zap } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { DashboardLayout } from '@/components/dashboard-layout'
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { AppSidebar } from "@/components/app-sidebar"
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
+import {
+  FolderOpen,
+  Plus,
+  Search,
+  Calendar,
+  FileText,
+  Users,
+  Clock,
+  ArrowUpDown,
+  Grid,
+  List,
+  Hash,
+  Target,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Archive
+} from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface Project {
   id: string
   name: string
   description: string
-  research_question: string
-  thesis?: string
-  created_at: string
-  sources_count: number
-  configuration: {
-    extract_quotes: boolean
-    extract_statistics: boolean
-    extract_methods: boolean
-    preferred_info_type: 'statistical' | 'qualitative' | 'balanced'
-    custom_instructions?: string
-  }
+  thesis: string
+  field: string
+  deadline?: string
+  collaborators: string[]
+  tags: string[]
+  createdAt: string
+  papers: any[]
+  status: 'active' | 'archived' | 'completed'
 }
 
-export default function Projects() {
-  const [projects, setProjects] = useState<Project[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showCreateForm, setShowCreateForm] = useState(false)
-  const [user, setUser] = useState<any>(null)
-  const [newProject, setNewProject] = useState({
-    name: '',
-    description: '',
-    research_question: '',
-    thesis: ''
-  })
-  const supabase = createClient()
+export default function ProjectsPage() {
   const router = useRouter()
+  const [projects, setProjects] = useState<Project[]>([])
+  const [filteredProjects, setFilteredProjects] = useState<Project[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [sortBy, setSortBy] = useState<string>("recent")
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/signin')
+    // Load projects from localStorage
+    const loadProjects = () => {
+      const savedProjects = localStorage.getItem('resyft_projects')
+      if (savedProjects) {
+        const parsed = JSON.parse(savedProjects)
+        setProjects(parsed)
+        setFilteredProjects(parsed)
       } else {
-        setUser(user)
-        loadProjects()
+        // Demo projects
+        const demoProjects: Project[] = [
+          {
+            id: "1",
+            name: "Climate Change Impact Study",
+            description: "Analyzing the effects of climate change on coastal ecosystems and biodiversity",
+            thesis: "Climate change significantly impacts coastal ecosystem biodiversity through rising sea levels and temperature changes",
+            field: "Environmental Science",
+            deadline: "2024-12-31",
+            collaborators: ["jane.doe@university.edu"],
+            tags: ["climate", "ecosystems", "biodiversity"],
+            createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+            papers: Array(12).fill(null),
+            status: "active"
+          },
+          {
+            id: "2",
+            name: "Machine Learning in Healthcare",
+            description: "Exploring applications of deep learning in medical diagnosis and treatment planning",
+            thesis: "Deep learning models can improve diagnostic accuracy in medical imaging",
+            field: "Computer Science",
+            collaborators: [],
+            tags: ["AI", "healthcare", "deep-learning"],
+            createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+            papers: Array(8).fill(null),
+            status: "active"
+          },
+          {
+            id: "3",
+            name: "COVID-19 Vaccine Efficacy",
+            description: "Meta-analysis of vaccine effectiveness across different populations",
+            thesis: "mRNA vaccines show consistent efficacy across diverse demographic groups",
+            field: "Medicine",
+            deadline: "2024-06-30",
+            collaborators: ["john.smith@hospital.org", "mary.johnson@research.edu"],
+            tags: ["COVID-19", "vaccines", "public-health"],
+            createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+            papers: Array(25).fill(null),
+            status: "completed"
+          }
+        ]
+        setProjects(demoProjects)
+        setFilteredProjects(demoProjects)
+        localStorage.setItem('resyft_projects', JSON.stringify(demoProjects))
       }
-    }
-    getUser()
-  }, [supabase, router])
-
-  const loadProjects = async () => {
-    setLoading(true)
-    // Simulate loading projects - in real app this would fetch from database
-    setTimeout(() => {
-      setProjects([
-        {
-          id: '1',
-          name: 'Machine Learning in Healthcare',
-          description: 'Research on AI applications in medical diagnosis',
-          research_question: 'How effective are machine learning models in early disease detection?',
-          thesis: 'ML models significantly improve diagnostic accuracy when combined with traditional methods.',
-          created_at: '2024-01-15',
-          sources_count: 12,
-          configuration: {
-            extract_quotes: true,
-            extract_statistics: true,
-            extract_methods: true,
-            preferred_info_type: 'statistical',
-            custom_instructions: 'Focus on diagnostic accuracy metrics and patient outcomes'
-          }
-        },
-        {
-          id: '2',
-          name: 'Climate Change Adaptation',
-          description: 'Urban planning strategies for climate resilience',
-          research_question: 'What urban planning strategies are most effective for climate adaptation?',
-          created_at: '2024-01-20',
-          sources_count: 8,
-          configuration: {
-            extract_quotes: true,
-            extract_statistics: false,
-            extract_methods: true,
-            preferred_info_type: 'qualitative'
-          }
-        }
-      ])
       setLoading(false)
-    }, 1000)
-  }
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push('/')
-  }
-
-  const createProject = async () => {
-    if (!newProject.name.trim() || !newProject.research_question.trim()) return
-
-    const project: Project = {
-      id: Date.now().toString(),
-      ...newProject,
-      created_at: new Date().toISOString(),
-      sources_count: 0,
-      configuration: {
-        extract_quotes: true,
-        extract_statistics: true,
-        extract_methods: true,
-        preferred_info_type: 'balanced'
-      }
     }
 
-    setProjects([project, ...projects])
-    setNewProject({ name: '', description: '', research_question: '', thesis: '' })
-    setShowCreateForm(false)
+    loadProjects()
+  }, [])
+
+  useEffect(() => {
+    let filtered = [...projects]
+
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(project =>
+        project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    }
+
+    // Apply status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(project => project.status === statusFilter)
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "recent":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        case "name":
+          return a.name.localeCompare(b.name)
+        case "papers":
+          return b.papers.length - a.papers.length
+        default:
+          return 0
+      }
+    })
+
+    setFilteredProjects(filtered)
+  }, [searchQuery, statusFilter, sortBy, projects])
+
+  const handleDeleteProject = (projectId: string) => {
+    const updated = projects.filter(p => p.id !== projectId)
+    setProjects(updated)
+    localStorage.setItem('resyft_projects', JSON.stringify(updated))
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+  const handleArchiveProject = (projectId: string) => {
+    const updated = projects.map(p =>
+      p.id === projectId ? { ...p, status: 'archived' as const } : p
     )
+    setProjects(updated)
+    localStorage.setItem('resyft_projects', JSON.stringify(updated))
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-700'
+      case 'completed':
+        return 'bg-blue-100 text-blue-700'
+      case 'archived':
+        return 'bg-gray-100 text-gray-700'
+      default:
+        return 'bg-gray-100 text-gray-700'
+    }
+  }
+
+  const getProgress = (project: Project) => {
+    if (!project.deadline) return null
+    const now = new Date()
+    const created = new Date(project.createdAt)
+    const deadline = new Date(project.deadline)
+    const total = deadline.getTime() - created.getTime()
+    const elapsed = now.getTime() - created.getTime()
+    return Math.min(100, Math.max(0, (elapsed / total) * 100))
   }
 
   return (
-    <DashboardLayout breadcrumbs={[{ label: "Projects" }]}>
-      <div className="space-y-6">
-        {/* Page Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl text-display text-gray-900 mb-2">My Projects</h1>
-            <p className="text-gray-600 text-body-premium">
-              Organize your research with custom analysis configurations
-            </p>
+    <SidebarProvider defaultOpen={false}>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b">
+          <div className="flex h-16 items-center gap-4 px-6">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="h-6" />
+            <div className="flex-1">
+              <h1 className="text-xl font-semibold">Research Projects</h1>
+            </div>
+            <Button onClick={() => router.push('/projects/new')} size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              New Project
+            </Button>
           </div>
-          <Button
-            onClick={() => setShowCreateForm(true)}
-            className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Project
-          </Button>
-        </div>
+        </header>
 
-        {/* Create Project Form */}
-        {showCreateForm && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <Card className="shadow-xl border-0">
-              <CardHeader>
-                <CardTitle className="text-headline">Create New Project</CardTitle>
-                <CardDescription className="text-body-premium">
-                  Set up your research project with custom analysis preferences
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm text-subhead text-gray-700 mb-2 block">
-                      Project Name *
-                    </label>
-                    <Input
-                      placeholder="e.g., Machine Learning in Healthcare"
-                      value={newProject.name}
-                      onChange={(e) => setNewProject({...newProject, name: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-subhead text-gray-700 mb-2 block">
-                      Description
-                    </label>
-                    <Input
-                      placeholder="Brief description of your research area"
-                      value={newProject.description}
-                      onChange={(e) => setNewProject({...newProject, description: e.target.value})}
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="text-sm text-subhead text-gray-700 mb-2 block">
-                    Research Question/Topic *
-                  </label>
-                  <Textarea
-                    placeholder="What is the main research question you're investigating?"
-                    value={newProject.research_question}
-                    onChange={(e) => setNewProject({...newProject, research_question: e.target.value})}
-                    className="min-h-20"
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-sm text-subhead text-gray-700 mb-2 block">
-                    Thesis (Optional)
-                  </label>
-                  <Textarea
-                    placeholder="Your hypothesis or thesis statement that sources should support"
-                    value={newProject.thesis}
-                    onChange={(e) => setNewProject({...newProject, thesis: e.target.value})}
-                    className="min-h-20"
-                  />
-                </div>
-                
-                <div className="flex gap-3 pt-4">
+        <main className="flex-1 p-6">
+          {/* Filters and Controls */}
+          <div className="space-y-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Search projects..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[140px]">
+                    <ArrowUpDown className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="Sort" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="recent">Most Recent</SelectItem>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="papers">Paper Count</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <div className="flex border rounded-md">
                   <Button
-                    onClick={createProject}
-                    disabled={!newProject.name.trim() || !newProject.research_question.trim()}
-                    className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+                    variant={viewMode === "grid" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode("grid")}
+                    className="rounded-r-none"
                   >
-                    Create Project
+                    <Grid className="w-4 h-4" />
                   </Button>
-                  <Button variant="outline" onClick={() => setShowCreateForm(false)}>
-                    Cancel
+                  <Button
+                    variant={viewMode === "list" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode("list")}
+                    className="rounded-l-none"
+                  >
+                    <List className="w-4 h-4" />
                   </Button>
                 </div>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="flex gap-4 text-sm text-gray-600">
+              <span>{filteredProjects.length} projects</span>
+              <span>•</span>
+              <span>{filteredProjects.reduce((acc, p) => acc + p.papers.length, 0)} total papers</span>
+              <span>•</span>
+              <span>{filteredProjects.filter(p => p.status === 'active').length} active</span>
+            </div>
+          </div>
+
+          {/* Projects Grid/List */}
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3].map(i => (
+                <Card key={i} className="animate-pulse">
+                  <CardHeader className="h-32 bg-gray-100" />
+                  <CardContent className="h-24 bg-gray-50" />
+                </Card>
+              ))}
+            </div>
+          ) : filteredProjects.length === 0 ? (
+            <Card className="text-center py-12">
+              <CardContent>
+                <FolderOpen className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="font-semibold text-lg mb-2">No projects found</h3>
+                <p className="text-gray-600 mb-4">
+                  {searchQuery ? "Try adjusting your search terms" : "Create your first project to get started"}
+                </p>
+                <Button onClick={() => router.push('/projects/new')}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Project
+                </Button>
               </CardContent>
             </Card>
-          </motion.div>
-        )}
-
-        {/* Projects Grid */}
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 inter-regular">Loading your projects...</p>
-          </div>
-        ) : projects.length === 0 ? (
-          <Card className="text-center py-12 shadow-lg border-2 border-dashed border-gray-300">
-            <CardContent>
-              <FolderOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl text-headline text-gray-900 mb-2">No Projects Yet</h3>
-              <p className="text-gray-600 text-body-premium mb-6">
-                Create your first project to start organizing your research with custom AI analysis
-              </p>
-              <Button
-                onClick={() => setShowCreateForm(true)}
-                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Your First Project
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project, index) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card className="h-full shadow-lg hover:shadow-xl transition-all duration-300 group border-0">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg text-headline text-gray-900 mb-2">
-                          {project.name}
-                        </CardTitle>
-                        <CardDescription className="text-body-premium">
-                          {project.description}
-                        </CardDescription>
+          ) : viewMode === "grid" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredProjects.map((project, index) => (
+                <motion.div
+                  key={project.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                >
+                  <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <CardTitle 
+                            className="text-base hover:text-blue-600 transition-colors"
+                            onClick={() => router.push(`/projects/${project.id}`)}
+                          >
+                            {project.name}
+                          </CardTitle>
+                          <Badge className={`mt-2 ${getStatusColor(project.status)}`}>
+                            {project.status}
+                          </Badge>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => router.push(`/projects/${project.id}/edit`)}>
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleArchiveProject(project.id)}>
+                              <Archive className="w-4 h-4 mr-2" />
+                              Archive
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleDeleteProject(project.id)}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                      <Badge variant="secondary" className="ml-2">
-                        {project.sources_count} sources
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h4 className="text-sm text-subhead text-gray-700 mb-1">Research Question</h4>
-                      <p className="text-sm text-gray-600 text-body-premium line-clamp-2">
-                        {project.research_question}
+                    </CardHeader>
+                    <CardContent 
+                      className="space-y-3"
+                      onClick={() => router.push(`/projects/${project.id}`)}
+                    >
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {project.description}
                       </p>
-                    </div>
-                    
-                    {project.thesis && (
-                      <div>
-                        <h4 className="text-sm text-subhead text-gray-700 mb-1">Thesis</h4>
-                        <p className="text-sm text-gray-600 text-body-premium line-clamp-2">
-                          {project.thesis}
-                        </p>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <FileText className="w-4 h-4" />
+                          <span>{project.papers.length} papers</span>
+                        </div>
+                        
+                        {project.deadline && (
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Calendar className="w-4 h-4" />
+                            <span>Due {new Date(project.deadline).toLocaleDateString()}</span>
+                          </div>
+                        )}
+                        
+                        {project.collaborators.length > 0 && (
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Users className="w-4 h-4" />
+                            <span>{project.collaborators.length} collaborators</span>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    
-                    <div className="flex flex-wrap gap-2">
-                      {project.configuration.extract_quotes && (
-                        <Badge variant="outline" className="text-xs">Quotes</Badge>
+
+                      {project.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {project.tags.slice(0, 3).map(tag => (
+                            <Badge key={tag} variant="outline" className="text-xs">
+                              <Hash className="w-3 h-3 mr-1" />
+                              {tag}
+                            </Badge>
+                          ))}
+                          {project.tags.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{project.tags.length - 3}
+                            </Badge>
+                          )}
+                        </div>
                       )}
-                      {project.configuration.extract_statistics && (
-                        <Badge variant="outline" className="text-xs">Statistics</Badge>
+
+                      {getProgress(project) !== null && (
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-xs text-gray-600">
+                            <span>Progress</span>
+                            <span>{Math.round(getProgress(project)!)}%</span>
+                          </div>
+                          <Progress value={getProgress(project)!} className="h-1.5" />
+                        </div>
                       )}
-                      {project.configuration.extract_methods && (
-                        <Badge variant="outline" className="text-xs">Methods</Badge>
-                      )}
-                      <Badge variant="outline" className="text-xs capitalize">
-                        {project.configuration.preferred_info_type}
-                      </Badge>
-                    </div>
-                    
-                    <div className="flex gap-2 pt-4">
-                      <Link href={`/projects/${project.id}`} className="flex-1">
-                        <Button className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700">
-                          <FileText className="w-4 h-4 mr-2" />
-                          Open
-                        </Button>
-                      </Link>
-                      <Link href={`/projects/${project.id}/settings`}>
-                        <Button variant="outline" size="icon">
-                          <Settings className="w-4 h-4" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </div>
-    </DashboardLayout>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredProjects.map((project, index) => (
+                <motion.div
+                  key={project.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                >
+                  <Card 
+                    className="hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => router.push(`/projects/${project.id}`)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center gap-3">
+                            <h3 className="font-semibold hover:text-blue-600 transition-colors">
+                              {project.name}
+                            </h3>
+                            <Badge className={getStatusColor(project.status)}>
+                              {project.status}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            {project.description}
+                          </p>
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <span className="flex items-center gap-1">
+                              <FileText className="w-3 h-3" />
+                              {project.papers.length} papers
+                            </span>
+                            {project.deadline && (
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                Due {new Date(project.deadline).toLocaleDateString()}
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              Created {new Date(project.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="sm">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation()
+                              router.push(`/projects/${project.id}/edit`)
+                            }}>
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation()
+                              handleArchiveProject(project.id)
+                            }}>
+                              <Archive className="w-4 h-4 mr-2" />
+                              Archive
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDeleteProject(project.id)
+                              }}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
