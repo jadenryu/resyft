@@ -14,9 +14,12 @@ export const metadata: Metadata = {
   title: "Resyft - Research Paper Analysis",
   description: "Extract and distill essential data from research papers quickly and accurately",
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
-    apple: '/icon.png',
+    icon: [
+      { url: '/icon.png', sizes: '32x32', type: 'image/png' },
+      { url: '/resyft-2.png', sizes: 'any', type: 'image/png' }
+    ],
+    shortcut: '/resyft-2.png',
+    apple: '/resyft-2.png',
   },
 };
 
