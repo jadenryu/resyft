@@ -91,17 +91,18 @@ export function GuidedTour({ tourId, steps, onComplete, onSkip }: GuidedTourProp
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 pointer-events-none">
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-black/20 pointer-events-auto" />
+        {/* Enhanced Backdrop with better visibility */}
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto" />
         
         {/* Tour Card */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto"
         >
-          <Card className="w-96 shadow-2xl border-2 border-blue-200">
+          <Card className="w-[420px] shadow-2xl border-2 border-blue-300 bg-white/95 backdrop-blur-md">
             <CardContent className="p-0">
               {/* Header */}
               <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
@@ -153,12 +154,12 @@ export function GuidedTour({ tourId, steps, onComplete, onSkip }: GuidedTourProp
                     Previous
                   </Button>
                   
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     {steps.map((_, index) => (
                       <div
                         key={index}
-                        className={`w-2 h-2 rounded-full ${
-                          index === currentStep ? 'bg-blue-600' : 
+                        className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                          index === currentStep ? 'bg-blue-600 scale-110' : 
                           index < currentStep ? 'bg-green-500' : 'bg-gray-300'
                         }`}
                       />

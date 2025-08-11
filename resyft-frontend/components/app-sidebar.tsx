@@ -20,6 +20,7 @@ import {
   Settings,
   HelpCircle,
   LogOut,
+  MessageSquare,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -44,8 +45,8 @@ const data = {
   },
   navMain: [
     {
-      title: "Home",
-      url: "/",
+      title: "Overview",
+      url: "/overview",
       icon: Home,
       isActive: true,
     },
@@ -79,6 +80,11 @@ const data = {
       url: "/search",
       icon: Search,
     },
+    {
+      title: "Research Agent",
+      url: "/research-agent",
+      icon: MessageSquare,
+    },
   ],
   navSecondary: [
     {
@@ -92,23 +98,7 @@ const data = {
       icon: HelpCircle,
     },
   ],
-  projects: [
-    {
-      name: "Machine Learning Research",
-      url: "/projects/ml-research",
-      icon: Bot,
-    },
-    {
-      name: "Climate Studies",
-      url: "/projects/climate",
-      icon: PieChart,
-    },
-    {
-      name: "Medical Analysis",
-      url: "/projects/medical",
-      icon: FileText,
-    },
-  ],
+  projects: [],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

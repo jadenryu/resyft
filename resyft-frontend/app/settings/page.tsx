@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { AppSidebar } from "@/components/app-sidebar"
+import { BackNavigation } from "@/components/back-navigation"
 import {
   SidebarInset,
   SidebarProvider,
@@ -144,16 +145,32 @@ export default function SettingsPage() {
     setSaving(true)
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Save to localStorage
+      // Save to localStorage first
       localStorage.setItem('resyft_extraction_settings', JSON.stringify(settings))
+      
+      // Also send to API endpoint to validate integration
+      const testResponse = await fetch('/api/extract', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          paper_url: 'test-validation',
+          extraction_type: 'all',
+          settings: settings
+        }),
+      })
+
+      if (testResponse.ok) {
+        const testData = await testResponse.json()
+        console.log('Settings integration validated:', testData.system_prompt ? 'Success' : 'Failed')
+      }
       
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
     } catch (error) {
-      setErrors(["Failed to save settings. Please try again."])
+      console.error('Settings save error:', error)
+      setErrors(["Settings saved locally but integration test failed. This won't affect functionality."])
     }
     
     setSaving(false)
@@ -259,6 +276,8 @@ export default function SettingsPage() {
         <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b">
           <div className="flex h-16 items-center gap-4 px-6">
             <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="h-6" />
+            <BackNavigation />
             <Separator orientation="vertical" className="h-6" />
             <div className="flex-1">
               <h1 className="text-xl font-semibold">Extraction Settings</h1>
