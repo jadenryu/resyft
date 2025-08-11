@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
+import { ProjectTutorial } from "@/components/project-tutorial"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -39,7 +40,8 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-  Archive
+  Archive,
+  Lightbulb
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -71,6 +73,7 @@ export default function ProjectsPage() {
   const [sortBy, setSortBy] = useState<string>("recent")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [loading, setLoading] = useState(true)
+  const [showTutorial, setShowTutorial] = useState(false)
 
   useEffect(() => {
     // Load projects from localStorage
@@ -81,50 +84,13 @@ export default function ProjectsPage() {
         setProjects(parsed)
         setFilteredProjects(parsed)
       } else {
-        // Demo projects
-        const demoProjects: Project[] = [
-          {
-            id: "1",
-            name: "Climate Change Impact Study",
-            description: "Analyzing the effects of climate change on coastal ecosystems and biodiversity",
-            thesis: "Climate change significantly impacts coastal ecosystem biodiversity through rising sea levels and temperature changes",
-            field: "Environmental Science",
-            deadline: "2024-12-31",
-            collaborators: ["jane.doe@university.edu"],
-            tags: ["climate", "ecosystems", "biodiversity"],
-            createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-            papers: Array(12).fill(null),
-            status: "active"
-          },
-          {
-            id: "2",
-            name: "Machine Learning in Healthcare",
-            description: "Exploring applications of deep learning in medical diagnosis and treatment planning",
-            thesis: "Deep learning models can improve diagnostic accuracy in medical imaging",
-            field: "Computer Science",
-            collaborators: [],
-            tags: ["AI", "healthcare", "deep-learning"],
-            createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-            papers: Array(8).fill(null),
-            status: "active"
-          },
-          {
-            id: "3",
-            name: "COVID-19 Vaccine Efficacy",
-            description: "Meta-analysis of vaccine effectiveness across different populations",
-            thesis: "mRNA vaccines show consistent efficacy across diverse demographic groups",
-            field: "Medicine",
-            deadline: "2024-06-30",
-            collaborators: ["john.smith@hospital.org", "mary.johnson@research.edu"],
-            tags: ["COVID-19", "vaccines", "public-health"],
-            createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-            papers: Array(25).fill(null),
-            status: "completed"
-          }
-        ]
-        setProjects(demoProjects)
-        setFilteredProjects(demoProjects)
-        localStorage.setItem('resyft_projects', JSON.stringify(demoProjects))
+        // No saved projects - check if should show tutorial
+        const hasSeenTutorial = localStorage.getItem('resyft_projects_tutorial_seen')
+        if (!hasSeenTutorial) {
+          setShowTutorial(true)
+        }
+        setProjects([])
+        setFilteredProjects([])
       }
       setLoading(false)
     }
@@ -180,6 +146,16 @@ export default function ProjectsPage() {
     localStorage.setItem('resyft_projects', JSON.stringify(updated))
   }
 
+  const handleTutorialComplete = () => {
+    localStorage.setItem('resyft_projects_tutorial_seen', 'true')
+    setShowTutorial(false)
+  }
+
+  const handleTutorialSkip = () => {
+    localStorage.setItem('resyft_projects_tutorial_seen', 'true')
+    setShowTutorial(false)
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -207,6 +183,12 @@ export default function ProjectsPage() {
     <SidebarProvider defaultOpen={false}>
       <AppSidebar />
       <SidebarInset>
+        {showTutorial && (
+          <ProjectTutorial 
+            onComplete={handleTutorialComplete}
+            onSkip={handleTutorialSkip}
+          />
+        )}
         <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b">
           <div className="flex h-16 items-center gap-4 px-6">
             <SidebarTrigger className="-ml-1" />
@@ -214,7 +196,12 @@ export default function ProjectsPage() {
             <div className="flex-1">
               <h1 className="text-xl font-semibold">Research Projects</h1>
             </div>
-            <Button onClick={() => router.push('/projects/new')} size="sm">
+            <Button 
+              id="tutorial-new-project"
+              onClick={() => router.push('/projects/new')} 
+              size="sm"
+              className="bg-blue-600 text-white hover:bg-blue-700"
+            >
               <Plus className="w-4 h-4 mr-2" />
               New Project
             </Button>
@@ -225,7 +212,7 @@ export default function ProjectsPage() {
           {/* Filters and Controls */}
           <div className="space-y-4 mb-6">
             <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
+              <div id="tutorial-search" className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   placeholder="Search projects..."
@@ -235,7 +222,7 @@ export default function ProjectsPage() {
                 />
               </div>
               
-              <div className="flex gap-2">
+              <div id="tutorial-filters" className="flex gap-2">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[140px]">
                     <SelectValue placeholder="Status" />
@@ -260,20 +247,20 @@ export default function ProjectsPage() {
                   </SelectContent>
                 </Select>
 
-                <div className="flex border rounded-md">
+                <div id="tutorial-view-modes" className="flex border rounded-md">
                   <Button
-                    variant={viewMode === "grid" ? "default" : "ghost"}
+                    variant={viewMode === "grid" ? "secondary" : "ghost"}
                     size="sm"
                     onClick={() => setViewMode("grid")}
-                    className="rounded-r-none"
+                    className={`rounded-r-none ${viewMode === "grid" ? "bg-blue-600 text-white hover:bg-blue-700" : ""}`}
                   >
                     <Grid className="w-4 h-4" />
                   </Button>
                   <Button
-                    variant={viewMode === "list" ? "default" : "ghost"}
+                    variant={viewMode === "list" ? "secondary" : "ghost"}
                     size="sm"
                     onClick={() => setViewMode("list")}
-                    className="rounded-l-none"
+                    className={`rounded-l-none ${viewMode === "list" ? "bg-blue-600 text-white hover:bg-blue-700" : ""}`}
                   >
                     <List className="w-4 h-4" />
                   </Button>
@@ -309,10 +296,25 @@ export default function ProjectsPage() {
                 <p className="text-gray-600 mb-4">
                   {searchQuery ? "Try adjusting your search terms" : "Create your first project to get started"}
                 </p>
-                <Button onClick={() => router.push('/projects/new')}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Project
-                </Button>
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={() => router.push('/projects/new')}
+                    className="bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Project
+                  </Button>
+                  {!searchQuery && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => setShowTutorial(true)}
+                      className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                    >
+                      <Lightbulb className="w-4 h-4 mr-2" />
+                      Take Tutorial
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ) : viewMode === "grid" ? (

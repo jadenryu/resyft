@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { SectionNav } from '@/components/section-nav'
 import { 
   Zap, 
   FileText, 
@@ -109,6 +110,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
+      {/* Section Navigation */}
+      <SectionNav />
       {/* Navigation */}
       <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-lg border-b border-gray-200 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -187,18 +190,21 @@ export default function Home() {
                 <div className="flex justify-center mb-6">
                   <div className="bg-gray-100 p-1 rounded-lg">
                     <Button
-                      variant={analysisType === 'url' ? 'default' : 'ghost'}
+                      variant="ghost"
                       size="sm"
                       onClick={() => setAnalysisType('url')}
-                      className="mr-1"
+                      className={`mr-1 font-semibold ${analysisType === 'url' ? 'bg-blue-600 !text-white hover:bg-blue-700 hover:!text-white' : '!text-black hover:!text-black hover:bg-gray-200'}`}
+                      style={{ transition: 'all 0.05s ease-in-out' }}
                     >
                       <LinkIcon className="w-4 h-4 mr-2" />
                       URL
                     </Button>
                     <Button
-                      variant={analysisType === 'text' ? 'default' : 'ghost'}
+                      variant="ghost"
                       size="sm"
                       onClick={() => setAnalysisType('text')}
+                      className={`font-semibold ${analysisType === 'text' ? 'bg-blue-600 !text-white hover:bg-blue-700 hover:!text-white' : '!text-black hover:!text-black hover:bg-gray-200'}`}
+                      style={{ transition: 'all 0.05s ease-in-out' }}
                     >
                       <FileText className="w-4 h-4 mr-2" />
                       Text
@@ -495,7 +501,7 @@ export default function Home() {
       </section>
 
       {/* Reviews Section */}
-      <section className="py-20 px-4 bg-gray-50">
+      <section id="reviews-section" className="py-20 px-4 bg-gray-50">
         <div className="container mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -584,7 +590,7 @@ export default function Home() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 px-4 bg-white">
+      <section id="faq-section" className="py-20 px-4 bg-white">
         <div className="container mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -675,7 +681,7 @@ export default function Home() {
                 <p className="text-gray-600 mb-4">
                   Our research specialists are here to help you get the most out of Resyft.
                 </p>
-                <Link href="/contact">
+                <Link href="/support">
                   <Button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700">
                     Contact Support
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -704,16 +710,19 @@ export default function Home() {
                 Join thousands of researchers who have streamlined their literature review process and discovered insights faster than ever before.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
-                <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 rounded-full h-12 px-8 text-base font-semibold">
-                  Start Free Trial
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
+                <Link href="/signup">
+                  <Button size="lg" className="bg-white !text-black hover:bg-gray-100 hover:!text-black rounded-full h-12 px-8 text-base font-bold border-2 border-gray-200">
+                    Launch Now!
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </Link>
                 <Button size="lg" variant="outline" className="border-white bg-transparent text-white hover:bg-white hover:text-gray-900 rounded-full h-12 px-8 text-base font-semibold">
-                  Schedule a Demo
+                  Schedule a Pro Demo
+                  <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </div>
               <p className="text-sm text-gray-400">
-                No credit card required. 14-day free trial. Cancel anytime.
+                No credit card required. Free forever. Upgrade anytime.
               </p>
             </div>
           </motion.div>

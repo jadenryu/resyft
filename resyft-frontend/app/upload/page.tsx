@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { AppSidebar } from "@/components/app-sidebar"
+import { BackNavigation } from "@/components/back-navigation"
 import {
   SidebarInset,
   SidebarProvider,
@@ -30,12 +31,16 @@ import {
   ArrowRight,
   FolderPlus,
   Clock,
-  FileCheck
+  FileCheck,
+  AlertTriangle
 } from "lucide-react"
+import { validateAcademicURL, validateAcademicText, validateAcademicFile, sanitizeInput } from "@/lib/validators"
+import { useRealtimeValidation } from "@/hooks/use-validation"
 
 interface ValidationError {
   field: string
   message: string
+  type?: 'error' | 'warning'
 }
 
 export default function UploadPage() {
@@ -50,95 +55,96 @@ export default function UploadPage() {
   const [errors, setErrors] = useState<ValidationError[]>([])
   const [success, setSuccess] = useState(false)
   const [dragActive, setDragActive] = useState(false)
+  const [existingProjects, setExistingProjects] = useState<Array<{id: string, name: string}>>([])
+
+  useEffect(() => {
+    // Load existing projects from localStorage
+    const savedProjects = JSON.parse(localStorage.getItem('resyft_projects') || '[]')
+    setExistingProjects(savedProjects.map((proj: any) => ({
+      id: proj.id,
+      name: proj.name
+    })))
+  }, [])
+  
+  // Real-time validation hooks
+  const urlValidation = useRealtimeValidation(url, 'url', {
+    debounceMs: 800,
+    minLengthBeforeValidation: 10
+  })
+  
+  const textValidation = useRealtimeValidation(text, 'text', {
+    debounceMs: 1000,
+    minLengthBeforeValidation: 50
+  })
 
   const validateFile = (file: File): ValidationError[] => {
+    const validationResult = validateAcademicFile(file)
     const errors: ValidationError[] = []
-    const maxSize = 10 * 1024 * 1024 // 10MB
-    const allowedTypes = ['application/pdf', 'text/plain']
     
-    if (file.size > maxSize) {
+    validationResult.errors.forEach(error => {
       errors.push({
         field: 'file',
-        message: 'File size must be less than 10MB'
+        message: error,
+        type: 'error'
       })
-    }
+    })
     
-    if (!allowedTypes.includes(file.type)) {
+    validationResult.warnings?.forEach(warning => {
       errors.push({
         field: 'file',
-        message: 'Only PDF and TXT files are supported'
+        message: warning,
+        type: 'warning'
       })
-    }
+    })
     
     return errors
   }
 
-  const validateUrl = (url: string): ValidationError[] => {
+  const validateUrl = async (url: string): Promise<ValidationError[]> => {
+    const validationResult = await validateAcademicURL(url)
     const errors: ValidationError[] = []
     
-    if (!url) {
+    validationResult.errors.forEach(error => {
       errors.push({
         field: 'url',
-        message: 'URL is required'
+        message: error,
+        type: 'error'
       })
-      return errors
-    }
+    })
     
-    try {
-      const urlObj = new URL(url)
-      const validDomains = [
-        'arxiv.org',
-        'pubmed.ncbi.nlm.nih.gov',
-        'scholar.google.com',
-        'sciencedirect.com',
-        'nature.com',
-        'science.org',
-        'ieee.org',
-        'springer.com',
-        'wiley.com',
-        'plos.org',
-        'biorxiv.org',
-        'medrxiv.org'
-      ]
-      
-      const isValidDomain = validDomains.some(domain => 
-        urlObj.hostname.includes(domain)
-      )
-      
-      if (!isValidDomain) {
-        errors.push({
-          field: 'url',
-          message: `URL must be from a supported academic source. Supported domains include: ${validDomains.slice(0, 5).join(', ')}, and more.`
-        })
-      }
-    } catch {
+    validationResult.warnings?.forEach(warning => {
       errors.push({
         field: 'url',
-        message: 'Please enter a valid URL'
+        message: warning,
+        type: 'warning'
       })
-    }
+    })
     
     return errors
   }
 
   const validateText = (text: string): ValidationError[] => {
+    const validationResult = validateAcademicText(text, {
+      checkLanguage: true,
+      checkQuality: true
+    })
     const errors: ValidationError[] = []
-    const minLength = 100
-    const maxLength = 50000
     
-    if (!text || text.length < minLength) {
+    validationResult.errors.forEach(error => {
       errors.push({
         field: 'text',
-        message: `Text must be at least ${minLength} characters`
+        message: error,
+        type: 'error'
       })
-    }
+    })
     
-    if (text.length > maxLength) {
+    validationResult.warnings?.forEach(warning => {
       errors.push({
         field: 'text',
-        message: `Text must be less than ${maxLength} characters`
+        message: warning,
+        type: 'warning'
       })
-    }
+    })
     
     return errors
   }
@@ -200,9 +206,11 @@ export default function UploadPage() {
         validationErrors = validateFile(file)
       }
     } else if (uploadType === "url") {
-      validationErrors = validateUrl(url)
+      validationErrors = await validateUrl(url)
     } else if (uploadType === "text") {
-      validationErrors = validateText(text)
+      const sanitizedText = sanitizeInput(text)
+      setText(sanitizedText)
+      validationErrors = validateText(sanitizedText)
     }
     
     // Validate title
@@ -221,14 +229,84 @@ export default function UploadPage() {
     setProcessing(true)
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Prepare payload for backend
+      let paperData: any = {
+        title,
+        extraction_type: 'all'
+      }
+      
+      // Handle different upload types
+      if (uploadType === "file" && file) {
+        // For file upload, we'd need to convert to text or handle file upload differently
+        paperData.paper_text = "File upload processing not yet implemented - using text extraction"
+        paperData.paper_url = ""
+      } else if (uploadType === "url") {
+        paperData.paper_url = url
+        paperData.paper_text = ""
+      } else if (uploadType === "text") {
+        paperData.paper_text = text
+        paperData.paper_url = ""
+      }
+      
+      // Call the extraction API
+      const response = await fetch('/api/extract', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(paperData)
+      })
+      
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`)
+      }
+      
+      const result = await response.json()
+      
+      // Store the result in localStorage for later access
+      const savedProjects = JSON.parse(localStorage.getItem('resyft_projects') || '[]')
+      const paperEntry = {
+        id: result.id || `paper_${Date.now()}`,
+        title,
+        uploadType,
+        uploadedAt: new Date().toISOString(),
+        status: 'completed',
+        analysisResult: result,
+        ...(uploadType === "url" && { url }),
+        ...(uploadType === "file" && file && { fileName: file.name, fileSize: file.size }),
+        ...(uploadType === "text" && { textLength: text.length })
+      }
+      
+      if (project && project !== "none") {
+        // Add to existing project
+        const updatedProjects = savedProjects.map((proj: any) => {
+          if (proj.id === project) {
+            return {
+              ...proj,
+              papers: [...proj.papers, paperEntry],
+              updatedAt: new Date().toISOString()
+            }
+          }
+          return proj
+        })
+        localStorage.setItem('resyft_projects', JSON.stringify(updatedProjects))
+      } else {
+        // Store as individual paper
+        const individualPapers = JSON.parse(localStorage.getItem('resyft_individual_papers') || '[]')
+        individualPapers.push(paperEntry)
+        localStorage.setItem('resyft_individual_papers', JSON.stringify(individualPapers))
+      }
       
       setSuccess(true)
       setTimeout(() => {
-        router.push('/dashboard')
+        if (project && project !== "none") {
+          router.push(`/projects/${project}`)
+        } else {
+          router.push('/dashboard')
+        }
       }, 1500)
     } catch (error) {
+      console.error('Upload error:', error)
       setErrors([{
         field: 'general',
         message: 'Failed to upload paper. Please try again.'
@@ -237,11 +315,6 @@ export default function UploadPage() {
     }
   }
 
-  const existingProjects = [
-    { id: "1", name: "Climate Change Research" },
-    { id: "2", name: "Machine Learning Applications" },
-    { id: "3", name: "Medical Studies Review" }
-  ]
 
   return (
     <SidebarProvider defaultOpen={false}>
@@ -250,6 +323,8 @@ export default function UploadPage() {
         <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b">
           <div className="flex h-16 items-center gap-4 px-6">
             <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="h-6" />
+            <BackNavigation />
             <Separator orientation="vertical" className="h-6" />
             <div className="flex-1">
               <h1 className="text-xl font-semibold">Upload Paper</h1>
@@ -371,35 +446,103 @@ export default function UploadPage() {
                     <TabsContent value="url" className="space-y-4">
                       <div>
                         <Label htmlFor="url">Paper URL</Label>
-                        <Input
-                          id="url"
-                          type="url"
-                          placeholder="https://arxiv.org/pdf/..."
-                          value={url}
-                          onChange={(e) => setUrl(e.target.value)}
-                          className="mt-2"
-                        />
-                        <p className="text-xs text-gray-500 mt-2">
-                          Supported: arXiv, PubMed, Nature, Science, IEEE, and more
-                        </p>
+                        <div className="relative">
+                          <Input
+                            id="url"
+                            type="url"
+                            placeholder="https://arxiv.org/pdf/..."
+                            value={url}
+                            onChange={(e) => setUrl(e.target.value)}
+                            className={`mt-2 pr-10 ${
+                              urlValidation.errors.length > 0 ? 'border-red-500 focus:ring-red-500' : 
+                              urlValidation.warnings.length > 0 ? 'border-yellow-500 focus:ring-yellow-500' :
+                              url && urlValidation.isValid ? 'border-green-500 focus:ring-green-500' : ''
+                            }`}
+                          />
+                          {urlValidation.isValidating && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 mt-1">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                            </div>
+                          )}
+                          {!urlValidation.isValidating && url && urlValidation.isValid && urlValidation.errors.length === 0 && (
+                            <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 mt-1 w-4 h-4 text-green-600" />
+                          )}
+                          {!urlValidation.isValidating && urlValidation.errors.length > 0 && (
+                            <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 mt-1 w-4 h-4 text-red-600" />
+                          )}
+                          {!urlValidation.isValidating && urlValidation.errors.length === 0 && urlValidation.warnings.length > 0 && (
+                            <AlertTriangle className="absolute right-3 top-1/2 -translate-y-1/2 mt-1 w-4 h-4 text-yellow-600" />
+                          )}
+                        </div>
+                        
+                        {/* Real-time validation feedback */}
+                        {urlValidation.errors.length > 0 && (
+                          <div className="mt-2 text-xs text-red-600">
+                            {urlValidation.errors[0]}
+                          </div>
+                        )}
+                        {urlValidation.warnings.length > 0 && urlValidation.errors.length === 0 && (
+                          <div className="mt-2 text-xs text-yellow-600">
+                            {urlValidation.warnings[0]}
+                          </div>
+                        )}
+                        {!urlValidation.errors.length && !urlValidation.warnings.length && (
+                          <p className="text-xs text-gray-500 mt-2">
+                            Supported: arXiv, PubMed, Nature, Science, IEEE, and more
+                          </p>
+                        )}
                       </div>
                     </TabsContent>
 
                     <TabsContent value="text" className="space-y-4">
                       <div>
                         <Label htmlFor="text">Paper Text</Label>
-                        <Textarea
-                          id="text"
-                          placeholder="Paste the full text of the research paper here..."
-                          value={text}
-                          onChange={(e) => setText(e.target.value)}
-                          className="mt-2 min-h-[200px]"
-                        />
+                        <div className="relative">
+                          <Textarea
+                            id="text"
+                            placeholder="Paste the full text of the research paper here..."
+                            value={text}
+                            onChange={(e) => setText(e.target.value)}
+                            className={`mt-2 min-h-[200px] ${
+                              textValidation.errors.length > 0 ? 'border-red-500 focus:ring-red-500' : 
+                              textValidation.warnings.length > 0 ? 'border-yellow-500 focus:ring-yellow-500' :
+                              text.length >= 100 && textValidation.isValid ? 'border-green-500 focus:ring-green-500' : ''
+                            }`}
+                          />
+                          {textValidation.isValidating && (
+                            <div className="absolute right-3 top-3">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Real-time validation feedback */}
+                        {textValidation.errors.length > 0 && (
+                          <Alert variant="destructive" className="mt-2">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription className="text-xs">
+                              {textValidation.errors[0]}
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                        {textValidation.warnings.length > 0 && textValidation.errors.length === 0 && (
+                          <Alert className="border-yellow-200 bg-yellow-50 mt-2">
+                            <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                            <AlertDescription className="text-xs text-yellow-800">
+                              {textValidation.warnings[0]}
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                        
                         <div className="flex justify-between mt-2">
                           <p className="text-xs text-gray-500">
                             Min: 100 characters • Max: 50,000 characters
                           </p>
-                          <p className="text-xs text-gray-600">
+                          <p className={`text-xs ${
+                            text.length < 100 ? 'text-red-600' : 
+                            text.length > 50000 ? 'text-red-600' : 
+                            'text-gray-600'
+                          }`}>
                             {text.length} / 50,000
                           </p>
                         </div>
@@ -450,13 +593,26 @@ export default function UploadPage() {
                     </div>
                   </div>
 
-                  {/* Error Messages */}
-                  {errors.length > 0 && (
+                  {/* Error and Warning Messages */}
+                  {errors.filter(e => e.type === 'error' || !e.type).length > 0 && (
                     <Alert variant="destructive">
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>
                         <ul className="list-disc list-inside space-y-1">
-                          {errors.map((error, index) => (
+                          {errors.filter(e => e.type === 'error' || !e.type).map((error, index) => (
+                            <li key={index}>{error.message}</li>
+                          ))}
+                        </ul>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  {errors.filter(e => e.type === 'warning').length > 0 && (
+                    <Alert className="border-yellow-200 bg-yellow-50">
+                      <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                      <AlertDescription className="text-yellow-800">
+                        <ul className="list-disc list-inside space-y-1">
+                          {errors.filter(e => e.type === 'warning').map((error, index) => (
                             <li key={index}>{error.message}</li>
                           ))}
                         </ul>
@@ -486,7 +642,7 @@ export default function UploadPage() {
                     <Button
                       onClick={handleSubmit}
                       disabled={processing || success}
-                      className="min-w-[120px]"
+                      className="min-w-[120px] bg-blue-600 text-white hover:bg-blue-700"
                     >
                       {processing ? (
                         <>

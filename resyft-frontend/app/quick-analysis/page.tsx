@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { AppSidebar } from "@/components/app-sidebar"
+import { BackNavigation } from "@/components/back-navigation"
+import { validateAcademicURL, validateAcademicText, sanitizeInput } from "@/lib/validators"
 import {
   SidebarInset,
   SidebarProvider,
@@ -34,7 +36,8 @@ import {
   Clock,
   Sparkles,
   ExternalLink,
-  ArrowRight
+  ArrowRight,
+  AlertTriangle
 } from "lucide-react"
 
 interface AnalysisResult {
@@ -58,43 +61,113 @@ export default function QuickAnalysisPage() {
   const [progress, setProgress] = useState(0)
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [errors, setErrors] = useState<string[]>([])
+  const [warnings, setWarnings] = useState<string[]>([])
 
-  const validateUrl = (url: string): boolean => {
-    try {
-      new URL(url)
-      const validDomains = [
-        'arxiv.org', 'pubmed.ncbi.nlm.nih.gov', 'scholar.google.com',
-        'sciencedirect.com', 'nature.com', 'science.org', 'ieee.org',
-        'springer.com', 'wiley.com', 'plos.org', 'biorxiv.org', 'medrxiv.org'
-      ]
-      return validDomains.some(domain => url.includes(domain))
-    } catch {
-      return false
+  const performValidation = async (): Promise<boolean> => {
+    setErrors([])
+    setWarnings([])
+    
+    if (inputType === "url") {
+      if (!url.trim()) {
+        setErrors(["Please enter a URL"])
+        return false
+      }
+      
+      const validationResult = await validateAcademicURL(url)
+      setErrors(validationResult.errors)
+      setWarnings(validationResult.warnings || [])
+      
+      return validationResult.isValid
+    } else {
+      if (!text.trim()) {
+        setErrors(["Please enter text to analyze"])
+        return false
+      }
+      
+      const sanitizedText = sanitizeInput(text)
+      setText(sanitizedText)
+      
+      const validationResult = validateAcademicText(sanitizedText, {
+        checkLanguage: true,
+        checkQuality: true
+      })
+      
+      setErrors(validationResult.errors)
+      setWarnings(validationResult.warnings || [])
+      
+      return validationResult.isValid
+    }
+  }
+
+  const performRealAnalysis = async (): Promise<AnalysisResult> => {
+    const inputText = inputType === "url" ? url : text
+    const paperText = inputType === "text" ? text : `URL to analyze: ${url}`
+    
+    const response = await fetch('/api/extract', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        paper_text: paperText,
+        paper_url: inputType === "url" ? url : 'text-analysis',
+        extraction_type: 'quick_analysis',
+        settings: {
+          quotes: { 
+            enabled: true, 
+            maxPerPaper: 5, 
+            priority: 'high_impact' 
+          },
+          statistics: { 
+            enabled: true, 
+            includePValues: true,
+            includeConfidenceIntervals: true,
+            includeEffectSizes: true
+          },
+          summaries: { 
+            enabled: true, 
+            length: 'detailed',
+            focusAreas: ['findings', 'methodology', 'implications'],
+            includeMethodology: true,
+            includeLimitations: true,
+            includeImplications: true
+          }
+        }
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`)
+    }
+
+    const data = await response.json()
+    
+    // Transform API response to AnalysisResult format
+    return {
+      summary: data.results?.summary?.detailed_summary || data.results?.summary?.summary || 'No summary available',
+      keyFindings: data.results?.summary?.key_findings?.map((f: any) => f.finding || f) || [],
+      quotes: data.results?.quotes?.quotes?.map((q: any) => q.text) || [],
+      statistics: data.results?.statistics?.statistics?.map((s: any) => `${s.type}: ${s.value} (${s.context})`) || [],
+      methodology: data.results?.summary?.methodology || 'Methodology details not available',
+      limitations: data.results?.summary?.limitations || 'Limitations not specified',
+      implications: data.results?.summary?.implications || 'Implications not available',
+      relevanceScore: data.results?.relevance?.relevance_score || 0,
+      processingTime: data.processing_time || 2.5
     }
   }
 
   const handleAnalyze = async () => {
-    setErrors([])
+    // Perform validation
+    const isValid = await performValidation()
     
-    // Validation
-    if (inputType === "url") {
-      if (!url.trim()) {
-        setErrors(["Please enter a URL"])
-        return
-      }
-      if (!validateUrl(url)) {
-        setErrors(["Please enter a valid academic paper URL from a supported source"])
-        return
-      }
-    } else {
-      if (!text.trim()) {
-        setErrors(["Please enter text to analyze"])
-        return
-      }
-      if (text.length < 100) {
-        setErrors(["Text must be at least 100 characters long"])
-        return
-      }
+    if (!isValid) {
+      return
+    }
+    
+    // Show warnings but allow proceeding
+    if (warnings.length > 0) {
+      // User can still proceed with warnings
+      console.log('Proceeding with warnings:', warnings)
     }
 
     setAnalyzing(true)
@@ -116,38 +189,26 @@ export default function QuickAnalysisPage() {
       setProgress(step)
     }
 
-    // Mock analysis result
-    const mockResult: AnalysisResult = {
-      summary: inputType === "url" 
-        ? "This research paper investigates the application of machine learning techniques in medical diagnosis, specifically focusing on early disease detection. The study presents a novel approach combining convolutional neural networks with traditional statistical methods to achieve improved diagnostic accuracy. The authors demonstrate that their proposed method achieves 94.2% accuracy in detecting early-stage diseases, significantly outperforming existing approaches."
-        : "The provided text discusses various aspects of research methodology and findings. Key themes include the application of advanced analytical techniques and their implications for the field. The content suggests significant improvements over existing methods with quantifiable results and statistical validation.",
-      keyFindings: [
-        "Machine learning models achieved 94.2% diagnostic accuracy",
-        "Significant improvement over traditional methods (p < 0.001)",
-        "Early disease detection capabilities enhanced by 15%",
-        "Method applicable across multiple medical domains"
-      ],
-      quotes: [
-        "Our proposed CNN architecture demonstrated a 94.2% accuracy rate in tumor detection, representing a substantial improvement over conventional radiological assessment.",
-        "The integration of machine learning with traditional diagnostic methods shows promise for revolutionizing medical practice.",
-        "Early detection capabilities are crucial for improving patient outcomes and reducing healthcare costs."
-      ],
-      statistics: [
-        "Accuracy: 94.2% (95% CI: 92.1-96.3%)",
-        "Sensitivity: 96.7%",
-        "Specificity: 91.8%",
-        "Sample size: n=5,432",
-        "P-value: < 0.001"
-      ],
-      methodology: "The study employed a retrospective analysis using convolutional neural networks trained on a dataset of 5,432 medical images. Cross-validation was performed using 5-fold methodology to ensure robustness of results.",
-      limitations: "The study was limited to specific types of medical images and may not generalize to all diagnostic scenarios. Further validation across diverse populations is needed.",
-      implications: "These findings suggest that AI-assisted diagnosis could significantly improve healthcare outcomes while reducing diagnostic errors and costs.",
-      relevanceScore: 87,
-      processingTime: 4.2
+    try {
+      // Perform real AI analysis using OpenRouter with Google Gemini 2.5 Flash Lite
+      const analysisResult = await performRealAnalysis()
+      setResult(analysisResult)
+    } catch (error) {
+      console.error('Analysis error:', error)
+      // Fallback to basic mock result
+      const fallbackResult: AnalysisResult = {
+        summary: "Analysis could not be completed due to technical error. Please try again.",
+        keyFindings: ["Analysis incomplete due to technical error"],
+        quotes: [],
+        statistics: [],
+        methodology: "Unable to extract methodology details",
+        limitations: "Analysis failed due to technical error",
+        implications: "Cannot determine implications without complete analysis",
+        relevanceScore: 0,
+        processingTime: 0
+      }
+      setResult(fallbackResult)
     }
-
-    await new Promise(resolve => setTimeout(resolve, 500))
-    setResult(mockResult)
     setAnalyzing(false)
   }
 
@@ -180,6 +241,8 @@ export default function QuickAnalysisPage() {
         <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b">
           <div className="flex h-16 items-center gap-4 px-6">
             <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="h-6" />
+            <BackNavigation />
             <Separator orientation="vertical" className="h-6" />
             <div className="flex-1">
               <h1 className="text-xl font-semibold">Quick Analysis</h1>
@@ -284,12 +347,26 @@ export default function QuickAnalysisPage() {
                       </AlertDescription>
                     </Alert>
                   )}
+                  
+                  {/* Warning Messages */}
+                  {warnings.length > 0 && errors.length === 0 && (
+                    <Alert className="border-yellow-200 bg-yellow-50">
+                      <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                      <AlertDescription className="text-yellow-800">
+                        <ul className="list-disc list-inside space-y-1">
+                          {warnings.map((warning, index) => (
+                            <li key={index}>{warning}</li>
+                          ))}
+                        </ul>
+                      </AlertDescription>
+                    </Alert>
+                  )}
 
                   {/* Analyze Button */}
                   <Button 
                     onClick={handleAnalyze}
                     disabled={analyzing}
-                    className="w-full"
+                    className="w-full bg-blue-600 text-white hover:bg-blue-700"
                     size="lg"
                   >
                     {analyzing ? (
@@ -363,7 +440,11 @@ export default function QuickAnalysisPage() {
                       <Download className="w-4 h-4 mr-2" />
                       Export
                     </Button>
-                    <Button size="sm" onClick={() => router.push('/upload')}>
+                    <Button 
+                      size="sm" 
+                      onClick={() => router.push('/upload')}
+                      className="bg-blue-600 text-white hover:bg-blue-700"
+                    >
                       <ArrowRight className="w-4 h-4 mr-2" />
                       Add to Project
                     </Button>

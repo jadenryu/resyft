@@ -51,4 +51,42 @@ export interface ExtractionRequest {
   paper_text?: string
   extraction_type: 'numerical' | 'quotes' | 'details' | 'all'
   project_id?: string
+  settings?: ExtractionSettings
+}
+
+export interface ExtractionSettings {
+  quotes: {
+    enabled: boolean
+    maxPerPaper: number
+    minLength: number
+    maxLength: number
+    priority: 'relevance' | 'novelty' | 'statistical'
+  }
+  statistics: {
+    enabled: boolean
+    includeConfidenceIntervals: boolean
+    includePValues: boolean
+    includeEffectSizes: boolean
+    minSampleSize: number
+  }
+  summaries: {
+    length: 'brief' | 'moderate' | 'detailed'
+    focusAreas: string[]
+    includeMethodology: boolean
+    includeLimitations: boolean
+    includeImplications: boolean
+  }
+  relevanceScoring: {
+    keywordWeight: number
+    citationWeight: number
+    recencyWeight: number
+    methodologyWeight: number
+    customKeywords: string[]
+  }
+  outputFormat: {
+    citationStyle: 'apa' | 'mla' | 'chicago' | 'harvard'
+    includePageNumbers: boolean
+    includeDOI: boolean
+    groupByTheme: boolean
+  }
 }
