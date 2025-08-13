@@ -1,8 +1,8 @@
-from openai import OpenAI
 from pydantic import BaseModel, Field
 from typing import Dict, Any, List, Optional
 import os
 import json
+import httpx
 
 class ExtractionResult(BaseModel):
     methods: Optional[str] = Field(None, description="Research methods used in the paper")
@@ -17,123 +17,132 @@ class ExtractionResult(BaseModel):
 
 class PaperExtractor:
     def __init__(self):
-        # Initialize OpenRouter client
-        self.client = OpenAI(
-            base_url="https://openrouter.ai/api/v1",
-            api_key=os.getenv("OPENROUTER_API_KEY"),
-            default_headers={
-                "HTTP-Referer": os.getenv("YOUR_SITE_URL", "http://localhost:3000"),
-                "X-Title": "Resyft Research Analysis"
-            }
-        )
-        
-        # Default to Claude 3.5 Sonnet for best performance
-        self.model = os.getenv("OPENROUTER_MODEL", "anthropic/claude-3.5-sonnet")
+        # Initialize OpenRouter configuration for Gemini
+        self.api_key = os.getenv("OPENROUTER_API_KEY")
+        self.base_url = "https://openrouter.ai/api/v1/chat/completions"
+        self.model = "google/gla:gemini-2.5-flash-lite"
+        self.headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://resyft.com",
+            "X-Title": "Resyft Paper Analysis",
+        }
     
     async def extract(self, content: str, extraction_type: str, project_context: Optional[str] = None) -> Dict[str, Any]:
-        """Extract information from paper content using OpenRouter"""
+        """Extract information from paper content using Gemini via OpenRouter"""
         
         prompt = self._build_prompt(content, extraction_type, project_context)
         
-        # Create the function schema for structured output
-        function_schema = {
-            "name": "extract_paper_data",
-            "description": "Extract structured data from research paper",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "methods": {"type": "string", "description": "Research methods used"},
-                    "sample_size": {"type": "integer", "description": "Sample size of the study"},
-                    "key_statistics": {"type": "object", "description": "Key statistical findings"},
-                    "conclusions": {"type": "string", "description": "Main conclusions"},
-                    "important_quotes": {"type": "array", "items": {"type": "string"}, "description": "Important quotes"},
-                    "numerical_data": {"type": "object", "description": "Numerical data as key-value pairs"},
-                    "reliability_score": {"type": "number", "minimum": 0, "maximum": 1, "description": "Reliability score"},
-                    "relevance_score": {"type": "number", "minimum": 0, "maximum": 1, "description": "Relevance score"},
-                    "support_score": {"type": "number", "minimum": 0, "maximum": 1, "description": "Support score"}
-                },
-                "required": ["reliability_score", "relevance_score", "support_score"]
-            }
+        system_prompt = """You are a research paper analysis expert. Analyze the provided research paper and extract key information in a structured format.
+
+For scoring:
+- reliability_score (0-1): Rate based on methodology rigor, sample size, and peer review status
+- relevance_score (0-1): Rate based on how current and applicable the research is  
+- support_score (0-1): Rate based on how well conclusions are supported by data
+
+Return a valid JSON object with the extracted information. Focus on the specific extraction type requested."""
+        
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.3,
+            "max_tokens": 2000
         }
         
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": """You are a research paper analysis expert. Extract key information from research papers including methods, statistics, and conclusions. 
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    self.base_url,
+                    headers=self.headers,
+                    json=payload
+                )
+                
+                if response.status_code != 200:
+                    print(f"OpenRouter API error: {response.status_code} - {response.text}")
+                    raise Exception(f"OpenRouter API error: {response.status_code}")
+                
+                data = response.json()
+                
+                if 'choices' not in data or not data['choices']:
+                    raise Exception("No response from OpenRouter API")
+                
+                content = data['choices'][0]['message']['content']
+                
+                # Parse JSON from response
+                try:
+                    # Look for JSON in the response
+                    start_idx = content.find('{')
+                    end_idx = content.rfind('}') + 1
+                    
+                    if start_idx != -1 and end_idx > start_idx:
+                        json_str = content[start_idx:end_idx]
+                        result = json.loads(json_str)
                         
-                        For reliability_score: Rate 0-1 based on methodology rigor, sample size, and peer review status.
-                        For relevance_score: Rate 0-1 based on how current and applicable the research is.
-                        For support_score: Rate 0-1 based on how well the conclusions are supported by the data.
+                        # Ensure required scores are present
+                        result.setdefault("reliability_score", 0.5)
+                        result.setdefault("relevance_score", 0.5) 
+                        result.setdefault("support_score", 0.5)
                         
-                        Focus on extracting the specific type of information requested."""
-                    },
-                    {"role": "user", "content": prompt}
-                ],
-                functions=[function_schema],
-                function_call={"name": "extract_paper_data"},
-                temperature=0.3,
-                max_tokens=4000
-            )
-            
-            # Extract the function call response
-            function_args = json.loads(response.choices[0].message.function_call.arguments)
-            
-            # Filter out None values
-            result = {k: v for k, v in function_args.items() if v is not None}
-            
-            return result
-            
+                        # Filter out None values
+                        result = {k: v for k, v in result.items() if v is not None}
+                        
+                        print(f"✅ Gemini extraction successful - Type: {extraction_type}")
+                        return result
+                    else:
+                        raise Exception("No valid JSON found in response")
+                        
+                except json.JSONDecodeError as e:
+                    print(f"JSON parsing error: {e}")
+                    # Fallback to text-based response
+                    return {
+                        "conclusions": content,
+                        "reliability_score": 0.5,
+                        "relevance_score": 0.5,
+                        "support_score": 0.5
+                    }
+                    
         except Exception as e:
-            print(f"OpenRouter extraction error: {str(e)}")
-            # Fallback to simpler extraction without function calling
+            print(f"Gemini extraction error: {str(e)}")
+            # Fallback to simpler extraction
             return await self._fallback_extraction(content, extraction_type, prompt)
     
     async def _fallback_extraction(self, content: str, extraction_type: str, prompt: str) -> Dict[str, Any]:
-        """Fallback extraction method without function calling"""
+        """Fallback extraction method with simple text analysis"""
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a research paper analysis expert. Provide a JSON response with extracted information."
-                    },
-                    {
-                        "role": "user",
-                        "content": f"{prompt}\n\nProvide your response as a valid JSON object with these fields: methods, sample_size, key_statistics, conclusions, important_quotes, numerical_data, reliability_score (0-1), relevance_score (0-1), support_score (0-1)."
-                    }
-                ],
-                temperature=0.3,
-                max_tokens=4000
-            )
+            # Simple fallback - basic analysis without API call
+            print(f"⚠️ Using fallback extraction for type: {extraction_type}")
             
-            # Try to parse JSON from response
-            response_text = response.choices[0].message.content
-            # Find JSON in response
-            start_idx = response_text.find('{')
-            end_idx = response_text.rfind('}') + 1
-            if start_idx != -1 and end_idx > start_idx:
-                json_str = response_text[start_idx:end_idx]
-                return json.loads(json_str)
-            else:
-                # Return minimal response if parsing fails
-                return {
-                    "conclusions": response_text,
-                    "reliability_score": 0.5,
-                    "relevance_score": 0.5,
-                    "support_score": 0.5
-                }
+            # Basic text analysis
+            word_count = len(content.split())
+            has_numbers = any(char.isdigit() for char in content)
+            
+            reliability = 0.3 if word_count > 1000 else 0.2
+            relevance = 0.4 if has_numbers else 0.3
+            support = 0.3
+            
+            fallback_result = {
+                "methods": "Analysis method not fully determined",
+                "conclusions": "Basic analysis completed - full extraction requires API connection",
+                "reliability_score": reliability,
+                "relevance_score": relevance,
+                "support_score": support,
+                "important_quotes": [],
+                "fallback": True
+            }
+            
+            return fallback_result
                 
         except Exception as e:
             print(f"Fallback extraction error: {str(e)}")
             return {
-                "error": "Extraction failed",
-                "reliability_score": 0,
-                "relevance_score": 0,
-                "support_score": 0
+                "error": "All extraction methods failed",
+                "conclusions": "Unable to analyze paper content",
+                "reliability_score": 0.0,
+                "relevance_score": 0.0,
+                "support_score": 0.0
             }
     
     def _build_prompt(self, content: str, extraction_type: str, project_context: Optional[str] = None) -> str:

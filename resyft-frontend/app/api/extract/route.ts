@@ -15,12 +15,7 @@ export async function POST(request: NextRequest) {
   try {
     const { paper_url = '', paper_text = '', extraction_type = 'all', custom_prompt } = await request.json()
 
-    const apiKey = process.env.OPEN_ROUTER_API_KEY
-    const model = process.env.OPEN_ROUTER_MODEL || 'google/gemini-2.5-flash-lite'
-    
-    if (!apiKey) {
-      throw new Error('OpenRouter API key not configured')
-    }
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000'
     
     // Validate input
     if (!paper_text && !paper_url) {
@@ -46,123 +41,110 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const systemPrompt = `You are an expert research analyst specialized in extracting key information from academic papers. Your task is to analyze the provided research paper and extract structured information with high accuracy.
+    console.log(`📡 Frontend: Calling backend at ${backendUrl}/api/extract`)
+    console.log(`📝 Extraction type: ${extraction_type}, Text length: ${paper_text?.length || 0}`)
 
-ANALYSIS REQUIREMENTS:
-1. Extract methodology details and research approach
-2. Identify sample sizes and participant demographics
-3. Extract all statistical findings, p-values, effect sizes
-4. Summarize key conclusions and findings
-5. Extract 3-5 most important quotes that support main findings
-6. Assess reliability and relevance (0.0-1.0 scale)
-7. Generate citation-ready summary text
-
-EXTRACTION FOCUS:
-${custom_prompt || 'Extract key findings, methods, sample size, and conclusions with supporting statistics'}
-
-IMPORTANT: Provide specific, accurate information extracted directly from the text. If information is not available, state "Not specified in the paper" rather than making assumptions.`
-
-    const userPrompt = `Please analyze this research paper and extract key information:
-
-${paper_text.slice(0, 15000)}${paper_text.length > 15000 ? '... (truncated)' : ''}
-
-Return your analysis in this exact JSON format:
-{
-  "methods": "detailed methodology description",
-  "sample_size": number_or_null,
-  "key_statistics": "statistical findings with p-values and effect sizes",
-  "conclusions": "main conclusions and findings",
-  "important_quotes": ["quote1", "quote2", "quote3"],
-  "reliability_score": 0.85,
-  "relevance_score": 0.90,
-  "suggested_text": "citation-ready text summarizing key findings"
-}`
-
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    // Call backend extraction service
+    const backendResponse = await fetch(`${backendUrl}/api/extract`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://resyft.com',
-        'X-Title': 'Resyft Paper Analysis',
       },
       body: JSON.stringify({
-        model: model,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: userPrompt
-          }
-        ],
-        temperature: 0.3,
-        max_tokens: 2000
+        paper_url,
+        paper_text,
+        extraction_type,
+        project_id: custom_prompt ? 'custom-prompt' : undefined
       })
     })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`)
+    if (!backendResponse.ok) {
+      const errorData = await backendResponse.json().catch(() => ({ error: 'Backend service unavailable' }))
+      throw new Error(`Backend error: ${backendResponse.status} - ${errorData.error || 'Unknown error'}`)
     }
 
-    const data = await response.json()
-    const content = data.choices[0].message.content.trim()
+    const jobData = await backendResponse.json()
+    
+    if (!jobData.jobId) {
+      throw new Error('Backend did not return job ID')
+    }
 
-    // Extract JSON from response
-    let analysisResult: PaperAnalysisResult
-    try {
-      // Find JSON in the response
-      const jsonMatch = content.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) {
-        throw new Error('No JSON found in response')
-      }
-      analysisResult = JSON.parse(jsonMatch[0])
-    } catch (parseError) {
-      // Fallback: create structured response from text
-      analysisResult = {
-        methods: extractSection(content, 'methods') || 'Methods not clearly specified in the analysis',
-        sample_size: extractNumber(content, ['sample', 'participants', 'subjects']) || null,
-        key_statistics: extractSection(content, 'statistics') || 'Statistical information not extracted',
-        conclusions: extractSection(content, 'conclusions') || content.slice(0, 300) + '...',
-        important_quotes: extractQuotes(content) || ['Analysis completed - see detailed results above'],
-        reliability_score: 0.7,
-        relevance_score: 0.8,
-        suggested_text: content.slice(0, 200) + '...'
+    console.log(`🔄 Frontend: Job created with ID: ${jobData.jobId}`)
+
+    // Poll for job completion with timeout
+    const maxAttempts = 60 // 2 minutes with 2-second intervals
+    let attempts = 0
+    let jobResult = null
+
+    while (attempts < maxAttempts && !jobResult) {
+      attempts++
+      
+      // Wait 2 seconds between polls
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      try {
+        const statusResponse = await fetch(`${backendUrl}/api/extract/status/${jobData.jobId}`)
+        
+        if (!statusResponse.ok) {
+          console.warn(`⚠️ Status check failed: ${statusResponse.status}`)
+          continue
+        }
+        
+        const status = await statusResponse.json()
+        console.log(`🔍 Job ${jobData.jobId} status: ${status.state}, progress: ${status.progress}%`)
+        
+        if (status.state === 'completed' && status.result) {
+          jobResult = status.result
+          break
+        } else if (status.state === 'failed') {
+          throw new Error(`Job failed: ${status.failedReason || 'Unknown error'}`)
+        }
+        
+      } catch (pollError) {
+        console.warn(`⚠️ Polling error on attempt ${attempts}:`, pollError)
+        
+        // Continue polling unless we're out of attempts
+        if (attempts >= maxAttempts) {
+          throw new Error(`Job polling failed after ${attempts} attempts`)
+        }
       }
     }
 
-    // Ensure all required fields are present
+    if (!jobResult) {
+      throw new Error(`Job did not complete within timeout (${maxAttempts * 2} seconds)`)
+    }
+
+    console.log(`✅ Frontend: Analysis completed successfully`)
+
+    // Transform backend result to match frontend expectations
     const result = {
-      methods: analysisResult.methods || 'No methodology information extracted',
-      sample_size: analysisResult.sample_size,
-      key_statistics: analysisResult.key_statistics || 'No statistical data extracted',
-      conclusions: analysisResult.conclusions || 'No conclusions extracted from the paper',
-      important_quotes: Array.isArray(analysisResult.important_quotes) 
-        ? analysisResult.important_quotes 
+      methods: jobResult.methods || 'No methodology information extracted',
+      sample_size: jobResult.sample_size,
+      key_statistics: jobResult.key_statistics || jobResult.numerical_data || 'No statistical data extracted',
+      conclusions: jobResult.conclusions || 'No conclusions extracted from the paper',
+      important_quotes: Array.isArray(jobResult.important_quotes) 
+        ? jobResult.important_quotes 
         : ['No quotes extracted from the paper'],
-      reliability_score: Math.max(0, Math.min(1, analysisResult.reliability_score || 0.7)),
-      relevance_score: Math.max(0, Math.min(1, analysisResult.relevance_score || 0.8)),
-      suggested_text: analysisResult.suggested_text || 'Analysis completed successfully',
+      reliability_score: Math.max(0, Math.min(1, jobResult.reliability_score || 0.7)),
+      relevance_score: Math.max(0, Math.min(1, jobResult.relevance_score || 0.8)),
+      suggested_text: jobResult.suggested_text || jobResult.conclusions || 'Analysis completed successfully',
       _full_result: {
-        suggested_text: analysisResult.suggested_text
+        suggested_text: jobResult.suggested_text || jobResult.conclusions
       }
     }
 
     return NextResponse.json(result)
     
   } catch (error) {
-    console.error('Paper Analysis Error:', error)
+    console.error('🚨 Frontend Analysis Error:', error)
     
     // Return meaningful error response
     return NextResponse.json({
       methods: 'Analysis failed due to technical error',
       sample_size: null,
       key_statistics: 'Unable to extract statistics',
-      conclusions: 'Analysis could not be completed',
-      important_quotes: ['Technical error prevented quote extraction'],
+      conclusions: 'Analysis could not be completed. Please try again.',
+      important_quotes: ['Technical error prevented analysis'],
       reliability_score: 0,
       relevance_score: 0,
       suggested_text: 'Analysis unavailable due to system error',
@@ -172,27 +154,4 @@ Return your analysis in this exact JSON format:
       }
     }, { status: 200 }) // Return 200 to show results even on error
   }
-}
-
-// Helper functions for fallback parsing
-function extractSection(text: string, section: string): string | null {
-  const regex = new RegExp(`${section}[:\s]*(.*?)(?=\n\n|$)`, 'i')
-  const match = text.match(regex)
-  return match ? match[1].trim() : null
-}
-
-function extractNumber(text: string, keywords: string[]): number | null {
-  for (const keyword of keywords) {
-    const regex = new RegExp(`${keyword}[:\s]*(\d+)`, 'i')
-    const match = text.match(regex)
-    if (match) {
-      return parseInt(match[1])
-    }
-  }
-  return null
-}
-
-function extractQuotes(text: string): string[] | null {
-  const quotes = text.match(/"([^"]+)"/g)
-  return quotes ? quotes.slice(0, 3).map(q => q.replace(/"/g, '')) : null
 }
