@@ -45,23 +45,21 @@ function TypingIndicator() {
         <img 
           src="/resyft-2.png" 
           alt="AI" 
-          className="w-4 h-4 object-contain filter brightness-0 invert" 
+          className="w-4 h-4 object-contain" 
         />
       </div>
       
-      <div className="max-w-3xl mr-12">
-        <Card className="bg-white border-slate-200 shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-              </div>
-              <span className="text-sm text-slate-600">AI is thinking...</span>
+      <div className="max-w-4xl mr-8 md:mr-16">
+        <div className="bg-slate-50 text-slate-900 rounded-2xl px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="flex gap-1">
+              <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+              <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
             </div>
-          </CardContent>
-        </Card>
+            <span className="text-sm text-slate-600">AI is thinking...</span>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -69,7 +67,6 @@ function TypingIndicator() {
 
 export default function ResearchAgentPage() {
   const [messages, setMessages] = useState<Message[]>([])
-  const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
   const [selectedMode, setSelectedMode] = useState<"general" | "scholar">("scholar")
@@ -85,8 +82,9 @@ export default function ResearchAgentPage() {
     scrollToBottom()
   }, [messages])
 
-  const handleSubmit = async (message?: string) => {
-    const messageToSend = message || inputValue.trim()
+  const handleSubmit = async (message?: string, fromLanding?: boolean) => {
+    const inputElement = fromLanding ? landingInputRef.current : chatInputRef.current
+    const messageToSend = message || (inputElement?.value?.trim() || "")
     if (!messageToSend || isLoading) return
 
     const userMessage: Message = {
@@ -97,7 +95,7 @@ export default function ResearchAgentPage() {
     }
 
     setMessages(prev => [...prev, userMessage])
-    setInputValue("")
+    if (inputElement) inputElement.value = ""
     setIsLoading(true)
     setIsTyping(true)
 
@@ -184,37 +182,18 @@ export default function ResearchAgentPage() {
     handleSubmit(example)
   }
 
-  // Landing page when no messages - using exact design provided
+  // Landing page when no messages - optimized for collapsed sidebar
   const LandingPage = () => (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white flex flex-col items-center justify-center px-4 font-['Inter',sans-serif]">
-      <div className="w-full max-w-4xl mx-auto">
-        {/* Header with Try Pro button */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-3">
-            <img 
-              src="/resyft-2.png" 
-              alt="Resyft Research Agent" 
-              className="w-8 h-8 object-contain" 
-            />
-            <h1 className="text-xl font-semibold text-slate-900">Research Assistant</h1>
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="text-indigo-600 border-indigo-300 hover:bg-indigo-50 bg-white font-medium"
-          >
-            Try Pro for free
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white flex flex-col items-center justify-center px-6 font-['Inter',sans-serif]">
+      <div className="w-full max-w-5xl mx-auto">
 
         {/* Main Heading */}
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 leading-tight">
             What research question do you have?
           </h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Get accurate answers with line-by-line scholarly source citations
+          <p className="text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
+            Advanced AI research assistant for paper analysis, literature synthesis, and citation management
           </p>
         </div>
 
@@ -245,8 +224,8 @@ export default function ResearchAgentPage() {
         </div>
 
         {/* Search Input */}
-        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="mb-8">
-          <div className="relative max-w-3xl mx-auto">
+        <div className="mb-8">
+          <div className="relative max-w-4xl mx-auto">
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 focus-within:border-indigo-300 focus-within:shadow-md p-5">
               {/* Main input row */}
               <div className="flex items-center gap-4">
@@ -254,19 +233,26 @@ export default function ResearchAgentPage() {
                   <input
                     ref={landingInputRef}
                     type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="Ask anything"
-                    className="w-full text-lg border-0 bg-transparent focus:ring-0 focus:outline-none placeholder:text-slate-400 p-0 h-auto py-1 text-slate-900"
-                    style={{ textDecoration: "none", borderBottom: "none", boxShadow: "none", outline: "none" }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        handleSubmit(undefined, true)
+                      }
+                    }}
+                    placeholder="Ask anything about research..."
+                    className="w-full text-lg border-0 bg-transparent focus:ring-0 focus:outline-none placeholder:text-slate-400"
                     disabled={isLoading}
                     autoComplete="off"
                   />
                 </div>
                 <Button
-                  type="submit"
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handleSubmit(undefined, true)
+                  }}
                   className="bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl px-5 py-2.5 transition-colors flex-shrink-0"
-                  disabled={!inputValue.trim() || isLoading}
+                  disabled={isLoading}
                 >
                   {isLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin text-white" />
@@ -302,49 +288,67 @@ export default function ResearchAgentPage() {
               </div>
             </div>
           </div>
-        </form>
+        </div>
 
-        {/* Agents Section */}
+        {/* Research Tools Section */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-6">
-            <h2 className="text-xl font-semibold text-slate-900">Agents</h2>
+            <h2 className="text-xl font-semibold text-slate-900">Research Tools</h2>
             <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200">
-              Beta
+              AI-Powered
             </Badge>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            {/* Hypothesis Generator */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Paper Analysis Agent */}
             <div 
               className="bg-white rounded-xl border border-slate-200 p-6 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
-              onClick={() => handleExampleClick("Generate research hypotheses based on my field of study")}
+              onClick={() => handleExampleClick("Analyze this research paper and extract key findings, methodology, and statistical significance")}
             >
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center group-hover:bg-amber-200 transition-colors flex-shrink-0">
-                  <Lightbulb className="w-5 h-5 text-amber-600" />
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors flex-shrink-0">
+                  <FileText className="w-5 h-5 text-blue-600" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-semibold text-slate-900 mb-2">Hypothesis Generator</h3>
+                  <h3 className="font-semibold text-slate-900 mb-2">Paper Analysis</h3>
                   <p className="text-slate-600 text-sm leading-relaxed">
-                    Turn your ideas into research-ready hypotheses
+                    Extract methodology, findings, and statistical insights from research papers
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Citation Recommender */}
+            {/* Literature Search */}
             <div 
               className="bg-white rounded-xl border border-slate-200 p-6 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
-              onClick={() => handleExampleClick("Find citations for my research paper and format them properly")}
+              onClick={() => handleExampleClick("Search for recent literature on my research topic and provide citation-ready summaries")}
             >
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors flex-shrink-0">
-                  <FileText className="w-5 h-5 text-emerald-600" />
+                  <Search className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-semibold text-slate-900 mb-2">Citation Recommender</h3>
+                  <h3 className="font-semibold text-slate-900 mb-2">Literature Search</h3>
                   <p className="text-slate-600 text-sm leading-relaxed">
-                    Find accurate citations for every sentence of your research draft
+                    Find and synthesize relevant academic sources with proper citations
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Data Synthesis Agent */}
+            <div 
+              className="bg-white rounded-xl border border-slate-200 p-6 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
+              onClick={() => handleExampleClick("Synthesize data from multiple research papers and identify patterns and trends")}
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors flex-shrink-0">
+                  <Sparkles className="w-5 h-5 text-purple-600" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-slate-900 mb-2">Data Synthesis</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    Combine insights from multiple sources to identify research patterns
                   </p>
                 </div>
               </div>
@@ -354,7 +358,7 @@ export default function ResearchAgentPage() {
 
         {/* Footer */}
         <div className="text-center">
-          <p className="text-sm text-slate-500">Powered by advanced AI research tools</p>
+          <p className="text-sm text-slate-500">Powered by Resyft AI Research Platform</p>
         </div>
       </div>
     </div>
@@ -375,8 +379,8 @@ export default function ResearchAgentPage() {
                 className="w-6 h-6 object-contain" 
               />
               <div>
-                <h1 className="text-lg font-semibold text-slate-900">Research Agent</h1>
-                <p className="text-xs text-slate-500 font-medium">AI-Powered Research Assistant</p>
+                <h1 className="text-lg font-semibold text-slate-900">Resyft Research Agent</h1>
+                <p className="text-xs text-slate-500 font-medium">Advanced AI Research Platform</p>
               </div>
             </div>
             {messages.length > 0 && (
@@ -400,8 +404,8 @@ export default function ResearchAgentPage() {
             <>
               {/* Messages Area */}
               <div className="flex-1 flex flex-col">
-                <ScrollArea className="flex-1 p-4">
-                  <div className="max-w-4xl mx-auto space-y-6">
+                <ScrollArea className="flex-1 p-4 md:p-6 lg:p-8">
+                  <div className="max-w-5xl mx-auto space-y-6">
                     {messages.map((message) => (
                       <div
                         key={message.id}
@@ -414,22 +418,21 @@ export default function ResearchAgentPage() {
                             <img 
                               src="/resyft-2.png" 
                               alt="AI" 
-                              className="w-4 h-4 object-contain filter brightness-0 invert" 
+                              className="w-4 h-4 object-contain" 
                             />
                           </div>
                         )}
                         
-                        <div className={`max-w-3xl ${
-                          message.role === 'user' ? 'ml-16' : 'mr-16'
+                        <div className={`max-w-4xl ${
+                          message.role === 'user' ? 'ml-8 md:ml-16' : 'mr-8 md:mr-16'
                         }`}>
-                          <Card className={`shadow-sm ${
+                          <div className={`rounded-2xl px-4 py-3 ${
                             message.role === 'user' 
-                              ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white border-0' 
+                              ? 'bg-indigo-500 text-white ml-auto' 
                               : message.error
-                                ? 'bg-red-50 border-red-200'
-                                : 'bg-white border-slate-200'
+                                ? 'bg-red-50 border border-red-200 text-red-800'
+                                : 'bg-slate-50 text-slate-900'
                           }`}>
-                            <CardContent className="p-4">
                               {message.error && (
                                 <div className="flex items-center gap-2 mb-3">
                                   <AlertCircle className="w-4 h-4 text-red-500" />
@@ -459,13 +462,10 @@ export default function ResearchAgentPage() {
                                 </div>
                               )}
                               
-                              <div className={`text-xs mt-2 ${
-                                message.role === 'user' ? 'text-indigo-100' : 'text-slate-400'
-                              }`}>
+                              <div className={`text-xs mt-2 opacity-70`}>
                                 {message.timestamp.toLocaleTimeString()}
                               </div>
-                            </CardContent>
-                          </Card>
+                          </div>
                         </div>
                         
                         {message.role === 'user' && (
@@ -484,8 +484,8 @@ export default function ResearchAgentPage() {
                 </ScrollArea>
 
                 {/* Input Area */}
-                <div className="border-t bg-white/90 backdrop-blur-sm p-4 shadow-sm">
-                  <div className="max-w-4xl mx-auto">
+                <div className="border-t bg-white/90 backdrop-blur-sm p-4 md:p-6 shadow-sm">
+                  <div className="max-w-5xl mx-auto">
                     <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
                       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 focus-within:border-indigo-300 p-4">
                         <div className="flex items-center gap-3">
@@ -493,17 +493,20 @@ export default function ResearchAgentPage() {
                             ref={chatInputRef}
                             type="text"
                             placeholder="Ask me anything about your research..."
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            className="flex-1 text-base border-0 bg-transparent focus:ring-0 focus:outline-none placeholder:text-slate-400 p-0 h-auto text-slate-900"
-                            style={{ textDecoration: "none", borderBottom: "none", boxShadow: "none", outline: "none" }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault()
+                                handleSubmit()
+                              }
+                            }}
+                            className="flex-1 text-base border-0 bg-transparent focus:ring-0 focus:outline-none placeholder:text-slate-400"
                             disabled={isLoading}
                             autoComplete="off"
                           />
                           <Button
                             type="submit"
                             size="sm"
-                            disabled={!inputValue.trim() || isLoading}
+                            disabled={isLoading}
                             className="bg-indigo-500 hover:bg-indigo-600 rounded-xl px-4 py-2 transition-colors flex-shrink-0"
                           >
                             {isLoading ? (
@@ -515,7 +518,7 @@ export default function ResearchAgentPage() {
                         </div>
                         <div className="flex items-center justify-between mt-2">
                           <div className="text-xs text-slate-600 font-medium">Press Enter to send</div>
-                          <div className="text-xs text-slate-500">Powered by AI research tools</div>
+                          <div className="text-xs text-slate-500">Powered by Resyft AI</div>
                         </div>
                       </div>
                     </form>
