@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Button } from './ui/button'
-import { useSupabase } from '@/hooks/use-supabase'
+import { useSupabase } from '../hooks/use-supabase'
 
 export function Header() {
   const { user, signOut } = useSupabase()

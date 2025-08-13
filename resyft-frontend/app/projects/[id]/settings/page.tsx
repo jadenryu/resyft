@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { createClient } from '@/lib/supabase'
+import { createClient } from '../../../lib/supabase'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Save, BarChart3, Quote, FileText, Settings as SettingsIcon } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
