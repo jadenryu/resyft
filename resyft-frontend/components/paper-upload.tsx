@@ -5,7 +5,12 @@ import { Button } from './ui/button'
 import { Textarea } from './ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { useMutation } from '@tanstack/react-query'
-import { ExtractionRequest } from '@/types'
+// Define ExtractionRequest interface locally
+interface ExtractionRequest {
+  paper_url?: string
+  paper_text?: string
+  extraction_type: 'all' | 'statistics' | 'quotes' | 'summary' | 'methodology' | 'quality'
+}
 
 export function PaperUpload() {
   const [paperUrl, setPaperUrl] = useState('')
