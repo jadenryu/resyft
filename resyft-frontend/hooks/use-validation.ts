@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { validateAcademicURL, validateAcademicText, sanitizeInput } from '@/lib'
+import { validateAcademicURL, validateAcademicText, sanitizeInput } from '../lib/validators'
 
 interface ValidationState {
   isValidating: boolean
