@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { researchTools, toolHandlers } from '@/lib/research-tools'
+import { researchTools, toolHandlers } from '@/lib'
 
 export async function POST(request: NextRequest) {
   try {
