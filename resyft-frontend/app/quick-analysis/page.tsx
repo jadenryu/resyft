@@ -15,7 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { AppSidebar } from "@/components/app-sidebar"
 import { BackNavigation } from "@/components/back-navigation"
-import { validateAcademicURL, validateAcademicText, sanitizeInput } from "../../lib/validators"
+import { validateAcademicURL, validateAcademicText, sanitizeInput } from "@/lib/validators"
 import {
   SidebarInset,
   SidebarProvider,
