@@ -34,7 +34,7 @@ import {
   FileCheck,
   AlertTriangle
 } from "lucide-react"
-import { validateAcademicURL, validateAcademicText, validateAcademicFile, sanitizeInput } from "@/lib/validators"
+import { validateAcademicURL, validateAcademicText, validateAcademicFile, sanitizeInput } from "@/lib"
 import { useRealtimeValidation } from "@/hooks/use-validation"
 
 interface ValidationError {
