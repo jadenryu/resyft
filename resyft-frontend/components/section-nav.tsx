@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Button } from '@/components/ui/button'
+import { Button } from '../../components/ui/button'
 import { MessageCircle, Star } from 'lucide-react'
 
 interface SectionNavTab {

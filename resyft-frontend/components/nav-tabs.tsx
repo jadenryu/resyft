@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { cn } from "@/lib/utils"
+import { cn } from "../lib/utils"
 import {
   Home,
   Search,
