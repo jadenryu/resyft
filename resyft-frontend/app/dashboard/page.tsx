@@ -2,17 +2,17 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+import { AppSidebar } from "../../components/app-sidebar"
+import { Button } from "../../components/ui/button"
+import { Card, CardContent } from "../../components/ui/card"
+import { Input } from "../../components/ui/input"
+import { Badge } from "../../components/ui/badge"
+import { Separator } from "../../components/ui/separator"
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
+} from "../../components/ui/sidebar"
 import {
   Upload,
   FolderPlus,

@@ -1,16 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import { Button } from '../../components/ui/button'
+import { Card, CardContent } from '../../components/ui/card'
+import { Input } from '../../components/ui/input'
+import { Textarea } from '../../components/ui/textarea'
+import { Badge } from '../../components/ui/badge'
+import { Progress } from '../../components/ui/progress'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../components/ui/accordion'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { SectionNav } from '@/components/section-nav'
+import { SectionNav } from '../../components/section-nav'
 import { 
   Zap, 
   FileText, 

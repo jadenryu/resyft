@@ -1,13 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { AppSidebar } from "@/components/app-sidebar"
+import { AppSidebar } from "../../components/app-sidebar"
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { Separator } from "@/components/ui/separator"
+} from "../../components/ui/sidebar"
+import { Separator } from "../../components/ui/separator"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,7 +15,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+} from "../../components/ui/breadcrumb"
 
 interface DashboardLayoutProps {
   children: React.ReactNode

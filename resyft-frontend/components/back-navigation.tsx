@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, usePathname } from 'next/navigation'
-import { Button } from '@/components/ui/button'
+import { Button } from '../../components/ui/button'
 import { ArrowLeft, Home } from 'lucide-react'
 
 export function BackNavigation() {
