@@ -35,7 +35,7 @@ import {
   AlertTriangle
 } from "lucide-react"
 import { validateAcademicURL, validateAcademicText, validateAcademicFile, sanitizeInput } from "../../lib/validators"
-import { useRealtimeValidation } from "../hooks/use-validation"
+import { useRealtimeValidation } from "../../hooks/use-validation"
 
 interface ValidationError {
   field: string

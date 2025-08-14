@@ -1,17 +1,17 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
-import { Badge } from "../../components/ui/badge"
-import { Progress } from "../../components/ui/progress"
-import { Alert, AlertDescription } from "../../components/ui/alert"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
+import { Badge } from "./ui/badge"
+import { Progress } from "./ui/progress"
+import { Alert, AlertDescription } from "./ui/alert"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "../../components/ui/tooltip"
+} from "./ui/tooltip"
 import {
   TrendingUp,
   AlertTriangle,
@@ -35,7 +35,7 @@ import {
   getScoreColor, 
   getScoreLabel,
   getConfidenceIcon 
-} from "@/lib/scoring"
+} from "../lib/scoring"
 
 interface ScoringDisplayProps {
   relevanceScore: RelevanceScore

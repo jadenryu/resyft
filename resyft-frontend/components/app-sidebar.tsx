@@ -23,10 +23,10 @@ import {
   MessageSquare,
 } from "lucide-react"
 
-import { NavMain } from "../../components/nav-main"
-import { NavProjects } from "../../components/nav-projects"
-import { NavSecondary } from "../../components/nav-secondary"
-import { NavUser } from "../../components/nav-user"
+import { NavMain } from "./nav-main"
+import { NavProjects } from "./nav-projects"
+import { NavSecondary } from "./nav-secondary"
+import { NavUser } from "./nav-user"
 import {
   Sidebar,
   SidebarContent,
@@ -35,7 +35,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "../../components/ui/sidebar"
+} from "./ui/sidebar"
 
 const data = {
   user: {

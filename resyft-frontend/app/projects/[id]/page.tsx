@@ -3,26 +3,26 @@
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { motion } from "framer-motion"
-import { Button } from "../../components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
-import { Input } from "../../components/ui/input"
-import { Badge } from "../../components/ui/badge"
-import { Separator } from "../../components/ui/separator"
-import { Progress } from "../../components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
+import { Button } from "../../../components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
+import { Input } from "../../../components/ui/input"
+import { Badge } from "../../../components/ui/badge"
+import { Separator } from "../../../components/ui/separator"
+import { Progress } from "../../../components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select"
-import { AppSidebar } from "../../components/app-sidebar"
+} from "../../../components/ui/select"
+import { AppSidebar } from "../../../components/app-sidebar"
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "../../components/ui/sidebar"
+} from "../../../components/ui/sidebar"
 import {
   Target,
   Plus,
@@ -59,7 +59,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu"
+} from "../../../components/ui/dropdown-menu"
 
 interface Paper {
   id: string
