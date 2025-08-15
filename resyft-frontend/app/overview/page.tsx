@@ -71,12 +71,13 @@ export default function OverviewPage() {
       let hoursAnalyzed = 0
       if (totalPapers > 0) {
         const allPapers = projects.flatMap((project: any) => project.papers)
-        const papersWithResults = allPapers.filter((paper: any) => paper.analysisResult?.metadata?.processing_time)
+        const papersWithResults = allPapers.filter((paper: any) => 
+          paper.analysisResult?.metadata?.processing_time != null)
         
         if (papersWithResults.length > 0) {
           // Calculate actual time saved (assuming 30min manual analysis per paper - processing time)
           const actualProcessingTime = papersWithResults.reduce((acc: number, paper: any) => 
-            acc + (paper.analysisResult.metadata.processing_time / 3600), 0) // Convert seconds to hours
+            acc + ((paper.analysisResult?.metadata?.processing_time || 0) / 3600), 0) // Convert seconds to hours
           const estimatedManualTime = totalPapers * 0.5 // 30 minutes per paper
           hoursAnalyzed = Math.max(0, Math.round(estimatedManualTime - actualProcessingTime))
         } else {
@@ -89,11 +90,12 @@ export default function OverviewPage() {
       let avgRelevanceScore = 0
       if (totalPapers > 0) {
         const allPapers = projects.flatMap((project: any) => project.papers)
-        const papersWithRelevance = allPapers.filter((paper: any) => paper.analysisResult?.relevance?.relevance_score)
+        const papersWithRelevance = allPapers.filter((paper: any) => 
+          paper.analysisResult?.relevance?.relevance_score != null)
         
         if (papersWithRelevance.length > 0) {
           const totalRelevance = papersWithRelevance.reduce((acc: number, paper: any) => 
-            acc + paper.analysisResult.relevance.relevance_score, 0)
+            acc + (paper.analysisResult?.relevance?.relevance_score || 0), 0)
           avgRelevanceScore = Math.round(totalRelevance / papersWithRelevance.length)
         } else {
           // If no analysis results yet, show 0 instead of hardcoded value
