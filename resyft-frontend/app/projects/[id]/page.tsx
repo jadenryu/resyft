@@ -115,71 +115,11 @@ export default function ProjectDetailPage() {
         const projects = JSON.parse(savedProjects)
         const foundProject = projects.find((p: Project) => p.id === projectId)
         if (foundProject) {
-          // Generate demo papers for the project
-          const demoPapers: Paper[] = [
-            {
-              id: "paper-1",
-              title: "Deep Learning Applications in Medical Imaging: A Comprehensive Review",
-              authors: ["Zhang, L.", "Chen, M.", "Rodriguez, A."],
-              journal: "Nature Medicine",
-              year: 2024,
-              doi: "10.1038/s41591-024-12345-6",
-              url: "https://doi.org/10.1038/s41591-024-12345-6",
-              addedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-              status: "completed",
-              summary: "This comprehensive review examines the current state and future potential of deep learning applications in medical imaging. The authors analyze 127 studies and demonstrate that deep learning models achieve diagnostic accuracy comparable to experienced radiologists across multiple medical imaging domains.",
-              quotes: [
-                "Deep learning models have demonstrated unprecedented accuracy in medical image analysis, achieving diagnostic performance comparable to experienced radiologists.",
-                "The integration of AI into clinical workflows requires careful consideration of ethical implications and regulatory compliance."
-              ],
-              statistics: [
-                "Accuracy: 94.2% (95% CI: 92.1-96.3)",
-                "Sensitivity: 96.7%",
-                "Specificity: 91.8%",
-                "Studies analyzed: 127"
-              ],
-              relevanceScore: 92,
-              tags: ["deep-learning", "medical-imaging", "AI"]
-            },
-            {
-              id: "paper-2",
-              title: "Machine Learning Algorithms for Early Disease Detection: A Systematic Meta-Analysis",
-              authors: ["Johnson, K.", "Patel, S.", "Williams, R.", "Lee, H."],
-              journal: "The Lancet Digital Health",
-              year: 2024,
-              doi: "10.1016/S2589-7500(24)00123-4",
-              addedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-              status: "completed",
-              summary: "A systematic meta-analysis of 127 studies examining machine learning approaches for early disease detection across various medical conditions. The research demonstrates superior performance of ML algorithms compared to traditional screening methods.",
-              quotes: [
-                "Machine learning algorithms showed superior performance in detecting early-stage diseases compared to traditional screening methods.",
-                "The pooled sensitivity across all studies was 0.89 (95% CI: 0.85-0.92) with a specificity of 0.84 (95% CI: 0.81-0.87)."
-              ],
-              statistics: [
-                "Pooled sensitivity: 89% (95% CI: 85-92%)",
-                "Pooled specificity: 84% (95% CI: 81-87%)",
-                "Studies included: 127",
-                "Total patients: 2,847,392"
-              ],
-              relevanceScore: 88,
-              tags: ["machine-learning", "early-detection", "meta-analysis"]
-            },
-            {
-              id: "paper-3",
-              title: "Ethical Considerations in AI-Driven Healthcare: Current Challenges and Future Directions",
-              authors: ["Brown, T.", "Garcia, M."],
-              journal: "AI & Medicine Ethics",
-              year: 2024,
-              addedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-              status: "processing",
-              relevanceScore: 76,
-              tags: ["ethics", "healthcare", "AI"]
-            }
-          ]
-          
           setProject(foundProject)
-          setPapers(demoPapers)
-          setFilteredPapers(demoPapers)
+          // Use actual papers from the project, not demo papers
+          const actualPapers = foundProject.papers || []
+          setPapers(actualPapers)
+          setFilteredPapers(actualPapers)
         }
       }
       setLoading(false)
