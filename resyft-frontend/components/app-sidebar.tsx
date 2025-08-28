@@ -51,6 +51,11 @@ const data = {
       isActive: true,
     },
     {
+      title: "Research Agent",
+      url: "/research-agent",
+      icon: MessageSquare,
+    },
+    {
       title: "Dashboard",
       url: "/dashboard",
       icon: BarChart3,
@@ -79,11 +84,6 @@ const data = {
       title: "Search",
       url: "/search",
       icon: Search,
-    },
-    {
-      title: "Research Agent",
-      url: "/research-agent",
-      icon: MessageSquare,
     },
   ],
   navSecondary: [

@@ -8,9 +8,9 @@ import { Textarea } from '../components/ui/textarea'
 import { Badge } from '../components/ui/badge'
 import { Progress } from '../components/ui/progress'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion'
+import { VercelSection } from '../components/vercel-section'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { SectionNav } from '../components/section-nav'
 import { 
   Zap, 
   FileText, 
@@ -52,6 +52,21 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null)
   const [progress, setProgress] = useState(0)
+  const [waitlistEmail, setWaitlistEmail] = useState('')
+
+  const handleWaitlistSignup = async () => {
+    if (!waitlistEmail.trim()) return
+    
+    try {
+      // Here you would integrate with your waitlist service (e.g., ConvertKit, Mailchimp, etc.)
+      console.log('Waitlist signup:', waitlistEmail)
+      alert('Thank you for joining our waitlist! We\'ll be in touch soon.')
+      setWaitlistEmail('')
+    } catch (error) {
+      console.error('Waitlist signup error:', error)
+      alert('There was an error signing up. Please try again.')
+    }
+  }
 
   const handleAnalyze = async () => {
     if ((!url.trim() && analysisType === 'url') || (!text.trim() && analysisType === 'text')) return
@@ -110,8 +125,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
-      {/* Section Navigation */}
-      <SectionNav />
       {/* Navigation */}
       <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-lg border-b border-gray-200 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -125,9 +138,32 @@ export default function Home() {
               alt="Resyft Icon" 
               className="w-8 h-8 object-contain"
             />
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+            <span className="text-xl font-bold text-gray-900">
               Resyft
             </span>
+          </motion.div>
+          
+          {/* Navigation Links */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="hidden md:flex items-center space-x-8"
+          >
+            <a href="#features" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+              Features
+            </a>
+            <a href="#reviews-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+              Reviews
+            </a>
+            <a href="#faq-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+              FAQ
+            </a>
+            <Link href="/about" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+              About
+            </Link>
+            <Link href="/pricing" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+              Pricing
+            </Link>
           </motion.div>
           
           <motion.div
@@ -141,7 +177,7 @@ export default function Home() {
               </Button>
             </Link>
             <Link href="/signup">
-              <Button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                 Get Started
               </Button>
             </Link>
@@ -166,22 +202,65 @@ export default function Home() {
           >
             <Badge variant="secondary" className="mb-6 px-4 py-2 text-sm font-medium">
               <Sparkles className="w-4 h-4 mr-2" />
-              AI-Powered Research Analysis
+              AI-Powered Document Analysis
             </Badge>
             
             <h1 className="text-6xl md:text-7xl font-bold mb-8">
               <span className="bg-gradient-to-r from-gray-900 via-blue-900 to-cyan-900 bg-clip-text text-transparent">
-                Extract Research
+                Analyze Any Document
               </span>
               <br />
               <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                Insights in Seconds
+                With AI Precision
               </span>
             </h1>
             
             <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-              Paste a research paper URL or text, and get instant analysis with methods, statistics, and ready-to-cite text for your research.
+              Upload documents, PDFs, or paste text to get intelligent analysis tailored to your content's field - from neuroscience to cybersecurity.
             </p>
+            
+            {/* Waitlist Banner */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="mb-16"
+            >
+              <Card className="max-w-3xl mx-auto bg-blue-50 border-blue-200">
+                <CardContent className="p-8 text-center">
+                  <Badge variant="outline" className="mb-4 px-3 py-1 text-sm font-medium border-blue-300 text-blue-700">
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Early Access
+                  </Badge>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                    Join the Resyft Waitlist
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    Be among the first to experience the future of research analysis. Get early access to premium features and help shape the product.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                    <Input
+                      type="email"
+                      placeholder="Enter your email address"
+                      value={waitlistEmail}
+                      onChange={(e) => setWaitlistEmail(e.target.value)}
+                      className="flex-1 border-blue-300 focus:border-blue-500"
+                      onKeyDown={(e) => e.key === 'Enter' && handleWaitlistSignup()}
+                    />
+                    <Button 
+                      onClick={handleWaitlistSignup}
+                      disabled={!waitlistEmail.trim()}
+                      className="bg-blue-600 hover:bg-blue-700 hover:scale-105 text-white whitespace-nowrap transition-all duration-200"
+                    >
+                      Join Waitlist
+                    </Button>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-3">
+                    Early access • Priority support • No spam, ever
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
             
             {/* Analysis Interface */}
             <Card className="max-w-4xl mx-auto shadow-2xl border-0 overflow-hidden">
@@ -193,7 +272,7 @@ export default function Home() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setAnalysisType('url')}
-                      className={`mr-1 font-semibold ${analysisType === 'url' ? 'bg-blue-600 !text-white hover:bg-blue-700 hover:!text-white' : '!text-black hover:!text-black hover:bg-gray-200'}`}
+                      className={`mr-1 font-semibold ${analysisType === 'url' ? 'bg-gradient-to-r from-blue-600 to-cyan-600 !text-white hover:from-blue-700 hover:to-cyan-700 hover:!text-white' : '!text-black hover:!text-black hover:bg-gray-200'}`}
                       style={{ transition: 'all 0.05s ease-in-out' }}
                     >
                       <LinkIcon className="w-4 h-4 mr-2" />
@@ -203,7 +282,7 @@ export default function Home() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setAnalysisType('text')}
-                      className={`font-semibold ${analysisType === 'text' ? 'bg-blue-600 !text-white hover:bg-blue-700 hover:!text-white' : '!text-black hover:!text-black hover:bg-gray-200'}`}
+                      className={`font-semibold ${analysisType === 'text' ? 'bg-gradient-to-r from-blue-600 to-cyan-600 !text-white hover:from-blue-700 hover:to-cyan-700 hover:!text-white' : '!text-black hover:!text-black hover:bg-gray-200'}`}
                       style={{ transition: 'all 0.05s ease-in-out' }}
                     >
                       <FileText className="w-4 h-4 mr-2" />
@@ -216,14 +295,14 @@ export default function Home() {
                 <div className="space-y-4 mb-6">
                   {analysisType === 'url' ? (
                     <Input
-                      placeholder="https://arxiv.org/abs/2301.00001 or PubMed URL..."
+                      placeholder="https://example.com/document.pdf or any document URL..."
                       value={url}
                       onChange={(e) => setUrl(e.target.value)}
                       className="h-12 text-lg"
                     />
                   ) : (
                     <Textarea
-                      placeholder="Paste your research paper text here..."
+                      placeholder="Paste any document text here..."
                       value={text}
                       onChange={(e) => setText(e.target.value)}
                       className="min-h-32 text-base"
@@ -231,7 +310,7 @@ export default function Home() {
                   )}
                   
                   <Input
-                    placeholder="What information do you need? (e.g., 'Extract statistics and quotes supporting X hypothesis')"
+                    placeholder="What would you like to analyze? (e.g., 'Extract key findings and methodology')"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     className="h-11"
@@ -265,7 +344,7 @@ export default function Home() {
                   ) : (
                     <>
                       <Zap className="w-5 h-5 mr-2" />
-                      Analyze Research
+                      Analyze Document
                     </>
                   )}
                 </Button>
@@ -343,7 +422,7 @@ export default function Home() {
 
                     {/* Ready-to-Use Text */}
                     {analysis.suggested_text && (
-                      <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg border border-green-200">
+                      <div className="bg-green-50 p-6 rounded-lg border border-green-200">
                         <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
                           <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
                           Ready-to-Cite Text
@@ -373,7 +452,7 @@ export default function Home() {
                 transition={{ duration: 0.6, delay: 0.3 }}
                 className="mt-8 text-center"
               >
-                <Card className="max-w-2xl mx-auto border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50">
+                <Card className="max-w-2xl mx-auto border border-blue-200 bg-blue-50">
                   <CardContent className="p-6">
                     <h3 className="text-xl font-bold text-gray-900 mb-3">
                       Want more powerful analysis?
@@ -382,7 +461,7 @@ export default function Home() {
                       Create a project to customize analysis settings, save sources, and get AI text that perfectly supports your research thesis.
                     </p>
                     <Link href="/signup">
-                      <Button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700">
+                      <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                         Create Free Project
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
@@ -395,113 +474,156 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 px-4 bg-white relative overflow-hidden">
-        <div className="container mx-auto relative z-10">
+      {/* Instant Analysis Section */}
+      <VercelSection
+        badge="Lightning Fast"
+        title="Focus on insights, not manual analysis"
+        description="Get comprehensive document insights in seconds. Our AI-powered system instantly processes any document format and delivers structured analysis."
+        features={[
+          {
+            icon: Zap,
+            title: "Instant Analysis",
+            description: "Process documents in seconds, not hours. From technical papers to business reports - analyzed instantly with precision."
+          },
+          {
+            icon: FileText,
+            title: "Structured Insights", 
+            description: "Extract key findings, methodologies, and technical concepts in organized, actionable formats ready for your workflow."
+          }
+        ]}
+        ctaText="Try Analysis Now"
+        ctaHref="#demo"
+        className="bg-gradient-to-br from-blue-50/30 to-indigo-50/30 border-t border-blue-200/30"
+      />
+
+      {/* AI Intelligence Section */}
+      <VercelSection
+        badge="AI Powered"
+        title="Field-specific intelligence that adapts"
+        description="Specialized AI agents with expertise in neuroscience, cybersecurity, data science, and more provide expert-level analysis tailored to your document's domain."
+        features={[
+          {
+            icon: Brain,
+            title: "Expert AI Agents",
+            description: "AI specialists trained in specific fields analyze your content with domain expertise, ensuring accurate interpretation."
+          },
+          {
+            icon: Settings,
+            title: "Adaptive Processing",
+            description: "Automatically detects document type and routes to specialized analysis agents for maximum accuracy and relevance."
+          }
+        ]}
+        reversed={true}
+        className="bg-gradient-to-br from-emerald-50/20 to-green-50/20 border-t border-emerald-200/30"
+      />
+
+      {/* Quality & Support Section */}
+      <VercelSection
+        badge="Enterprise Ready"
+        title="Quality you can trust, formats you need"
+        description="Built for professional use with confidence scoring, reliability assessment, and support for all major document formats."
+        features={[
+          {
+            icon: Shield,
+            title: "Quality Assessment",
+            description: "Confidence scoring and reliability assessment help you understand the quality and trustworthiness of extracted insights."
+          },
+          {
+            icon: Users,
+            title: "Multi-Format Support",
+            description: "Analyze PDFs, text documents, URLs, and various file formats with consistent high-quality results across all platforms."
+          }
+        ]}
+        ctaText="See All Features"
+        ctaHref="#features-detail"
+        className="bg-gradient-to-br from-purple-50/20 to-violet-50/20 border-t border-purple-200/30"
+      />
+
+      {/* Stats Section */}
+      <section className="py-20 px-4 bg-white">
+        <div className="container mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Why Researchers Choose Resyft
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Trusted by professionals worldwide
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Powerful AI tools designed specifically for academic research and analysis
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Join thousands of professionals who have streamlined their document analysis with Resyft's AI
             </p>
           </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
             {[
-              {
-                icon: Zap,
-                title: "Instant Analysis",
-                description: "Get research insights in under 30 seconds without reading entire papers.",
-                gradient: "from-yellow-400 to-orange-500"
+              { 
+                number: "50K+", 
+                label: "Documents Analyzed"
               },
-              {
-                icon: FileText,
-                title: "Ready-to-Cite Text",
-                description: "Get perfectly formatted text you can copy directly into your research.",
-                gradient: "from-indigo-400 to-purple-500"
+              { 
+                number: "95%", 
+                label: "Analysis Accuracy"
               },
-              {
-                icon: Settings,
-                title: "Customizable Extraction",
-                description: "Configure what information to extract based on your research needs.",
-                gradient: "from-green-400 to-blue-500"
+              { 
+                number: "15s", 
+                label: "Average Processing Time"
               },
-              {
-                icon: Brain,
-                title: "AI Research Assistant",
-                description: "Advanced AI that understands academic writing and citation standards.",
-                gradient: "from-purple-400 to-pink-500"
-              },
-              {
-                icon: Shield,
-                title: "Reliability Scoring",
-                description: "Get reliability and relevance scores for every source you analyze.",
-                gradient: "from-blue-400 to-cyan-500"
-              },
-              {
-                icon: Users,
-                title: "Project Collaboration",
-                description: "Organize research by project and collaborate with your team.",
-                gradient: "from-pink-400 to-red-500"
+              { 
+                number: "1K+", 
+                label: "Professional Users"
               }
-            ].map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-              >
-                <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
-                  <CardContent className="p-8">
-                    <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${feature.gradient} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                      <feature.icon className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">
-                      {feature.title}
-                    </h3>
-                    <p className="text-gray-600">
-                      {feature.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              { number: "10K+", label: "Papers Analyzed" },
-              { number: "95%", label: "Accuracy Rate" },
-              { number: "30s", label: "Average Analysis Time" },
-              { number: "500+", label: "Research Teams" }
             ].map((stat, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="text-center"
               >
-                <div className="text-4xl font-bold mb-2">{stat.number}</div>
-                <div className="text-blue-100">{stat.label}</div>
+                <div className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+                  {stat.number}
+                </div>
+                <div className="text-gray-600 font-medium">
+                  {stat.label}
+                </div>
               </motion.div>
             ))}
           </div>
+
+          {/* Trust Indicators */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="text-center"
+          >
+            <p className="text-gray-500 mb-8">Trusted by leading research institutions</p>
+            <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
+              <div className="flex items-center text-gray-600">
+                <BookOpen className="w-4 h-4 mr-2" />
+                <span className="text-sm">Academic Partners</span>
+              </div>
+              <div className="flex items-center text-gray-600">
+                <Shield className="w-4 h-4 mr-2" />
+                <span className="text-sm">SOC 2 Compliant</span>
+              </div>
+              <div className="flex items-center text-gray-600">
+                <Award className="w-4 h-4 mr-2" />
+                <span className="text-sm">Research Validated</span>
+              </div>
+              <div className="flex items-center text-gray-600">
+                <Star className="w-4 h-4 mr-2" />
+                <span className="text-sm">98% Satisfaction</span>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Reviews Section */}
-      <section id="reviews-section" className="py-20 px-4 bg-gray-50">
+      <section id="reviews-section" className="py-24 px-4 bg-white">
         <div className="container mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -509,11 +631,11 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Trusted by Researchers Worldwide
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              What researchers are saying
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              See what researchers say about their experience with Resyft
+              Real feedback from researchers using Resyft to accelerate their work
             </p>
           </motion.div>
 
@@ -562,7 +684,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
               >
-                <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+                <Card className="h-full bg-white border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
                   <CardContent className="p-6">
                     <div className="flex mb-4">
                       {Array(review.rating)
@@ -673,7 +795,7 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="text-center"
           >
-            <Card className="max-w-2xl mx-auto border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50">
+            <Card className="max-w-2xl mx-auto border border-blue-200 bg-blue-50">
               <CardContent className="p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-3">
                   Still have questions?
@@ -682,7 +804,7 @@ export default function Home() {
                   Our research specialists are here to help you get the most out of Resyft.
                 </p>
                 <Link href="/support">
-                  <Button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                     Contact Support
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
@@ -693,38 +815,36 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section - Matching Screenshot Design */}
-      <section className="py-20 px-4 bg-gray-900">
+      {/* CTA Section */}
+      <section className="py-24 px-4 bg-gray-900">
         <div className="container mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="max-w-4xl mx-auto"
+            className="max-w-4xl mx-auto text-center"
           >
-            <div className="border border-gray-700 rounded-lg p-12 text-center">
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                Ready to Accelerate Your Research?
-              </h2>
-              <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-                Join thousands of researchers who have streamlined their literature review process and discovered insights faster than ever before.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
-                <Link href="/signup">
-                  <Button size="lg" className="bg-white !text-black hover:bg-gray-100 hover:!text-black rounded-full h-12 px-8 text-base font-bold border-2 border-gray-200">
-                    Launch Now!
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </Link>
-                <Button size="lg" variant="outline" className="border-white bg-transparent text-white hover:bg-white hover:text-gray-900 rounded-full h-12 px-8 text-base font-semibold">
-                  Schedule a Pro Demo
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Ready to accelerate your research?
+            </h2>
+            <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+              Join thousands of researchers who have streamlined their literature review process and discovered insights faster than ever before.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+              <Link href="/signup">
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white h-12 px-8 text-base font-semibold">
+                  Start Analyzing Papers
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
-              </div>
-              <p className="text-sm text-gray-400">
-                No credit card required. Free forever. Upgrade anytime.
-              </p>
+              </Link>
+              <Button size="lg" variant="outline" className="border-gray-400 bg-transparent text-gray-300 hover:bg-gray-800 hover:text-white h-12 px-8 text-base font-semibold">
+                Schedule a Demo
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
             </div>
+            <p className="text-sm text-gray-400">
+              No credit card required • Free to get started • Cancel anytime
+            </p>
           </motion.div>
         </div>
       </section>
@@ -754,8 +874,8 @@ export default function Home() {
               <h3 className="text-lg font-semibold text-white mb-4">Product</h3>
               <ul className="space-y-3">
                 <li><Link href="/features" className="text-gray-400 hover:text-white transition-colors">Features</Link></li>
-                <li><Link href="/pricing" className="text-gray-400 hover:text-white transition-colors">Pricing</Link></li>
-                <li><Link href="/api" className="text-gray-400 hover:text-white transition-colors">API</Link></li>
+                <li><Link href="/pricing" className="text-gray-400 hover:text-white transition-colors">Why Resyft?</Link></li>
+                <li><Link href="/api" className="text-gray-400 hover:text-white transition-colors">For Students</Link></li>
               </ul>
             </div>
 
@@ -763,7 +883,7 @@ export default function Home() {
               <h3 className="text-lg font-semibold text-white mb-4">Company</h3>
               <ul className="space-y-3">
                 <li><Link href="/about" className="text-gray-400 hover:text-white transition-colors">About</Link></li>
-                <li><Link href="/blog" className="text-gray-400 hover:text-white transition-colors">Blog</Link></li>
+                <li><Link href="/blog" className="text-gray-400 hover:text-white transition-colors">Team</Link></li>
                 <li><Link href="/contact" className="text-gray-400 hover:text-white transition-colors">Contact</Link></li>
               </ul>
             </div>
@@ -772,7 +892,7 @@ export default function Home() {
           <div className="border-t border-gray-700 pt-8 mt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <div className="text-gray-400 text-sm">
-                © 2024 Resyft. All rights reserved.
+                © 2025 Resyft. All rights reserved.
               </div>
               <div className="flex items-center space-x-4 mt-4 md:mt-0">
                 <Badge variant="secondary" className="bg-white/10 text-white border-white/20">
