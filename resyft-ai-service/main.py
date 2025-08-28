@@ -11,6 +11,7 @@ import uvicorn
 from services.extractor import PaperExtractor
 from services.scraper import PaperScraper
 from services.agent_integration import agent_integration
+from models.agent_workflow import analyze_document, WorkflowResult, WorkflowConfig
 
 app = FastAPI(title="Resyft AI Service")  # Production-ready AI service
 
@@ -71,6 +72,43 @@ class AdvancedExtractionResponse(BaseModel):
     supports_thesis: Optional[bool]
     contradictions: List[str]
     future_research: List[str]
+
+class DocumentAnalysisRequest(BaseModel):
+    """Request model for the new agentic document analysis system"""
+    content: Optional[str] = None
+    url: Optional[str] = None
+    filename: Optional[str] = None
+    source_type: str = Field(default="text", pattern="^(text|url|file)$")
+    user_requirements: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+class DocumentAnalysisResponse(BaseModel):
+    """Response model for the new agentic document analysis system"""
+    success: bool
+    processing_time_seconds: float
+    timestamp: str
+    
+    # Classification results
+    primary_topic: str
+    confidence_score: float
+    classification_reasoning: str
+    key_indicators: List[str]
+    secondary_topics: List[str]
+    
+    # Analysis results
+    key_findings: List[str]
+    methodology: Optional[str]
+    technical_concepts: List[str]
+    data_insights: Dict[str, Any]
+    practical_applications: List[str]
+    limitations: List[str]
+    future_directions: List[str]
+    confidence_assessment: str
+    field_specific_insights: Dict[str, Any]
+    
+    # Error handling
+    error_message: Optional[str] = None
+    warnings: List[str] = Field(default_factory=list)
 
 extractor = PaperExtractor()
 scraper = PaperScraper()
@@ -289,6 +327,141 @@ async def extract_paper_advanced(request: AdvancedExtractionRequest):
         
     except Exception as e:
         raise HTTPException(500, f"Advanced extraction failed: {str(e)}")
+
+@app.post("/analyze", response_model=DocumentAnalysisResponse)
+async def analyze_document_endpoint(request: DocumentAnalysisRequest):
+    """
+    New agentic document analysis endpoint using specialized agents
+    Supports any type of document (not just research papers)
+    """
+    import traceback
+    
+    try:
+        # Enhanced debug logging
+        print(f"🌐 === NEW DOCUMENT ANALYSIS REQUEST ===")
+        print(f"📝 Content provided: {bool(request.content)}")
+        print(f"📝 URL provided: {bool(request.url)}")
+        if request.content:
+            print(f"📝 Content length: {len(request.content)} chars")
+            print(f"📝 Content preview: {request.content[:100]}...")
+        print(f"📝 Source type: {request.source_type}")
+        print(f"📝 Filename: {request.filename}")
+        print(f"📝 User requirements: {request.user_requirements}")
+        
+        # Input validation
+        if not request.content and not request.url:
+            raise HTTPException(400, "Either content or url is required")
+        
+        # Get document content
+        document_content = None
+        try:
+            if request.url:
+                print(f"🔍 Scraping content from URL: {request.url}")
+                document_content = await scraper.scrape_paper(request.url)
+                if not document_content or len(document_content.strip()) < 50:
+                    raise HTTPException(400, "Failed to extract meaningful content from URL")
+            elif request.content:
+                document_content = request.content.strip()
+                print(f"🔍 Using provided content: {len(document_content)} characters")
+                
+            if len(document_content.strip()) < 50:
+                raise HTTPException(400, "Document content must be at least 50 characters long")
+                
+        except HTTPException:
+            raise
+        except Exception as e:
+            print(f"❌ Error getting document content: {e}")
+            raise HTTPException(400, f"Failed to retrieve document content: {str(e)}")
+        
+        # Run agentic workflow analysis
+        print("🤖 Starting agentic document analysis workflow")
+        
+        try:
+            # Create workflow configuration
+            config = WorkflowConfig(
+                min_confidence_threshold=0.3,
+                enable_fallback_analysis=True,
+                max_processing_time=300,
+                detailed_logging=True
+            )
+            
+            # Run the complete workflow
+            workflow_result = await analyze_document(
+                content=document_content,
+                source_type=request.source_type,
+                filename=request.filename,
+                user_requirements=request.user_requirements,
+                metadata=request.metadata,
+                config=config
+            )
+            
+            print(f"✅ Agentic analysis completed successfully")
+            print(f"📊 Topic: {workflow_result.classification.primary_topic}")
+            print(f"📊 Confidence: {workflow_result.classification.confidence_score:.2f}")
+            print(f"⏱️ Processing time: {workflow_result.processing_time_seconds:.2f}s")
+            
+            # Convert WorkflowResult to DocumentAnalysisResponse
+            return DocumentAnalysisResponse(
+                success=workflow_result.success,
+                processing_time_seconds=workflow_result.processing_time_seconds,
+                timestamp=workflow_result.timestamp.isoformat(),
+                
+                # Classification results
+                primary_topic=workflow_result.classification.primary_topic.value,
+                confidence_score=workflow_result.classification.confidence_score,
+                classification_reasoning=workflow_result.classification.reasoning,
+                key_indicators=workflow_result.classification.key_indicators,
+                secondary_topics=[topic.value for topic in workflow_result.classification.secondary_topics],
+                
+                # Analysis results
+                key_findings=workflow_result.analysis.key_findings,
+                methodology=workflow_result.analysis.methodology,
+                technical_concepts=workflow_result.analysis.technical_concepts,
+                data_insights=workflow_result.analysis.data_insights or {},
+                practical_applications=workflow_result.analysis.practical_applications,
+                limitations=workflow_result.analysis.limitations,
+                future_directions=workflow_result.analysis.future_directions,
+                confidence_assessment=workflow_result.analysis.confidence_assessment,
+                field_specific_insights=workflow_result.analysis.field_specific_insights,
+                
+                # Error handling
+                error_message=workflow_result.error_message,
+                warnings=workflow_result.warnings
+            )
+            
+        except Exception as e:
+            print(f"❌ Error during agentic analysis: {e}")
+            print(f"❌ Traceback: {traceback.format_exc()}")
+            
+            # Return error response
+            return DocumentAnalysisResponse(
+                success=False,
+                processing_time_seconds=0.0,
+                timestamp="",
+                primary_topic="general",
+                confidence_score=0.0,
+                classification_reasoning=f"Analysis failed: {str(e)}",
+                key_indicators=[],
+                secondary_topics=[],
+                key_findings=[],
+                methodology="Unknown",
+                technical_concepts=[],
+                data_insights={},
+                practical_applications=[],
+                limitations=[f"Analysis failed due to error: {str(e)}"],
+                future_directions=[],
+                confidence_assessment="None - System Error",
+                field_specific_insights={},
+                error_message=str(e),
+                warnings=[]
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Unexpected error in analyze_document_endpoint: {e}")
+        print(f"❌ Traceback: {traceback.format_exc()}")
+        raise HTTPException(500, f"Internal server error: {str(e)}")
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8001))
