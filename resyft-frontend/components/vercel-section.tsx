@@ -32,8 +32,9 @@ export function VercelSection({
   className = ""
 }: VercelSectionProps) {
   return (
-    <section className={`py-24 bg-gradient-to-br from-slate-50 to-white border-t border-slate-200/50 ${className}`}>
+    <section className={`py-24 bg-gray-50 ${className}`}>
       <div className="container px-4 md:px-6 max-w-7xl mx-auto">
+        <div className="bg-white rounded-2xl border border-gray-200 p-8 md:p-12 shadow-sm">
         <div className={`grid lg:grid-cols-2 gap-12 items-center ${reversed ? 'lg:flex-row-reverse' : ''}`}>
           {/* Content Side */}
           <motion.div
@@ -52,11 +53,11 @@ export function VercelSection({
               </Badge>
             )}
             
-            <div className="space-y-4">
-              <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-slate-900 leading-tight">
+            <div className="space-y-3">
+              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
                 {title}
               </h2>
-              <p className="text-xl text-slate-600 leading-relaxed">
+              <p className="text-base text-gray-600 leading-relaxed">
                 {description}
               </p>
             </div>
@@ -91,27 +92,24 @@ export function VercelSection({
                 transition={{ duration: 0.4, delay: index * 0.1 }}
                 viewport={{ once: true }}
               >
-                <Card className="border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-white/50 backdrop-blur-sm">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-                        <feature.icon className="h-6 w-6 text-blue-600" />
-                      </div>
-                      
-                      <div className="space-y-2 flex-1">
-                        <h3 className="font-semibold text-lg text-slate-900">
-                          {feature.title}
-                        </h3>
-                        <p className="text-slate-600 leading-relaxed">
-                          {feature.description}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="flex items-start gap-4 p-4">
+                  <div className="p-2 bg-blue-50 rounded-lg border border-blue-100">
+                    <feature.icon className="h-5 w-5 text-blue-600" />
+                  </div>
+                  
+                  <div className="space-y-1 flex-1">
+                    <h3 className="font-semibold text-base text-gray-900">
+                      {feature.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </motion.div>
+        </div>
         </div>
       </div>
     </section>

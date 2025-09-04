@@ -1,912 +1,502 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { Button } from '../components/ui/button'
-import { Card, CardContent } from '../components/ui/card'
-import { Input } from '../components/ui/input'
-import { Textarea } from '../components/ui/textarea'
-import { Badge } from '../components/ui/badge'
-import { Progress } from '../components/ui/progress'
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion'
-import { VercelSection } from '../components/vercel-section'
-import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { 
-  Zap, 
-  FileText, 
-  BarChart3, 
-  Shield, 
-  Brain,
+import { useState, useRef, useEffect } from "react"
+import { Button } from "../components/ui/button"
+import { Input } from "../components/ui/input"
+import { Card, CardContent } from "../components/ui/card"
+import { ScrollArea } from "../components/ui/scroll-area"
+import { Badge } from "../components/ui/badge"
+import { Separator } from "../components/ui/separator"
+import { AppSidebar } from "../components/app-sidebar"
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "../components/ui/sidebar"
+import {
+  Send,
+  User,
+  RefreshCw,
+  Search,
+  Lightbulb,
+  FileText,
   ArrowRight,
-  Sparkles,
-  Users,
-  CheckCircle,
-  Upload,
-  Link as LinkIcon,
-  Settings,
-  Star,
-  Clock,
-  BookOpen,
-  TrendingUp,
-  Award,
-  Target,
-  ChevronDown
-} from 'lucide-react'
+  ChevronDown,
+  Filter,
+  Loader2,
+  AlertCircle,
+  Sparkles
+} from "lucide-react"
 
-interface AnalysisResult {
-  methods?: string
-  sample_size?: number
-  key_statistics?: any
-  conclusions?: string
-  important_quotes?: string[]
-  reliability_score?: number
-  relevance_score?: number
-  suggested_text?: string
+interface Message {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: Date
+  tools_used?: string[]
+  error?: boolean
+}
+
+// Simple typing indicator component
+function TypingIndicator() {
+  return (
+    <div className="flex gap-3 justify-start">
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+        <div className="flex items-center gap-0.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
+          <div className="w-1 h-1 rounded-full bg-blue-200"></div>
+        </div>
+      </div>
+      
+      <div className="max-w-4xl mr-8 md:mr-16">
+        <div className="bg-slate-50 text-slate-900 rounded-2xl px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="flex gap-1">
+              <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+              <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+            </div>
+            <span className="text-sm text-slate-600">AI is thinking...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function Home() {
-  const [analysisType, setAnalysisType] = useState<'url' | 'text'>('url')
-  const [url, setUrl] = useState('')
-  const [text, setText] = useState('')
-  const [prompt, setPrompt] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null)
-  const [progress, setProgress] = useState(0)
-  const [waitlistEmail, setWaitlistEmail] = useState('')
+  const [messages, setMessages] = useState<Message[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
+  const [selectedMode, setSelectedMode] = useState<"general" | "scholar">("scholar")
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const landingInputRef = useRef<HTMLInputElement>(null)
+  const chatInputRef = useRef<HTMLInputElement>(null)
 
-  const handleWaitlistSignup = async () => {
-    if (!waitlistEmail.trim()) return
-    
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  const handleSubmit = async (message?: string, fromLanding?: boolean) => {
+    const inputElement = fromLanding ? landingInputRef.current : chatInputRef.current
+    const messageToSend = message || (inputElement?.value?.trim() || "")
+    if (!messageToSend || isLoading) return
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: messageToSend,
+      timestamp: new Date()
+    }
+
+    setMessages(prev => [...prev, userMessage])
+    if (inputElement) inputElement.value = ""
+    setIsLoading(true)
+    setIsTyping(true)
+
     try {
-      // Here you would integrate with your waitlist service (e.g., ConvertKit, Mailchimp, etc.)
-      console.log('Waitlist signup:', waitlistEmail)
-      alert('Thank you for joining our waitlist! We\'ll be in touch soon.')
-      setWaitlistEmail('')
+      // Generate AI response
+      const aiResponseData = await generateAIResponse(messageToSend)
+      
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: aiResponseData.response,
+        timestamp: new Date(),
+        tools_used: aiResponseData.tools_used
+      }
+
+      setMessages(prev => [...prev, assistantMessage])
     } catch (error) {
-      console.error('Waitlist signup error:', error)
-      alert('There was an error signing up. Please try again.')
+      console.error('Message handling error:', error)
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "I apologize, but I'm having trouble processing your request right now. This could be due to a temporary service issue. Please try again in a moment.",
+        timestamp: new Date(),
+        error: true
+      }
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
+      setIsTyping(false)
     }
   }
 
-  const handleAnalyze = async () => {
-    if ((!url.trim() && analysisType === 'url') || (!text.trim() && analysisType === 'text')) return
-    
-    setLoading(true)
-    setAnalysis(null)
-    setProgress(0)
-
-    // Simulate progress
-    const progressInterval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 90) {
-          clearInterval(progressInterval)
-          return 90
-        }
-        return prev + 10
-      })
-    }, 200)
-
+  const generateAIResponse = async (input: string): Promise<{ response: string, tools_used?: string[] }> => {
     try {
-      const response = await fetch(`/api/extract?t=${Date.now()}`, {
+      const conversationHistory = messages
+        .filter(m => !m.error)
+        .map(m => ({
+          role: m.role,
+          content: m.content,
+          ...(m.tools_used && { tools_used: m.tools_used })
+        }))
+
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache',
         },
-        body: JSON.stringify({ 
-          paper_url: analysisType === 'url' ? url : undefined,
-          paper_text: analysisType === 'text' ? text : undefined,
-          extraction_type: 'all',
-          custom_prompt: prompt || 'Extract key findings, methods, sample size, and conclusions',
-          use_pydantic_agent: true
-        }),
+        body: JSON.stringify({
+          message: input,
+          conversation_history: conversationHistory.slice(-10),
+          mode: selectedMode
+        })
       })
 
-      const result = await response.json()
-      setProgress(100)
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`)
+      }
+
+      const data = await response.json()
       
-      setAnalysis({
-        methods: result.methods || 'No methodology information extracted',
-        sample_size: result.sample_size || null,
-        conclusions: result.conclusions || 'No conclusions extracted from the paper',
-        important_quotes: result.important_quotes || ['No quotes extracted from the paper'],
-        reliability_score: result.reliability_score || 0,
-        relevance_score: result.relevance_score || 0,
-        suggested_text: result._full_result?.suggested_text || 'Analysis completed - check results above'
-      })
+      if (data.response) {
+        return {
+          response: data.response,
+          tools_used: data.tools_used || []
+        }
+      } else {
+        throw new Error('No valid response generated')
+      }
+      
     } catch (error) {
-      console.error('Error:', error)
-    } finally {
-      setLoading(false)
-      clearInterval(progressInterval)
-      setProgress(100)
+      console.error('AI Response Error:', error)
+      return {
+        response: `I understand you're asking about "${input}". As your research agent, I can help with paper analysis, literature search, data synthesis, hypothesis generation, and citation management. Could you provide more specific details?`,
+        tools_used: []
+      }
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-lg border-b border-gray-200 z-50">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center space-x-2"
-          >
-            <img 
-              src="/resyft-2.png" 
-              alt="Resyft Icon" 
-              className="w-8 h-8 object-contain"
-            />
-            <span className="text-xl font-bold text-gray-900">
-              Resyft
-            </span>
-          </motion.div>
-          
-          {/* Navigation Links */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="hidden md:flex items-center space-x-8"
-          >
-            <a href="#features" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-              Features
-            </a>
-            <a href="#reviews-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-              Reviews
-            </a>
-            <a href="#faq-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-              FAQ
-            </a>
-            <Link href="/about" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-              About
-            </Link>
-            <Link href="/pricing" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-              Pricing
-            </Link>
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center space-x-4"
-          >
-            <Link href="/login">
-              <Button variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium">
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/signup">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                Get Started
-              </Button>
-            </Link>
-          </motion.div>
-        </div>
-      </nav>
+  const clearConversation = () => {
+    setMessages([])
+  }
 
-      {/* Hero Section with Analysis Tool */}
-      <section className="pt-32 pb-20 px-4 relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-5 pointer-events-none">
-          <div className="absolute top-20 left-20 w-64 h-64 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 blur-3xl"></div>
-          <div className="absolute top-40 right-32 w-48 h-48 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 blur-2xl"></div>
-        </div>
-        
-        <div className="container mx-auto text-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="max-w-4xl mx-auto"
-          >
-            <Badge variant="secondary" className="mb-6 px-4 py-2 text-sm font-medium">
-              <Sparkles className="w-4 h-4 mr-2" />
-              AI-Powered Document Analysis
-            </Badge>
-            
-            <h1 className="text-6xl md:text-7xl font-bold mb-8">
-              <span className="bg-gradient-to-r from-gray-900 via-blue-900 to-cyan-900 bg-clip-text text-transparent">
-                Analyze Any Document
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                With AI Precision
-              </span>
-            </h1>
-            
-            <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-              Upload documents, PDFs, or paste text to get intelligent analysis tailored to your content's field - from neuroscience to cybersecurity.
-            </p>
-            
-            {/* Waitlist Banner */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mb-16"
-            >
-              <Card className="max-w-3xl mx-auto bg-blue-50 border-blue-200">
-                <CardContent className="p-8 text-center">
-                  <Badge variant="outline" className="mb-4 px-3 py-1 text-sm font-medium border-blue-300 text-blue-700">
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Early Access
-                  </Badge>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                    Join the Resyft Waitlist
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Be among the first to experience the future of research analysis. Get early access to premium features and help shape the product.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-                    <Input
-                      type="email"
-                      placeholder="Enter your email address"
-                      value={waitlistEmail}
-                      onChange={(e) => setWaitlistEmail(e.target.value)}
-                      className="flex-1 border-blue-300 focus:border-blue-500"
-                      onKeyDown={(e) => e.key === 'Enter' && handleWaitlistSignup()}
-                    />
-                    <Button 
-                      onClick={handleWaitlistSignup}
-                      disabled={!waitlistEmail.trim()}
-                      className="bg-blue-600 hover:bg-blue-700 hover:scale-105 text-white whitespace-nowrap transition-all duration-200"
-                    >
-                      Join Waitlist
-                    </Button>
-                  </div>
-                  <p className="text-sm text-gray-500 mt-3">
-                    Early access • Priority support • No spam, ever
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-            
-            {/* Analysis Interface */}
-            <Card className="max-w-4xl mx-auto shadow-2xl border-0 overflow-hidden">
-              <CardContent className="p-8">
-                {/* Input Type Toggle */}
-                <div className="flex justify-center mb-6">
-                  <div className="bg-gray-100 p-1 rounded-lg">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setAnalysisType('url')}
-                      className={`mr-1 font-semibold ${analysisType === 'url' ? 'bg-gradient-to-r from-blue-600 to-cyan-600 !text-white hover:from-blue-700 hover:to-cyan-700 hover:!text-white' : '!text-black hover:!text-black hover:bg-gray-200'}`}
-                      style={{ transition: 'all 0.05s ease-in-out' }}
-                    >
-                      <LinkIcon className="w-4 h-4 mr-2" />
-                      URL
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setAnalysisType('text')}
-                      className={`font-semibold ${analysisType === 'text' ? 'bg-gradient-to-r from-blue-600 to-cyan-600 !text-white hover:from-blue-700 hover:to-cyan-700 hover:!text-white' : '!text-black hover:!text-black hover:bg-gray-200'}`}
-                      style={{ transition: 'all 0.05s ease-in-out' }}
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      Text
-                    </Button>
-                  </div>
-                </div>
+  const handleExampleClick = (example: string) => {
+    handleSubmit(example)
+  }
 
-                {/* Input Area */}
-                <div className="space-y-4 mb-6">
-                  {analysisType === 'url' ? (
-                    <Input
-                      placeholder="https://example.com/document.pdf or any document URL..."
-                      value={url}
-                      onChange={(e) => setUrl(e.target.value)}
-                      className="h-12 text-lg"
-                    />
-                  ) : (
-                    <Textarea
-                      placeholder="Paste any document text here..."
-                      value={text}
-                      onChange={(e) => setText(e.target.value)}
-                      className="min-h-32 text-base"
-                    />
-                  )}
-                  
-                  <Input
-                    placeholder="What would you like to analyze? (e.g., 'Extract key findings and methodology')"
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    className="h-11"
+  // Landing page when no messages - optimized for collapsed sidebar
+  const LandingPage = () => (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white flex flex-col items-center justify-center px-6 font-['Inter',sans-serif]">
+      <div className="w-full max-w-5xl mx-auto">
+
+        {/* Main Heading */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 leading-tight">
+            What research question do you have?
+          </h1>
+          <p className="text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
+            Advanced AI research assistant for paper analysis, literature synthesis, and citation management
+          </p>
+        </div>
+
+        {/* Search Input */}
+        <div className="mb-8">
+          <div className="relative max-w-4xl mx-auto">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 focus-within:border-indigo-300 focus-within:shadow-md p-5">
+              {/* Main input row */}
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <input
+                    ref={landingInputRef}
+                    type="text"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        handleSubmit(undefined, true)
+                      }
+                    }}
+                    placeholder="Ask anything about research..."
+                    className="w-full text-lg border-0 bg-transparent focus:ring-0 focus:outline-none placeholder:text-slate-400"
+                    disabled={isLoading}
+                    autoComplete="off"
                   />
                 </div>
-
-                {/* Progress Bar */}
-                {loading && (
-                  <div className="mb-6">
-                    <Progress value={progress} className="h-2" />
-                    <p className="text-sm text-gray-600 mt-2">
-                      {progress < 30 ? 'Processing document...' :
-                       progress < 60 ? 'Extracting key information...' :
-                       progress < 90 ? 'Analyzing content...' :
-                       'Finalizing results...'}
-                    </p>
-                  </div>
-                )}
-
-                {/* Analyze Button */}
                 <Button
-                  onClick={handleAnalyze}
-                  disabled={loading || (analysisType === 'url' ? !url.trim() : !text.trim())}
-                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-lg font-semibold"
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handleSubmit(undefined, true)
+                  }}
+                  className="bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl px-5 py-2.5 transition-colors flex-shrink-0"
+                  disabled={isLoading}
                 >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Analyzing...
-                    </>
+                  {isLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-white" />
                   ) : (
-                    <>
-                      <Zap className="w-5 h-5 mr-2" />
-                      Analyze Document
-                    </>
+                    <Search className="w-5 h-5" />
                   )}
                 </Button>
-              </CardContent>
-            </Card>
-
-            {/* Results Section */}
-            {analysis && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="mt-8 max-w-4xl mx-auto"
-              >
-                <Card className="shadow-2xl border-0">
-                  <CardContent className="p-8">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                      <BarChart3 className="w-6 h-6 mr-3 text-green-600" />
-                      Analysis Results
-                    </h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                      {/* Key Metrics */}
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-900 mb-2">Methods</h4>
-                          <p className="text-gray-700">{analysis.methods}</p>
-                        </div>
-                        
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-900 mb-2">Sample Size</h4>
-                          <Badge variant="secondary" className="text-lg px-3 py-1">
-                            {analysis.sample_size?.toLocaleString()} participants
-                          </Badge>
-                        </div>
-                        
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-900 mb-2">Reliability & Relevance</h4>
-                          <div className="flex gap-4">
-                            <div className="text-center">
-                              <div className="text-2xl font-bold text-blue-600">
-                                {((analysis.reliability_score || 0) * 100).toFixed(0)}%
-                              </div>
-                              <div className="text-sm text-gray-500">Reliability</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-2xl font-bold text-green-600">
-                                {((analysis.relevance_score || 0) * 100).toFixed(0)}%
-                              </div>
-                              <div className="text-sm text-gray-500">Relevance</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Key Insights */}
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-900 mb-2">Conclusions</h4>
-                          <p className="text-gray-700">{analysis.conclusions}</p>
-                        </div>
-                        
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-900 mb-2">Key Quotes</h4>
-                          <div className="space-y-2">
-                            {analysis.important_quotes?.map((quote, index) => (
-                              <div key={index} className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500">
-                                <p className="text-gray-700 italic">{quote}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Ready-to-Use Text */}
-                    {analysis.suggested_text && (
-                      <div className="bg-green-50 p-6 rounded-lg border border-green-200">
-                        <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                          <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
-                          Ready-to-Cite Text
-                        </h4>
-                        <p className="text-gray-800 leading-relaxed mb-4">
-                          {analysis.suggested_text}
-                        </p>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => navigator.clipboard.writeText(analysis.suggested_text || '')}
-                        >
-                          Copy to Clipboard
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {/* CTA for Project Creation */}
-            {analysis && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="mt-8 text-center"
-              >
-                <Card className="max-w-2xl mx-auto border border-blue-200 bg-blue-50">
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">
-                      Want more powerful analysis?
-                    </h3>
-                    <p className="text-gray-600 mb-4">
-                      Create a project to customize analysis settings, save sources, and get AI text that perfectly supports your research thesis.
-                    </p>
-                    <Link href="/signup">
-                      <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                        Create Free Project
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Instant Analysis Section */}
-      <VercelSection
-        badge="Lightning Fast"
-        title="Focus on insights, not manual analysis"
-        description="Get comprehensive document insights in seconds. Our AI-powered system instantly processes any document format and delivers structured analysis."
-        features={[
-          {
-            icon: Zap,
-            title: "Instant Analysis",
-            description: "Process documents in seconds, not hours. From technical papers to business reports - analyzed instantly with precision."
-          },
-          {
-            icon: FileText,
-            title: "Structured Insights", 
-            description: "Extract key findings, methodologies, and technical concepts in organized, actionable formats ready for your workflow."
-          }
-        ]}
-        ctaText="Try Analysis Now"
-        ctaHref="#demo"
-        className="bg-gradient-to-br from-blue-50/30 to-indigo-50/30 border-t border-blue-200/30"
-      />
-
-      {/* AI Intelligence Section */}
-      <VercelSection
-        badge="AI Powered"
-        title="Field-specific intelligence that adapts"
-        description="Specialized AI agents with expertise in neuroscience, cybersecurity, data science, and more provide expert-level analysis tailored to your document's domain."
-        features={[
-          {
-            icon: Brain,
-            title: "Expert AI Agents",
-            description: "AI specialists trained in specific fields analyze your content with domain expertise, ensuring accurate interpretation."
-          },
-          {
-            icon: Settings,
-            title: "Adaptive Processing",
-            description: "Automatically detects document type and routes to specialized analysis agents for maximum accuracy and relevance."
-          }
-        ]}
-        reversed={true}
-        className="bg-gradient-to-br from-emerald-50/20 to-green-50/20 border-t border-emerald-200/30"
-      />
-
-      {/* Quality & Support Section */}
-      <VercelSection
-        badge="Enterprise Ready"
-        title="Quality you can trust, formats you need"
-        description="Built for professional use with confidence scoring, reliability assessment, and support for all major document formats."
-        features={[
-          {
-            icon: Shield,
-            title: "Quality Assessment",
-            description: "Confidence scoring and reliability assessment help you understand the quality and trustworthiness of extracted insights."
-          },
-          {
-            icon: Users,
-            title: "Multi-Format Support",
-            description: "Analyze PDFs, text documents, URLs, and various file formats with consistent high-quality results across all platforms."
-          }
-        ]}
-        ctaText="See All Features"
-        ctaHref="#features-detail"
-        className="bg-gradient-to-br from-purple-50/20 to-violet-50/20 border-t border-purple-200/30"
-      />
-
-      {/* Stats Section */}
-      <section className="py-20 px-4 bg-white">
-        <div className="container mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Trusted by professionals worldwide
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Join thousands of professionals who have streamlined their document analysis with Resyft's AI
-            </p>
-          </motion.div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
-            {[
-              { 
-                number: "50K+", 
-                label: "Documents Analyzed"
-              },
-              { 
-                number: "95%", 
-                label: "Analysis Accuracy"
-              },
-              { 
-                number: "15s", 
-                label: "Average Processing Time"
-              },
-              { 
-                number: "1K+", 
-                label: "Professional Users"
-              }
-            ].map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="text-center"
-              >
-                <div className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
-                  {stat.number}
-                </div>
-                <div className="text-gray-600 font-medium">
-                  {stat.label}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Trust Indicators */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-center"
-          >
-            <p className="text-gray-500 mb-8">Trusted by leading research institutions</p>
-            <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
-              <div className="flex items-center text-gray-600">
-                <BookOpen className="w-4 h-4 mr-2" />
-                <span className="text-sm">Academic Partners</span>
               </div>
-              <div className="flex items-center text-gray-600">
-                <Shield className="w-4 h-4 mr-2" />
-                <span className="text-sm">SOC 2 Compliant</span>
-              </div>
-              <div className="flex items-center text-gray-600">
-                <Award className="w-4 h-4 mr-2" />
-                <span className="text-sm">Research Validated</span>
-              </div>
-              <div className="flex items-center text-gray-600">
-                <Star className="w-4 h-4 mr-2" />
-                <span className="text-sm">98% Satisfaction</span>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
 
-      {/* Reviews Section */}
-      <section id="reviews-section" className="py-24 px-4 bg-white">
-        <div className="container mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              What researchers are saying
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Real feedback from researchers using Resyft to accelerate their work
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                quote: "Resyft has transformed my literature review process. What used to take hours now takes minutes, and I get better quality extracts.",
-                author: "Dr. Sarah Johnson",
-                role: "Associate Professor, Stanford University",
-                rating: 5,
-              },
-              {
-                quote: "The AI analysis is incredibly accurate. It captures nuances in research papers that I might have missed in a quick read.",
-                author: "Michael Chen",
-                role: "PhD Candidate, MIT",
-                rating: 5,
-              },
-              {
-                quote: "The ready-to-cite text feature has saved me countless hours of formatting. Perfect for systematic reviews.",
-                author: "Dr. Emily Rodriguez",
-                role: "Research Scientist, Johns Hopkins",
-                rating: 5,
-              },
-              {
-                quote: "We've tried other research tools, but Resyft's accuracy and speed are unmatched. Essential for our workflow.",
-                author: "Dr. David Kim",
-                role: "Principal Investigator, Harvard Medical",
-                rating: 5,
-              },
-              {
-                quote: "The reliability scoring helps me quickly identify the most credible sources. Like having a research assistant.",
-                author: "Lisa Patel",
-                role: "Graduate Student, UC Berkeley",
-                rating: 5,
-              },
-              {
-                quote: "Implementation was seamless. Our research team's productivity has increased by 40% since using Resyft.",
-                author: "Dr. James Wilson",
-                role: "Research Director, Mayo Clinic",
-                rating: 5,
-              },
-            ].map((review, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-              >
-                <Card className="h-full bg-white border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex mb-4">
-                      {Array(review.rating)
-                        .fill(0)
-                        .map((_, i) => (
-                          <Star key={i} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        ))}
-                    </div>
-                    <p className="text-gray-700 mb-6 leading-relaxed">{review.quote}</p>
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-3">
-                        {review.author.split(' ').map(n => n[0]).join('')}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">{review.author}</p>
-                        <p className="text-sm text-gray-600">{review.role}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section id="faq-section" className="py-20 px-4 bg-white">
-        <div className="container mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Everything you need to know about Resyft and research analysis
-            </p>
-          </motion.div>
-
-          <div className="max-w-3xl mx-auto">
-            <Accordion type="single" collapsible className="w-full">
-              {[
-                {
-                  question: "How accurate is Resyft's AI analysis?",
-                  answer: "Resyft achieves 95% accuracy in extracting key research elements like methods, sample sizes, and conclusions. Our AI is specifically trained on academic papers and continuously improves with each analysis."
-                },
-                {
-                  question: "What types of research papers does Resyft support?",
-                  answer: "Resyft works with papers from all major academic databases including PubMed, arXiv, IEEE, and more. We support PDFs, direct URLs, and text input for maximum flexibility."
-                },
-                {
-                  question: "How does the reliability scoring work?",
-                  answer: "Our reliability scoring evaluates factors like sample size, methodology rigor, peer review status, and citation quality. Each paper receives a score from 0-100% to help you assess source credibility."
-                },
-                {
-                  question: "Can I customize what information is extracted?",
-                  answer: "Yes! You can provide custom prompts to extract specific information relevant to your research. Whether you need statistical data, quotes, or methodological details, Resyft adapts to your needs."
-                },
-                {
-                  question: "Is my research data secure and private?",
-                  answer: "Absolutely. We use enterprise-grade encryption and never store your research content. All analyses are processed securely and deleted after completion. Your intellectual property remains completely private."
-                },
-                {
-                  question: "How fast is the analysis process?",
-                  answer: "Most papers are analyzed in under 30 seconds. Complex documents may take up to 2 minutes. Our AI processes information much faster than manual reading while maintaining high accuracy."
-                },
-                {
-                  question: "Do you offer institutional licenses?",
-                  answer: "Yes, we provide special pricing for universities, research institutions, and organizations. Contact our sales team for volume discounts and custom enterprise features."
-                },
-                {
-                  question: "Can I export or cite the extracted information?",
-                  answer: "Definitely! Resyft provides properly formatted, ready-to-cite text that you can copy directly into your research. We follow standard academic citation formats and include source attribution."
-                }
-              ].map((faq, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                >
-                  <AccordionItem value={`item-${index}`} className="border-b border-gray-200">
-                    <AccordionTrigger className="text-left font-semibold text-gray-900 hover:text-blue-600 py-6 text-lg">
-                      {faq.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-gray-600 pb-6 leading-relaxed">
-                      {faq.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                </motion.div>
-              ))}
-            </Accordion>
-          </div>
-
-        </div>
-      </section>
-
-      {/* Still Have Questions Section */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="container mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center"
-          >
-            <Card className="max-w-2xl mx-auto border border-blue-200 bg-blue-50">
-              <CardContent className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  Still have questions?
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Our research specialists are here to help you get the most out of Resyft.
-                </p>
-                <Link href="/support">
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                    Contact Support
-                    <ArrowRight className="w-4 h-4 ml-2" />
+              {/* Controls row */}
+              <div className="flex items-center justify-between mt-3">
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-slate-600 hover:text-slate-800 hover:bg-slate-100 text-sm h-8 px-3 rounded-lg font-medium"
+                  >
+                    <ChevronDown className="w-4 h-4 mr-2" />
+                    Advanced Search
                   </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-24 px-4 bg-gray-900">
-        <div className="container mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="max-w-4xl mx-auto text-center"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Ready to accelerate your research?
-            </h2>
-            <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Join thousands of researchers who have streamlined their literature review process and discovered insights faster than ever before.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
-              <Link href="/signup">
-                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white h-12 px-8 text-base font-semibold">
-                  Start Analyzing Papers
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </Link>
-              <Button size="lg" variant="outline" className="border-gray-400 bg-transparent text-gray-300 hover:bg-gray-800 hover:text-white h-12 px-8 text-base font-semibold">
-                Schedule a Demo
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            </div>
-            <p className="text-sm text-gray-400">
-              No credit card required • Free to get started • Cancel anytime
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-black text-white">
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="md:col-span-2">
-              <div className="flex items-center space-x-3 mb-6">
-                <img 
-                  src="/resyft-2.png" 
-                  alt="Resyft Icon" 
-                  className="w-10 h-10 object-contain"
-                />
-                <span className="text-2xl font-semibold text-white">
-                  Resyft
-                </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-slate-600 hover:text-slate-800 hover:bg-slate-100 text-sm h-8 px-3 rounded-lg font-medium"
+                  >
+                    <Filter className="w-4 h-4 mr-2" />
+                    Filter
+                  </Button>
+                </div>
+                <div className="text-xs text-slate-600 font-medium">Press Enter to search</div>
               </div>
-              <p className="text-gray-400 max-w-md mb-6 leading-relaxed">
-                AI-powered research analysis platform that extracts insights from academic papers in seconds. 
-                Accelerate your research with intelligent document processing and citation-ready text generation.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Product</h3>
-              <ul className="space-y-3">
-                <li><Link href="/features" className="text-gray-400 hover:text-white transition-colors">Features</Link></li>
-                <li><Link href="/pricing" className="text-gray-400 hover:text-white transition-colors">Why Resyft?</Link></li>
-                <li><Link href="/api" className="text-gray-400 hover:text-white transition-colors">For Students</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Company</h3>
-              <ul className="space-y-3">
-                <li><Link href="/about" className="text-gray-400 hover:text-white transition-colors">About</Link></li>
-                <li><Link href="/blog" className="text-gray-400 hover:text-white transition-colors">Team</Link></li>
-                <li><Link href="/contact" className="text-gray-400 hover:text-white transition-colors">Contact</Link></li>
-              </ul>
             </div>
           </div>
+        </div>
 
-          <div className="border-t border-gray-700 pt-8 mt-8">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div className="text-gray-400 text-sm">
-                © 2025 Resyft. All rights reserved.
+        {/* Research Tools Section */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-6">
+            <h2 className="text-xl font-semibold text-slate-900">Research Tools</h2>
+            <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200">
+              AI-Powered
+            </Badge>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Paper Analysis Agent */}
+            <div 
+              className="bg-white rounded-xl border border-slate-200 p-6 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
+              onClick={() => handleExampleClick("Analyze this research paper and extract key findings, methodology, and statistical significance")}
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors flex-shrink-0">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-slate-900 mb-2">Paper Analysis</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    Extract methodology, findings, and statistical insights from research papers
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center space-x-4 mt-4 md:mt-0">
-                <Badge variant="secondary" className="bg-white/10 text-white border-white/20">
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  AI Powered
-                </Badge>
-                <div className="text-gray-400 text-sm">
-                  Made with ❤️ for researchers
+            </div>
+
+            {/* Literature Search */}
+            <div 
+              className="bg-white rounded-xl border border-slate-200 p-6 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
+              onClick={() => handleExampleClick("Search for recent literature on my research topic and provide citation-ready summaries")}
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors flex-shrink-0">
+                  <Search className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-slate-900 mb-2">Literature Search</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    Find and synthesize relevant academic sources with proper citations
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Data Synthesis Agent */}
+            <div 
+              className="bg-white rounded-xl border border-slate-200 p-6 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
+              onClick={() => handleExampleClick("Synthesize data from multiple research papers and identify patterns and trends")}
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors flex-shrink-0">
+                  <Sparkles className="w-5 h-5 text-purple-600" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-slate-900 mb-2">Data Synthesis</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    Combine insights from multiple sources to identify research patterns
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </footer>
+
+        {/* Footer */}
+        <div className="text-center">
+          <p className="text-sm text-slate-500">Powered by Resyft AI Research Platform</p>
+        </div>
+      </div>
     </div>
+  )
+
+  return (
+    <SidebarProvider defaultOpen={false}>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200 shadow-sm">
+          <div className="flex h-16 items-center gap-4 px-6">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="h-6" />
+            <div className="flex items-center gap-3 flex-1">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                <div className="w-1 h-1 rounded-full bg-blue-300"></div>
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold text-slate-900">Research Agent</h1>
+                <p className="text-xs text-slate-500 font-medium">Advanced AI Research Platform</p>
+              </div>
+            </div>
+            {messages.length > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={clearConversation}
+                className="border-slate-200 hover:bg-slate-50 rounded-xl"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                New Chat
+              </Button>
+            )}
+          </div>
+        </header>
+
+        <main className="flex-1 flex flex-col bg-gradient-to-br from-slate-50/50 to-white">
+          {messages.length === 0 ? (
+            <LandingPage />
+          ) : (
+            <>
+              {/* Messages Area */}
+              <div className="flex-1 flex flex-col">
+                <ScrollArea className="flex-1 p-4 md:p-6 lg:p-8">
+                  <div className="max-w-5xl mx-auto space-y-6">
+                    {messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`flex gap-4 ${
+                          message.role === 'user' ? 'justify-end' : 'justify-start'
+                        }`}
+                      >
+                        {message.role === 'assistant' && (
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+                            <div className="flex items-center gap-0.5">
+                              <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
+                              <div className="w-1 h-1 rounded-full bg-blue-200"></div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className={`max-w-4xl ${
+                          message.role === 'user' ? 'ml-8 md:ml-16' : 'mr-8 md:mr-16'
+                        }`}>
+                          <div className={`rounded-2xl px-4 py-3 ${
+                            message.role === 'user' 
+                              ? 'bg-indigo-500 text-white ml-auto' 
+                              : message.error
+                                ? 'bg-red-50 border border-red-200 text-red-800'
+                                : 'bg-slate-50 text-slate-900'
+                          }`}>
+                              {message.error && (
+                                <div className="flex items-center gap-2 mb-3">
+                                  <AlertCircle className="w-4 h-4 text-red-500" />
+                                  <span className="text-sm font-medium text-red-700">Service Error</span>
+                                </div>
+                              )}
+                              
+                              <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                                {message.content}
+                              </div>
+                              
+                              {message.tools_used && message.tools_used.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Sparkles className="w-3 h-3 text-indigo-600" />
+                                    <span className="text-xs font-semibold text-slate-700">Tools used:</span>
+                                  </div>
+                                  {message.tools_used.map((toolId, index) => (
+                                    <Badge 
+                                      key={index}
+                                      variant="secondary"
+                                      className="text-xs bg-indigo-100 text-indigo-700 border-indigo-200 hover:bg-indigo-200 transition-colors px-2 py-1 rounded-full"
+                                    >
+                                      {toolId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                          </div>
+                        </div>
+                        
+                        {message.role === 'user' && (
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center flex-shrink-0">
+                            <User className="w-4 h-4 text-white" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    
+                    {/* Typing indicator */}
+                    {isTyping && <TypingIndicator />}
+                    
+                    <div ref={messagesEndRef} />
+                  </div>
+                </ScrollArea>
+
+                {/* Input Area */}
+                <div className="border-t bg-white/90 backdrop-blur-sm p-4 md:p-6 shadow-sm">
+                  <div className="max-w-5xl mx-auto">
+                    <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+                      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 focus-within:border-indigo-300 p-4">
+                        <div className="flex items-center gap-3">
+                          <input
+                            ref={chatInputRef}
+                            type="text"
+                            placeholder="Ask me anything about your research..."
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault()
+                                handleSubmit()
+                              }
+                            }}
+                            className="flex-1 text-base border-0 bg-transparent focus:ring-0 focus:outline-none placeholder:text-slate-400"
+                            disabled={isLoading}
+                            autoComplete="off"
+                          />
+                          <Button
+                            type="submit"
+                            size="sm"
+                            disabled={isLoading}
+                            className="bg-indigo-500 hover:bg-indigo-600 rounded-xl px-4 py-2 transition-colors flex-shrink-0"
+                          >
+                            {isLoading ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-white" />
+                            ) : (
+                              <Send className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="text-xs text-slate-600 font-medium">Press Enter to send</div>
+                          <div className="text-xs text-slate-500">Powered by Resyft AI</div>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
