@@ -8,13 +8,14 @@ import { Textarea } from '../../components/ui/textarea'
 import { Badge } from '../../components/ui/badge'
 import { Progress } from '../../components/ui/progress'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../components/ui/accordion'
-import { VercelSection } from '../../components/vercel-section'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import ShaderBackground from '../../components/shader-background'
 import Header from '../../components/shader-header'
 import HeroContent from '../../components/hero-content'
 import PulsingCircle from '../../components/pulsing-circle'
+import { TestimonialGridSection } from '../../components/testimonial-grid-section'
+import { HeroQuoteSection } from '../../components/hero-quote-section'
 import { 
   Zap, 
   FileText, 
@@ -113,7 +114,7 @@ export default function AboutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50/30">
       {/* Navigation */}
       <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-lg border-b border-gray-200 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -127,7 +128,7 @@ export default function AboutPage() {
               alt="Resyft Icon" 
               className="w-8 h-8 object-contain"
             />
-            <span className="text-xl font-bold text-gray-900">
+            <span className="text-xl playfair-semibold text-gray-900">
               Resyft
             </span>
           </motion.div>
@@ -138,19 +139,19 @@ export default function AboutPage() {
             animate={{ opacity: 1, y: 0 }}
             className="hidden md:flex items-center space-x-8"
           >
-            <Link href="/" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+            <Link href="/" className="text-gray-600 hover:text-gray-900 merriweather-regular transition-colors">
               Home
             </Link>
-            <a href="#features" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+            <a href="#features" className="text-gray-600 hover:text-gray-900 merriweather-regular transition-colors">
               Features
             </a>
-            <a href="#reviews-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-              Reviews
+            <a href="#testimonials-section" className="text-gray-600 hover:text-gray-900 merriweather-regular transition-colors">
+              Testimonials
             </a>
-            <a href="#faq-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+            <a href="#faq-section" className="text-gray-600 hover:text-gray-900 merriweather-regular transition-colors">
               FAQ
             </a>
-            <Link href="/pricing" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+            <Link href="/pricing" className="text-gray-600 hover:text-gray-900 merriweather-regular transition-colors">
               Pricing
             </Link>
           </motion.div>
@@ -161,12 +162,12 @@ export default function AboutPage() {
             className="flex items-center space-x-4"
           >
             <Link href="/login">
-              <Button variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium">
+              <Button variant="ghost" className="text-gray-600 hover:text-gray-900 merriweather-regular">
                 Sign In
               </Button>
             </Link>
             <Link href="/signup">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white merriweather-regular">
                 Get Started
               </Button>
             </Link>
@@ -181,70 +182,140 @@ export default function AboutPage() {
         <PulsingCircle />
       </ShaderBackground>
 
-      {/* Instant Analysis Section */}
-      <VercelSection
-        badge="Lightning Fast"
-        title="Focus on insights, not manual analysis"
-        description="Get comprehensive document insights in seconds. Our AI-powered system instantly processes any document format and delivers structured analysis."
-        features={[
-          {
-            icon: Zap,
-            title: "Instant Analysis",
-            description: "Process documents in seconds, not hours. From technical papers to business reports - analyzed instantly with precision."
-          },
-          {
-            icon: FileText,
-            title: "Structured Insights", 
-            description: "Extract key findings, methodologies, and technical concepts in organized, actionable formats ready for your workflow."
-          }
-        ]}
-        ctaText="Try Analysis Now"
-        ctaHref="#demo"
-        className="bg-gradient-to-br from-blue-50/30 to-indigo-50/30 border-t border-blue-200/30"
-      />
+      {/* Modern Research Agent Section */}
+      <section className="py-24 px-4">
+        <div className="container mx-auto max-w-7xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="bg-white rounded-3xl border border-gray-200/60 shadow-xl shadow-gray-100/50 overflow-hidden"
+          >
+            <div className="grid lg:grid-cols-2 gap-0 items-center">
+              {/* Content Side */}
+              <div className="p-12 lg:p-16 space-y-8">
+                <div className="space-y-6">
+                  <Badge className="bg-blue-50 text-blue-700 border-blue-200 px-4 py-2 merriweather-regular">
+                    Lightning Fast
+                  </Badge>
+                  <h2 className="text-3xl lg:text-4xl playfair-bold text-gray-900 leading-tight">
+                    Advanced AI research assistant
+                  </h2>
+                  <p className="text-lg text-gray-600 merriweather-light leading-relaxed">
+                    Ask complex research questions and get comprehensive analysis powered by specialized AI agents.
+                  </p>
+                </div>
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 merriweather-bold rounded-xl">
+                  Try Research Agent
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </div>
+              
+              {/* Image Side */}
+              <div className="relative p-8 lg:p-12 bg-gradient-to-br from-blue-50 to-white">
+                <div className="aspect-[4/3] relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200/60">
+                  <img 
+                    src="/stockpic.png" 
+                    alt="Research Agent Interface"
+                    className="w-full h-full object-cover bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
-      {/* AI Intelligence Section */}
-      <VercelSection
-        badge="AI Powered"
-        title="Field-specific intelligence that adapts"
-        description="Specialized AI agents with expertise in neuroscience, cybersecurity, data science, and more provide expert-level analysis tailored to your document's domain."
-        features={[
-          {
-            icon: Brain,
-            title: "Expert AI Agents",
-            description: "AI specialists trained in specific fields analyze your content with domain expertise, ensuring accurate interpretation."
-          },
-          {
-            icon: Settings,
-            title: "Adaptive Processing",
-            description: "Automatically detects document type and routes to specialized analysis agents for maximum accuracy and relevance."
-          }
-        ]}
-        reversed={true}
-        className="bg-gradient-to-br from-emerald-50/20 to-green-50/20 border-t border-emerald-200/30"
-      />
+      {/* Modern Paper Upload Section */}
+      <section className="py-24 px-4">
+        <div className="container mx-auto max-w-7xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="bg-white rounded-3xl border border-gray-200/60 shadow-xl shadow-gray-100/50 overflow-hidden"
+          >
+            <div className="grid lg:grid-cols-2 gap-0 items-center">
+              {/* Image Side */}
+              <div className="relative p-8 lg:p-12 bg-gradient-to-br from-blue-50 to-white lg:order-1">
+                <div className="aspect-[4/3] relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200/60">
+                  <img 
+                    src="/stockpic.png" 
+                    alt="Paper Upload Interface"
+                    className="w-full h-full object-cover bg-white"
+                  />
+                </div>
+              </div>
+              
+              {/* Content Side */}
+              <div className="p-12 lg:p-16 space-y-8 lg:order-2">
+                <div className="space-y-6">
+                  <Badge className="bg-blue-50 text-blue-700 border-blue-200 px-4 py-2 merriweather-regular">
+                    Smart Upload
+                  </Badge>
+                  <h2 className="text-3xl lg:text-4xl playfair-bold text-gray-900 leading-tight">
+                    Seamless paper processing
+                  </h2>
+                  <p className="text-lg text-gray-600 merriweather-light leading-relaxed">
+                    Upload PDFs, paste URLs, or input text directly. Our AI automatically processes any research format.
+                  </p>
+                </div>
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 merriweather-bold rounded-xl">
+                  Upload Paper
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
-      {/* Quality & Support Section */}
-      <VercelSection
-        badge="Enterprise Ready"
-        title="Quality you can trust, formats you need"
-        description="Built for professional use with confidence scoring, reliability assessment, and support for all major document formats."
-        features={[
-          {
-            icon: Shield,
-            title: "Quality Assessment",
-            description: "Confidence scoring and reliability assessment help you understand the quality and trustworthiness of extracted insights."
-          },
-          {
-            icon: Users,
-            title: "Multi-Format Support",
-            description: "Analyze PDFs, text documents, URLs, and various file formats with consistent high-quality results across all platforms."
-          }
-        ]}
-        ctaText="See All Features"
-        ctaHref="#features-detail"
-        className="bg-gradient-to-br from-purple-50/20 to-violet-50/20 border-t border-purple-200/30"
-      />
+      {/* Modern Research Tools Section */}
+      <section className="py-24 px-4">
+        <div className="container mx-auto max-w-7xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="bg-white rounded-3xl border border-gray-200/60 shadow-xl shadow-gray-100/50 overflow-hidden"
+          >
+            <div className="grid lg:grid-cols-2 gap-0 items-center">
+              {/* Content Side */}
+              <div className="p-12 lg:p-16 space-y-8">
+                <div className="space-y-6">
+                  <Badge className="bg-blue-50 text-blue-700 border-blue-200 px-4 py-2 merriweather-regular">
+                    AI-Powered Tools
+                  </Badge>
+                  <h2 className="text-3xl lg:text-4xl playfair-bold text-gray-900 leading-tight">
+                    Specialized research tools
+                  </h2>
+                  <p className="text-lg text-gray-600 merriweather-light leading-relaxed">
+                    Access paper analysis, literature search, and data synthesis tools designed for researchers.
+                  </p>
+                </div>
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 merriweather-bold rounded-xl">
+                  Explore Tools
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </div>
+              
+              {/* Image Side */}
+              <div className="relative p-8 lg:p-12 bg-gradient-to-br from-blue-50 to-white">
+                <div className="aspect-[4/3] relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200/60">
+                  <img 
+                    src="/stockpic.png" 
+                    alt="Research Tools Interface"
+                    className="w-full h-full object-cover bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
       {/* Stats Section */}
       <section className="py-20 px-4 bg-white">
@@ -255,10 +326,10 @@ export default function AboutPage() {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            <h2 className="text-4xl md:text-5xl playfair-bold text-gray-900 mb-6">
               Trusted by professionals worldwide
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl merriweather-light text-gray-600 max-w-3xl mx-auto">
               Join thousands of professionals who have streamlined their document analysis with Resyft's AI
             </p>
           </motion.div>
@@ -289,134 +360,24 @@ export default function AboutPage() {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 className="text-center"
               >
-                <div className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+                <div className="text-4xl md:text-5xl playfair-bold text-gray-900 mb-2">
                   {stat.number}
                 </div>
-                <div className="text-gray-600 font-medium">
+                <div className="text-gray-600 merriweather-regular">
                   {stat.label}
                 </div>
               </motion.div>
             ))}
           </div>
 
-          {/* Trust Indicators */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-center"
-          >
-            <p className="text-gray-500 mb-8">Trusted by leading research institutions</p>
-            <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
-              <div className="flex items-center text-gray-600">
-                <BookOpen className="w-4 h-4 mr-2" />
-                <span className="text-sm">Academic Partners</span>
-              </div>
-              <div className="flex items-center text-gray-600">
-                <Shield className="w-4 h-4 mr-2" />
-                <span className="text-sm">SOC 2 Compliant</span>
-              </div>
-              <div className="flex items-center text-gray-600">
-                <Award className="w-4 h-4 mr-2" />
-                <span className="text-sm">Research Validated</span>
-              </div>
-              <div className="flex items-center text-gray-600">
-                <Star className="w-4 h-4 mr-2" />
-                <span className="text-sm">98% Satisfaction</span>
-              </div>
-            </div>
-          </motion.div>
         </div>
       </section>
+
+      {/* Hero Quote Section */}
+      <HeroQuoteSection />
 
       {/* Reviews Section */}
-      <section id="reviews-section" className="py-24 px-4 bg-white">
-        <div className="container mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              What researchers are saying
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Real feedback from researchers using Resyft to accelerate their work
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                quote: "Resyft has transformed my literature review process. What used to take hours now takes minutes, and I get better quality extracts.",
-                author: "Dr. Sarah Johnson",
-                role: "Associate Professor, Stanford University",
-                rating: 5,
-              },
-              {
-                quote: "The AI analysis is incredibly accurate. It captures nuances in research papers that I might have missed in a quick read.",
-                author: "Michael Chen",
-                role: "PhD Candidate, MIT",
-                rating: 5,
-              },
-              {
-                quote: "The ready-to-cite text feature has saved me countless hours of formatting. Perfect for systematic reviews.",
-                author: "Dr. Emily Rodriguez",
-                role: "Research Scientist, Johns Hopkins",
-                rating: 5,
-              },
-              {
-                quote: "We've tried other research tools, but Resyft's accuracy and speed are unmatched. Essential for our workflow.",
-                author: "Dr. David Kim",
-                role: "Principal Investigator, Harvard Medical",
-                rating: 5,
-              },
-              {
-                quote: "The reliability scoring helps me quickly identify the most credible sources. Like having a research assistant.",
-                author: "Lisa Patel",
-                role: "Graduate Student, UC Berkeley",
-                rating: 5,
-              },
-              {
-                quote: "Implementation was seamless. Our research team's productivity has increased by 40% since using Resyft.",
-                author: "Dr. James Wilson",
-                role: "Research Director, Mayo Clinic",
-                rating: 5,
-              },
-            ].map((review, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-              >
-                <Card className="h-full bg-white border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex mb-4">
-                      {Array(review.rating)
-                        .fill(0)
-                        .map((_, i) => (
-                          <Star key={i} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        ))}
-                    </div>
-                    <p className="text-gray-700 mb-6 leading-relaxed">{review.quote}</p>
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-3">
-                        {review.author.split(' ').map(n => n[0]).join('')}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">{review.author}</p>
-                        <p className="text-sm text-gray-600">{review.role}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <TestimonialGridSection />
 
       {/* FAQ Section */}
       <section id="faq-section" className="py-20 px-4 bg-white">
@@ -427,10 +388,10 @@ export default function AboutPage() {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
+            <h2 className="text-4xl playfair-bold text-gray-900 mb-6">
               Frequently Asked Questions
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl merriweather-light text-gray-600 max-w-2xl mx-auto">
               Everything you need to know about Resyft and research analysis
             </p>
           </motion.div>
@@ -478,10 +439,10 @@ export default function AboutPage() {
                   transition={{ duration: 0.4, delay: index * 0.05 }}
                 >
                   <AccordionItem value={`item-${index}`} className="border-b border-gray-200">
-                    <AccordionTrigger className="text-left font-semibold text-gray-900 hover:text-blue-600 py-6 text-lg">
+                    <AccordionTrigger className="text-left merriweather-bold text-gray-900 hover:text-blue-600 py-6 text-lg">
                       {faq.question}
                     </AccordionTrigger>
-                    <AccordionContent className="text-gray-600 pb-6 leading-relaxed">
+                    <AccordionContent className="text-gray-600 pb-6 leading-relaxed merriweather-regular">
                       {faq.answer}
                     </AccordionContent>
                   </AccordionItem>
@@ -504,10 +465,10 @@ export default function AboutPage() {
           >
             <Card className="max-w-2xl mx-auto border border-blue-200 bg-blue-50">
               <CardContent className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                <h3 className="text-xl playfair-bold text-gray-900 mb-3">
                   Still have questions?
                 </h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-600 mb-4 merriweather-regular">
                   Our research specialists are here to help you get the most out of Resyft.
                 </p>
                 <Link href="/support">
@@ -531,25 +492,25 @@ export default function AboutPage() {
             transition={{ duration: 0.6 }}
             className="max-w-4xl mx-auto text-center"
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <h2 className="text-4xl md:text-5xl playfair-bold text-white mb-6">
               Ready to accelerate your research?
             </h2>
-            <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed merriweather-regular">
               Join thousands of researchers who have streamlined their literature review process and discovered insights faster than ever before.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
               <Link href="/signup">
-                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white h-12 px-8 text-base font-semibold">
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white h-12 px-8 text-base merriweather-bold">
                   Start Analyzing Papers
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="border-gray-400 bg-transparent text-gray-300 hover:bg-gray-800 hover:text-white h-12 px-8 text-base font-semibold">
+              <Button size="lg" variant="outline" className="border-gray-400 bg-transparent text-gray-300 hover:bg-gray-800 hover:text-white h-12 px-8 text-base merriweather-bold">
                 Schedule a Demo
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
             </div>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-400 merriweather-regular">
               No credit card required • Free to get started • Cancel anytime
             </p>
           </motion.div>
@@ -567,38 +528,38 @@ export default function AboutPage() {
                   alt="Resyft Icon" 
                   className="w-10 h-10 object-contain"
                 />
-                <span className="text-2xl font-semibold text-white">
+                <span className="text-2xl merriweather-bold text-white">
                   Resyft
                 </span>
               </div>
-              <p className="text-gray-400 max-w-md mb-6 leading-relaxed">
+              <p className="text-gray-400 max-w-md mb-6 leading-relaxed merriweather-regular">
                 AI-powered research analysis platform that extracts insights from academic papers in seconds. 
                 Accelerate your research with intelligent document processing and citation-ready text generation.
               </p>
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Product</h3>
+              <h3 className="text-lg merriweather-bold text-white mb-4">Product</h3>
               <ul className="space-y-3">
-                <li><Link href="/features" className="text-gray-400 hover:text-white transition-colors">Features</Link></li>
-                <li><Link href="/pricing" className="text-gray-400 hover:text-white transition-colors">Why Resyft?</Link></li>
-                <li><Link href="/api" className="text-gray-400 hover:text-white transition-colors">For Students</Link></li>
+                <li><Link href="/features" className="text-gray-400 hover:text-white transition-colors merriweather-regular">Features</Link></li>
+                <li><Link href="/pricing" className="text-gray-400 hover:text-white transition-colors merriweather-regular">Why Resyft?</Link></li>
+                <li><Link href="/api" className="text-gray-400 hover:text-white transition-colors merriweather-regular">For Students</Link></li>
               </ul>
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Company</h3>
+              <h3 className="text-lg merriweather-bold text-white mb-4">Company</h3>
               <ul className="space-y-3">
-                <li><Link href="/about" className="text-gray-400 hover:text-white transition-colors">About</Link></li>
-                <li><Link href="/blog" className="text-gray-400 hover:text-white transition-colors">Team</Link></li>
-                <li><Link href="/contact" className="text-gray-400 hover:text-white transition-colors">Contact</Link></li>
+                <li><Link href="/about" className="text-gray-400 hover:text-white transition-colors merriweather-regular">About</Link></li>
+                <li><Link href="/blog" className="text-gray-400 hover:text-white transition-colors merriweather-regular">Team</Link></li>
+                <li><Link href="/contact" className="text-gray-400 hover:text-white transition-colors merriweather-regular">Contact</Link></li>
               </ul>
             </div>
           </div>
 
           <div className="border-t border-gray-700 pt-8 mt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
-              <div className="text-gray-400 text-sm">
+              <div className="text-gray-400 text-sm merriweather-regular">
                 © 2025 Resyft. All rights reserved.
               </div>
               <div className="flex items-center space-x-4 mt-4 md:mt-0">
@@ -606,7 +567,7 @@ export default function AboutPage() {
                   <Sparkles className="w-3 h-3 mr-1" />
                   AI Powered
                 </Badge>
-                <div className="text-gray-400 text-sm">
+                <div className="text-gray-400 text-sm merriweather-regular">
                   Made with ❤️ for researchers
                 </div>
               </div>

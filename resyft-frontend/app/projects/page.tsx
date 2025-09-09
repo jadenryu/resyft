@@ -194,7 +194,7 @@ export default function ProjectsPage() {
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="h-6" />
             <div className="flex-1">
-              <h1 className="text-xl font-semibold">Research Projects</h1>
+              <h1 className="text-xl playfair-semibold">Research Projects</h1>
             </div>
             <Button 
               id="tutorial-new-project"
@@ -292,8 +292,8 @@ export default function ProjectsPage() {
             <Card className="text-center py-12">
               <CardContent>
                 <FolderOpen className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="font-semibold text-lg mb-2">No projects found</h3>
-                <p className="text-gray-600 mb-4">
+                <h3 className="playfair-semibold text-lg mb-2">No projects found</h3>
+                <p className="text-gray-600 mb-4 merriweather-light">
                   {searchQuery ? "Try adjusting your search terms" : "Create your first project to get started"}
                 </p>
                 <div className="flex gap-3">
@@ -442,7 +442,7 @@ export default function ProjectsPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex-1 space-y-2">
                           <div className="flex items-center gap-3">
-                            <h3 className="font-semibold hover:text-blue-600 transition-colors">
+                            <h3 className="playfair-semibold hover:text-blue-600 transition-colors">
                               {project.name}
                             </h3>
                             <Badge className={getStatusColor(project.status)}>

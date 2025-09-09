@@ -47,14 +47,14 @@ export function VercelSection({
             {badge && (
               <Badge 
                 variant="secondary" 
-                className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 px-3 py-1 text-sm font-medium"
+                className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 px-3 py-1 text-sm merriweather-regular"
               >
                 {badge}
               </Badge>
             )}
             
             <div className="space-y-3">
-              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
+              <h2 className="text-2xl lg:text-3xl playfair-bold text-gray-900 leading-tight">
                 {title}
               </h2>
               <p className="text-base text-gray-600 leading-relaxed">
@@ -65,7 +65,7 @@ export function VercelSection({
             {ctaText && ctaHref && (
               <Button 
                 size="lg" 
-                className="bg-black hover:bg-slate-800 text-white px-6 py-3 text-base font-semibold group"
+                className="bg-black hover:bg-slate-800 text-white px-6 py-3 text-base playfair-semibold group"
                 asChild
               >
                 <a href={ctaHref}>
@@ -98,7 +98,7 @@ export function VercelSection({
                   </div>
                   
                   <div className="space-y-1 flex-1">
-                    <h3 className="font-semibold text-base text-gray-900">
+                    <h3 className="playfair-semibold text-base text-gray-900">
                       {feature.title}
                     </h3>
                     <p className="text-sm text-gray-600 leading-relaxed">

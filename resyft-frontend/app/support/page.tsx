@@ -97,7 +97,7 @@ export default function SupportPage() {
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
+              <h2 className="text-xl playfair-bold text-gray-900 mb-2">
                 Support Request Submitted
               </h2>
               <p className="text-gray-600 mb-6">
@@ -138,7 +138,7 @@ export default function SupportPage() {
                 <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                   <MessageCircle className="w-4 h-4 text-blue-600" />
                 </div>
-                <h1 className="text-xl font-semibold text-gray-900">Support Center</h1>
+                <h1 className="text-xl playfair-semibold text-gray-900">Support Center</h1>
               </div>
             </div>
             <Badge variant="secondary" className="px-3 py-1">
@@ -171,7 +171,7 @@ export default function SupportPage() {
                     {/* Personal Information */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">Name *</label>
+                        <label className="text-sm merriweather-regular text-gray-700">Name *</label>
                         <Input
                           placeholder="Your full name"
                           value={formData.name}
@@ -180,7 +180,7 @@ export default function SupportPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">Email *</label>
+                        <label className="text-sm merriweather-regular text-gray-700">Email *</label>
                         <Input
                           type="email"
                           placeholder="your@email.com"
@@ -194,7 +194,7 @@ export default function SupportPage() {
                     {/* Category and Priority */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">Category *</label>
+                        <label className="text-sm merriweather-regular text-gray-700">Category *</label>
                         <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a category" />
@@ -212,7 +212,7 @@ export default function SupportPage() {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">Priority</label>
+                        <label className="text-sm merriweather-regular text-gray-700">Priority</label>
                         <Select value={formData.priority} onValueChange={(value) => handleInputChange('priority', value)}>
                           <SelectTrigger>
                             <SelectValue />
@@ -229,7 +229,7 @@ export default function SupportPage() {
 
                     {/* Subject */}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">Subject *</label>
+                      <label className="text-sm merriweather-regular text-gray-700">Subject *</label>
                       <Input
                         placeholder="Brief summary of your issue"
                         value={formData.subject}
@@ -240,7 +240,7 @@ export default function SupportPage() {
 
                     {/* Message */}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">Message *</label>
+                      <label className="text-sm merriweather-regular text-gray-700">Message *</label>
                       <Textarea
                         placeholder="Please provide as much detail as possible about your issue..."
                         className="min-h-32"
@@ -294,21 +294,21 @@ export default function SupportPage() {
                   <div className="flex items-center gap-3">
                     <Mail className="w-5 h-5 text-blue-600" />
                     <div>
-                      <p className="font-medium">Email Support</p>
+                      <p className="merriweather-regular">Email Support</p>
                       <p className="text-sm text-gray-600">support@resyft.com</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <Clock className="w-5 h-5 text-green-600" />
                     <div>
-                      <p className="font-medium">Response Time</p>
+                      <p className="merriweather-regular">Response Time</p>
                       <p className="text-sm text-gray-600">Within 24 hours</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <Users className="w-5 h-5 text-purple-600" />
                     <div>
-                      <p className="font-medium">Enterprise Support</p>
+                      <p className="merriweather-regular">Enterprise Support</p>
                       <p className="text-sm text-gray-600">Priority queue available</p>
                     </div>
                   </div>
@@ -332,7 +332,7 @@ export default function SupportPage() {
                 <CardContent className="space-y-4">
                   {commonQuestions.map((faq, index) => (
                     <div key={index} className="border-b border-gray-100 pb-3 last:border-b-0">
-                      <h4 className="font-medium text-sm text-gray-900 mb-1">{faq.question}</h4>
+                      <h4 className="merriweather-regular text-sm text-gray-900 mb-1">{faq.question}</h4>
                       <p className="text-xs text-gray-600">{faq.answer}</p>
                     </div>
                   ))}

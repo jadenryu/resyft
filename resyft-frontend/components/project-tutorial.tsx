@@ -70,7 +70,7 @@ export function ProjectTutorial({ onComplete, onSkip }: ProjectTutorialProps) {
             <Play className="w-6 h-6 text-blue-600" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Ready to explore?</h3>
+            <h3 className="text-lg playfair-semibold">Ready to explore?</h3>
             <p className="text-sm text-gray-600">We'll create a demo project and show you around</p>
           </div>
         </div>
@@ -138,7 +138,7 @@ export function ProjectTutorial({ onComplete, onSkip }: ProjectTutorialProps) {
             <CheckCircle className="w-6 h-6 text-green-600" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Tutorial Complete!</h3>
+            <h3 className="text-lg playfair-semibold">Tutorial Complete!</h3>
             <p className="text-sm text-gray-600">The demo project will be removed and you can start fresh</p>
           </div>
         </div>
@@ -219,7 +219,7 @@ export function ProjectTutorial({ onComplete, onSkip }: ProjectTutorialProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Lightbulb className="w-5 h-5 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-600">
+                    <span className="text-sm merriweather-regular text-blue-600">
                       Step {currentStep + 1} of {tutorialSteps.length}
                     </span>
                   </div>

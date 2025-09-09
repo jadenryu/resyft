@@ -68,7 +68,7 @@ export function ScoringDisplay({
                   <Target className="w-5 h-5" />
                   Relevance Score
                 </span>
-                <span className="text-2xl font-bold" style={{ color: getScoreColor(relevanceScore.overall) }}>
+                <span className="text-2xl playfair-bold" style={{ color: getScoreColor(relevanceScore.overall) }}>
                   {relevanceScore.overall}%
                 </span>
               </CardTitle>
@@ -104,7 +104,7 @@ export function ScoringDisplay({
                   <Award className="w-5 h-5" />
                   Quality Score
                 </span>
-                <span className="text-2xl font-bold" style={{ color: getScoreColor(accuracyScore.overall) }}>
+                <span className="text-2xl playfair-bold" style={{ color: getScoreColor(accuracyScore.overall) }}>
                   {accuracyScore.overall}%
                 </span>
               </CardTitle>
@@ -260,7 +260,7 @@ export function ScoringDisplay({
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
                   <div className="space-y-1">
-                    <p className="font-medium mb-2">Quality Concerns:</p>
+                    <p className="merriweather-regular mb-2">Quality Concerns:</p>
                     {accuracyScore.flags.map((flag, index) => (
                       <p key={index} className="text-sm">{flag}</p>
                     ))}
@@ -274,7 +274,7 @@ export function ScoringDisplay({
                 <Info className="h-4 w-4 text-blue-600" />
                 <AlertDescription className="text-blue-800">
                   <div className="space-y-1">
-                    <p className="font-medium mb-2">Recommendations:</p>
+                    <p className="merriweather-regular mb-2">Recommendations:</p>
                     {accuracyScore.recommendations.map((rec, index) => (
                       <p key={index} className="text-sm">{rec}</p>
                     ))}
@@ -305,13 +305,13 @@ function ScoreBreakdownItem({
       <div className="flex items-center gap-3 flex-1">
         <div className="text-gray-500">{icon}</div>
         <div className="flex-1">
-          <p className="text-sm font-medium">{label}</p>
+          <p className="text-sm merriweather-regular">{label}</p>
           <p className="text-xs text-gray-500">{description}</p>
         </div>
       </div>
       <div className="flex items-center gap-3">
         <Progress value={score} className="w-24" />
-        <span className="text-sm font-medium w-10 text-right" style={{ color: getScoreColor(score) }}>
+        <span className="text-sm merriweather-regular w-10 text-right" style={{ color: getScoreColor(score) }}>
           {score}%
         </span>
       </div>
@@ -328,7 +328,7 @@ function CompactScoreDisplay({ relevance, accuracy }: { relevance: number; accur
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-gray-500" />
               <div className="flex items-center gap-1">
-                <span className="text-sm font-medium" style={{ color: getScoreColor(relevance) }}>
+                <span className="text-sm merriweather-regular" style={{ color: getScoreColor(relevance) }}>
                   {relevance}%
                 </span>
                 <Progress value={relevance} className="w-16 h-2" />
@@ -345,7 +345,7 @@ function CompactScoreDisplay({ relevance, accuracy }: { relevance: number; accur
             <div className="flex items-center gap-2">
               <Award className="w-4 h-4 text-gray-500" />
               <div className="flex items-center gap-1">
-                <span className="text-sm font-medium" style={{ color: getScoreColor(accuracy) }}>
+                <span className="text-sm merriweather-regular" style={{ color: getScoreColor(accuracy) }}>
                   {accuracy}%
                 </span>
                 <Progress value={accuracy} className="w-16 h-2" />

@@ -42,7 +42,7 @@ export function PaperUpload() {
     <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8 mb-12">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="paper-url" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="paper-url" className="block text-sm merriweather-regular text-gray-700 mb-2">
             Research Paper URL
           </label>
           <Textarea
@@ -56,7 +56,7 @@ export function PaperUpload() {
         </div>
 
         <div>
-          <label htmlFor="extraction-type" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="extraction-type" className="block text-sm merriweather-regular text-gray-700 mb-2">
             What information do you need?
           </label>
           <Select
@@ -86,7 +86,7 @@ export function PaperUpload() {
 
       {extractMutation.isSuccess && (
         <div className="mt-8 p-6 bg-gray-50 rounded-lg">
-          <h3 className="text-lg font-semibold mb-4">Extraction Results</h3>
+          <h3 className="text-lg playfair-semibold mb-4">Extraction Results</h3>
           <pre className="text-sm overflow-auto">
             {JSON.stringify(extractMutation.data, null, 2)}
           </pre>

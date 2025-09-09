@@ -280,7 +280,7 @@ export default function SettingsPage() {
             <BackNavigation />
             <Separator orientation="vertical" className="h-6" />
             <div className="flex-1">
-              <h1 className="text-xl font-semibold">Extraction Settings</h1>
+              <h1 className="text-xl playfair-semibold">Extraction Settings</h1>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={resetToDefaults}>
@@ -349,7 +349,7 @@ export default function SettingsPage() {
                     <CardContent className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label className="text-sm font-medium">Enable Statistics Extraction</Label>
+                          <Label className="text-sm merriweather-regular">Enable Statistics Extraction</Label>
                           <p className="text-xs text-gray-600">Extract numerical data, p-values, and effect sizes</p>
                         </div>
                         <Switch
@@ -410,7 +410,7 @@ export default function SettingsPage() {
                                 step={1}
                                 className="flex-1"
                               />
-                              <span className="text-sm font-medium w-12 text-center">
+                              <span className="text-sm merriweather-regular w-12 text-center">
                                 {settings.statistics.minSampleSize}
                               </span>
                             </div>
@@ -435,7 +435,7 @@ export default function SettingsPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <Label className="text-sm font-medium">Summary Length</Label>
+                        <Label className="text-sm merriweather-regular">Summary Length</Label>
                         <Select
                           value={settings.summaries.length}
                           onValueChange={(value) => setSettings({
@@ -455,7 +455,7 @@ export default function SettingsPage() {
                       </div>
 
                       <div className="space-y-3">
-                        <Label className="text-sm font-medium">Include in Summary</Label>
+                        <Label className="text-sm merriweather-regular">Include in Summary</Label>
                         
                         <div className="flex items-center justify-between">
                           <Label className="text-sm">Methodology Details</Label>
@@ -509,7 +509,7 @@ export default function SettingsPage() {
                     <CardContent className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label className="text-sm font-medium">Enable Quote Extraction</Label>
+                          <Label className="text-sm merriweather-regular">Enable Quote Extraction</Label>
                           <p className="text-xs text-gray-600">Extract meaningful direct quotes from papers</p>
                         </div>
                         <Switch
@@ -537,7 +537,7 @@ export default function SettingsPage() {
                                 step={1}
                                 className="flex-1"
                               />
-                              <span className="text-sm font-medium w-12 text-center">
+                              <span className="text-sm merriweather-regular w-12 text-center">
                                 {settings.quotes.maxPerPaper}
                               </span>
                             </div>
@@ -560,7 +560,7 @@ export default function SettingsPage() {
                                     step={10}
                                     className="flex-1"
                                   />
-                                  <span className="text-sm font-medium w-12 text-center">
+                                  <span className="text-sm merriweather-regular w-12 text-center">
                                     {settings.quotes.minLength}
                                   </span>
                                 </div>
@@ -579,7 +579,7 @@ export default function SettingsPage() {
                                     step={25}
                                     className="flex-1"
                                   />
-                                  <span className="text-sm font-medium w-12 text-center">
+                                  <span className="text-sm merriweather-regular w-12 text-center">
                                     {settings.quotes.maxLength}
                                   </span>
                                 </div>
@@ -640,7 +640,7 @@ export default function SettingsPage() {
                               step={5}
                               className="flex-1"
                             />
-                            <span className="text-sm font-medium w-12 text-center">
+                            <span className="text-sm merriweather-regular w-12 text-center">
                               {settings.relevanceScoring.keywordWeight}%
                             </span>
                           </div>
@@ -660,7 +660,7 @@ export default function SettingsPage() {
                               step={5}
                               className="flex-1"
                             />
-                            <span className="text-sm font-medium w-12 text-center">
+                            <span className="text-sm merriweather-regular w-12 text-center">
                               {settings.relevanceScoring.citationWeight}%
                             </span>
                           </div>
@@ -680,7 +680,7 @@ export default function SettingsPage() {
                               step={5}
                               className="flex-1"
                             />
-                            <span className="text-sm font-medium w-12 text-center">
+                            <span className="text-sm merriweather-regular w-12 text-center">
                               {settings.relevanceScoring.recencyWeight}%
                             </span>
                           </div>
@@ -700,7 +700,7 @@ export default function SettingsPage() {
                               step={5}
                               className="flex-1"
                             />
-                            <span className="text-sm font-medium w-12 text-center">
+                            <span className="text-sm merriweather-regular w-12 text-center">
                               {settings.relevanceScoring.methodologyWeight}%
                             </span>
                           </div>
@@ -718,7 +718,7 @@ export default function SettingsPage() {
                       </Alert>
 
                       <div>
-                        <Label className="text-sm font-medium">Custom Keywords</Label>
+                        <Label className="text-sm merriweather-regular">Custom Keywords</Label>
                         <p className="text-xs text-gray-600 mb-2">
                           Add specific terms that should boost relevance scores
                         </p>
@@ -780,7 +780,7 @@ export default function SettingsPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <Label className="text-sm font-medium">Citation Style</Label>
+                        <Label className="text-sm merriweather-regular">Citation Style</Label>
                         <Select
                           value={settings.outputFormat.citationStyle}
                           onValueChange={(value) => setSettings({
@@ -801,7 +801,7 @@ export default function SettingsPage() {
                       </div>
 
                       <div className="space-y-3">
-                        <Label className="text-sm font-medium">Include in Citations</Label>
+                        <Label className="text-sm merriweather-regular">Include in Citations</Label>
                         
                         <div className="flex items-center justify-between">
                           <Label className="text-sm">Page Numbers</Label>

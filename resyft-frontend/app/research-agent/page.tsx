@@ -184,12 +184,12 @@ export default function ResearchAgentPage() {
 
   // Landing page when no messages - optimized for collapsed sidebar
   const LandingPage = () => (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white flex flex-col items-center justify-center px-6 font-['Inter',sans-serif]">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white flex flex-col items-center justify-center px-6 font-merriweather">
       <div className="w-full max-w-5xl mx-auto">
 
         {/* Main Heading */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 leading-tight">
+          <h1 className="text-4xl md:text-5xl playfair-bold text-slate-900 mb-4 leading-tight">
             What research question do you have?
           </h1>
           <p className="text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
@@ -202,7 +202,7 @@ export default function ResearchAgentPage() {
           <div className="bg-white rounded-full p-1 shadow-sm border border-slate-200">
             <button
               onClick={() => setSelectedMode("general")}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`px-6 py-2 rounded-full text-sm merriweather-regular transition-all ${
                 selectedMode === "general"
                   ? "bg-indigo-500 text-white shadow-sm"
                   : "text-slate-600 hover:text-slate-800"
@@ -212,7 +212,7 @@ export default function ResearchAgentPage() {
             </button>
             <button
               onClick={() => setSelectedMode("scholar")}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`px-6 py-2 rounded-full text-sm merriweather-regular transition-all ${
                 selectedMode === "scholar"
                   ? "bg-indigo-500 text-white shadow-sm"
                   : "text-slate-600 hover:text-slate-800"
@@ -269,7 +269,7 @@ export default function ResearchAgentPage() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="text-slate-600 hover:text-slate-800 hover:bg-slate-100 text-sm h-8 px-3 rounded-lg font-medium"
+                    className="text-slate-600 hover:text-slate-800 hover:bg-slate-100 text-sm h-8 px-3 rounded-lg merriweather-regular"
                   >
                     <ChevronDown className="w-4 h-4 mr-2" />
                     Advanced Search
@@ -278,13 +278,13 @@ export default function ResearchAgentPage() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="text-slate-600 hover:text-slate-800 hover:bg-slate-100 text-sm h-8 px-3 rounded-lg font-medium"
+                    className="text-slate-600 hover:text-slate-800 hover:bg-slate-100 text-sm h-8 px-3 rounded-lg merriweather-regular"
                   >
                     <Filter className="w-4 h-4 mr-2" />
                     Filter
                   </Button>
                 </div>
-                <div className="text-xs text-slate-600 font-medium">Press Enter to search</div>
+                <div className="text-xs text-slate-600 merriweather-regular">Press Enter to search</div>
               </div>
             </div>
           </div>
@@ -293,7 +293,7 @@ export default function ResearchAgentPage() {
         {/* Research Tools Section */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-6">
-            <h2 className="text-xl font-semibold text-slate-900">Research Tools</h2>
+            <h2 className="text-xl playfair-semibold text-slate-900">Research Tools</h2>
             <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200">
               AI-Powered
             </Badge>
@@ -310,8 +310,8 @@ export default function ResearchAgentPage() {
                   <FileText className="w-5 h-5 text-blue-600" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-semibold text-slate-900 mb-2">Paper Analysis</h3>
-                  <p className="text-slate-600 text-sm leading-relaxed">
+                  <h3 className="playfair-regular text-slate-900 mb-2">Paper Analysis</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed merriweather-light">
                     Extract methodology, findings, and statistical insights from research papers
                   </p>
                 </div>
@@ -328,8 +328,8 @@ export default function ResearchAgentPage() {
                   <Search className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-semibold text-slate-900 mb-2">Literature Search</h3>
-                  <p className="text-slate-600 text-sm leading-relaxed">
+                  <h3 className="playfair-regular text-slate-900 mb-2">Literature Search</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed merriweather-light">
                     Find and synthesize relevant academic sources with proper citations
                   </p>
                 </div>
@@ -346,8 +346,8 @@ export default function ResearchAgentPage() {
                   <Sparkles className="w-5 h-5 text-purple-600" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-semibold text-slate-900 mb-2">Data Synthesis</h3>
-                  <p className="text-slate-600 text-sm leading-relaxed">
+                  <h3 className="playfair-regular text-slate-900 mb-2">Data Synthesis</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed merriweather-light">
                     Combine insights from multiple sources to identify research patterns
                   </p>
                 </div>
@@ -379,8 +379,8 @@ export default function ResearchAgentPage() {
                 className="w-6 h-6 object-contain" 
               />
               <div>
-                <h1 className="text-lg font-semibold text-slate-900">Resyft Research Agent</h1>
-                <p className="text-xs text-slate-500 font-medium">Advanced AI Research Platform</p>
+                <h1 className="text-lg playfair-semibold text-slate-900">Resyft Research Agent</h1>
+                <p className="text-xs text-slate-500 merriweather-regular">Advanced AI Research Platform</p>
               </div>
             </div>
             {messages.length > 0 && (
@@ -436,7 +436,7 @@ export default function ResearchAgentPage() {
                               {message.error && (
                                 <div className="flex items-center gap-2 mb-3">
                                   <AlertCircle className="w-4 h-4 text-red-500" />
-                                  <span className="text-sm font-medium text-red-700">Service Error</span>
+                                  <span className="text-sm merriweather-regular text-red-700">Service Error</span>
                                 </div>
                               )}
                               
@@ -448,7 +448,7 @@ export default function ResearchAgentPage() {
                                 <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100">
                                   <div className="flex items-center gap-2 mb-2">
                                     <Sparkles className="w-3 h-3 text-indigo-600" />
-                                    <span className="text-xs font-semibold text-slate-700">Tools used:</span>
+                                    <span className="text-xs playfair-semibold text-slate-700">Tools used:</span>
                                   </div>
                                   {message.tools_used.map((toolId, index) => (
                                     <Badge 
@@ -517,7 +517,7 @@ export default function ResearchAgentPage() {
                           </Button>
                         </div>
                         <div className="flex items-center justify-between mt-2">
-                          <div className="text-xs text-slate-600 font-medium">Press Enter to send</div>
+                          <div className="text-xs text-slate-600 merriweather-regular">Press Enter to send</div>
                           <div className="text-xs text-slate-500">Powered by Resyft AI</div>
                         </div>
                       </div>
