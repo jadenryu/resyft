@@ -43,7 +43,7 @@ export function SignupForm({
   return (
     <form className={cn("flex flex-col gap-6", className)} onSubmit={handleSignUp} {...props}>
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Create Account</h1>
+        <h1 className="text-2xl playfair-bold">Create Account</h1>
         <p className="text-muted-foreground text-sm text-balance">
           Sign up to start analyzing research papers
         </p>

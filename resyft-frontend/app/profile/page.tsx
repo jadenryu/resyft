@@ -220,7 +220,7 @@ export default function ProfilePage() {
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="h-6" />
             <div className="flex-1">
-              <h1 className="text-xl font-semibold">Profile & Settings</h1>
+              <h1 className="text-xl playfair-semibold">Profile & Settings</h1>
             </div>
           </div>
         </header>
@@ -256,7 +256,7 @@ export default function ProfilePage() {
                       </label>
                     </div>
                     <div className="flex-1">
-                      <h2 className="text-2xl font-bold text-gray-900">{profile.name}</h2>
+                      <h2 className="text-2xl playfair-bold text-gray-900">{profile.name}</h2>
                       <p className="text-gray-600">{profile.position} at {profile.institution}</p>
                       <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                         <span className="flex items-center gap-1">
@@ -432,7 +432,7 @@ export default function ProfilePage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                       <div>
-                        <Label className="text-sm font-medium">Summary Detail Level</Label>
+                        <Label className="text-sm merriweather-regular">Summary Detail Level</Label>
                         <Select
                           value={profile.preferences.summaryDepth}
                           onValueChange={(value) => setProfile({
@@ -455,7 +455,7 @@ export default function ProfilePage() {
                       </div>
 
                       <div>
-                        <Label className="text-sm font-medium">Statistical Data Preference</Label>
+                        <Label className="text-sm merriweather-regular">Statistical Data Preference</Label>
                         <Select
                           value={profile.preferences.statisticalPreference}
                           onValueChange={(value) => setProfile({
@@ -478,7 +478,7 @@ export default function ProfilePage() {
                       </div>
 
                       <div>
-                        <Label className="text-sm font-medium">Quote Density</Label>
+                        <Label className="text-sm merriweather-regular">Quote Density</Label>
                         <Select
                           value={profile.preferences.quoteDensity}
                           onValueChange={(value) => setProfile({
@@ -501,7 +501,7 @@ export default function ProfilePage() {
                       </div>
 
                       <div>
-                        <Label className="text-sm font-medium">Research Focus</Label>
+                        <Label className="text-sm merriweather-regular">Research Focus</Label>
                         <Select
                           value={profile.preferences.researchFocus}
                           onValueChange={(value) => setProfile({
@@ -524,7 +524,7 @@ export default function ProfilePage() {
                       </div>
 
                       <div>
-                        <Label className="text-sm font-medium">Technical Language Level</Label>
+                        <Label className="text-sm merriweather-regular">Technical Language Level</Label>
                         <Select
                           value={profile.preferences.technicalLevel}
                           onValueChange={(value) => setProfile({
@@ -561,7 +561,7 @@ export default function ProfilePage() {
                     <CardContent className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label className="text-sm font-medium">Email Notifications</Label>
+                          <Label className="text-sm merriweather-regular">Email Notifications</Label>
                           <p className="text-xs text-gray-600">Receive notifications via email</p>
                         </div>
                         <Switch
@@ -578,7 +578,7 @@ export default function ProfilePage() {
 
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label className="text-sm font-medium">Paper Analysis Complete</Label>
+                          <Label className="text-sm merriweather-regular">Paper Analysis Complete</Label>
                           <p className="text-xs text-gray-600">When your paper analysis is finished</p>
                         </div>
                         <Switch
@@ -595,7 +595,7 @@ export default function ProfilePage() {
 
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label className="text-sm font-medium">Project Updates</Label>
+                          <Label className="text-sm merriweather-regular">Project Updates</Label>
                           <p className="text-xs text-gray-600">Changes to your projects</p>
                         </div>
                         <Switch
@@ -612,7 +612,7 @@ export default function ProfilePage() {
 
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label className="text-sm font-medium">Weekly Digest</Label>
+                          <Label className="text-sm merriweather-regular">Weekly Digest</Label>
                           <p className="text-xs text-gray-600">Weekly summary of your research activity</p>
                         </div>
                         <Switch
@@ -629,7 +629,7 @@ export default function ProfilePage() {
 
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label className="text-sm font-medium">Collaborator Activity</Label>
+                          <Label className="text-sm merriweather-regular">Collaborator Activity</Label>
                           <p className="text-xs text-gray-600">When collaborators make changes to shared projects</p>
                         </div>
                         <Switch
@@ -658,7 +658,7 @@ export default function ProfilePage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <Label className="text-sm font-medium">Profile Visibility</Label>
+                        <Label className="text-sm merriweather-regular">Profile Visibility</Label>
                         <Select
                           value={profile.privacy.profileVisibility}
                           onValueChange={(value) => setProfile({
@@ -685,7 +685,7 @@ export default function ProfilePage() {
 
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label className="text-sm font-medium">Share Analytics</Label>
+                          <Label className="text-sm merriweather-regular">Share Analytics</Label>
                           <p className="text-xs text-gray-600">Help improve Resyft with anonymous usage data</p>
                         </div>
                         <Switch
@@ -702,7 +702,7 @@ export default function ProfilePage() {
 
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label className="text-sm font-medium">Allow Collaboration Invites</Label>
+                          <Label className="text-sm merriweather-regular">Allow Collaboration Invites</Label>
                           <p className="text-xs text-gray-600">Let others invite you to collaborate on projects</p>
                         </div>
                         <Switch

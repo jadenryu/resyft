@@ -40,7 +40,7 @@ export function LoginForm({
   return (
     <form className={cn("flex flex-col gap-6", className)} onSubmit={handleSignIn} {...props}>
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Welcome Back</h1>
+        <h1 className="text-2xl playfair-bold">Welcome Back</h1>
         <p className="text-muted-foreground text-sm text-balance">
           Sign in to continue analyzing research papers
         </p>

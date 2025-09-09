@@ -327,7 +327,7 @@ export default function UploadPage() {
             <BackNavigation />
             <Separator orientation="vertical" className="h-6" />
             <div className="flex-1">
-              <h1 className="text-xl font-semibold">Upload Paper</h1>
+              <h1 className="text-xl playfair-semibold">Upload Paper</h1>
             </div>
           </div>
         </header>
@@ -403,7 +403,7 @@ export default function UploadPage() {
                         {file ? (
                           <div className="space-y-2">
                             <FileCheck className="w-12 h-12 mx-auto text-green-600" />
-                            <p className="font-medium text-green-900">{file.name}</p>
+                            <p className="merriweather-regular text-green-900">{file.name}</p>
                             <p className="text-sm text-green-700">
                               {(file.size / 1024 / 1024).toFixed(2)} MB
                             </p>
@@ -423,7 +423,7 @@ export default function UploadPage() {
                                 Drag and drop your PDF here, or
                               </p>
                               <Label htmlFor="file-upload" className="cursor-pointer">
-                                <span className="text-blue-600 hover:text-blue-700 font-medium">
+                                <span className="text-blue-600 hover:text-blue-700 merriweather-regular">
                                   browse files
                                 </span>
                               </Label>
@@ -672,7 +672,7 @@ export default function UploadPage() {
                 <div className="flex items-center gap-3">
                   <Clock className="w-5 h-5 text-gray-400" />
                   <div className="text-sm text-gray-600">
-                    <p className="font-medium">Processing Time</p>
+                    <p className="merriweather-regular">Processing Time</p>
                     <p>Papers typically take 30-60 seconds to analyze and extract insights</p>
                   </div>
                 </div>

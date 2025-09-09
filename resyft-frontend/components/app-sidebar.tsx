@@ -45,20 +45,10 @@ const data = {
   },
   navMain: [
     {
-      title: "Overview",
-      url: "/overview",
-      icon: Home,
-      isActive: true,
-    },
-    {
       title: "Research Agent",
       url: "/research-agent",
       icon: MessageSquare,
-    },
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: BarChart3,
+      isActive: true,
     },
     {
       title: "Projects",
@@ -80,11 +70,6 @@ const data = {
       url: "/upload",
       icon: Upload,
     },
-    {
-      title: "Search",
-      url: "/search",
-      icon: Search,
-    },
   ],
   navSecondary: [
     {
@@ -93,8 +78,8 @@ const data = {
       icon: Settings,
     },
     {
-      title: "Help",
-      url: "/help",
+      title: "Support",
+      url: "/support",
       icon: HelpCircle,
     },
   ],
@@ -117,7 +102,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Resyft</span>
+                  <span className="truncate playfair-semibold">Resyft</span>
                   <span className="truncate text-xs">Research Analysis</span>
                 </div>
               </a>

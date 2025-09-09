@@ -75,10 +75,8 @@
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-family: var(--font-inter), "Inter", system-ui, -apple-system, sans-serif;
-  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "clig" 1, "ss01" 1;
-  font-optical-sizing: auto;
-  font-variant-ligatures: common-ligatures contextual;
+  font-family: var(--font-merriweather), "Merriweather", serif;
+  font-feature-settings: "kern" 1, "liga" 1;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -107,88 +105,100 @@ body {
   transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
-/* Enhanced Inter font utility classes */
-.font-inter {
-  font-family: var(--font-inter), "Inter", system-ui, -apple-system, sans-serif;
-  font-optical-sizing: auto;
-  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1;
+/* Playfair Display for headings */
+.font-playfair {
+  font-family: var(--font-playfair), "Playfair Display", serif;
+  font-feature-settings: "kern" 1, "liga" 1;
   text-rendering: optimizeLegibility;
 }
 
-/* Dynamic font weights with enhanced features */
-.inter-thin {
-  font-family: var(--font-inter), "Inter", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 100;
-  font-style: normal;
-  letter-spacing: 0.02em;
-  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
+/* Merriweather for body text */
+.font-merriweather {
+  font-family: var(--font-merriweather), "Merriweather", serif;
+  font-feature-settings: "kern" 1, "liga" 1;
+  text-rendering: optimizeLegibility;
 }
 
-.inter-light {
-  font-family: var(--font-inter), "Inter", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 300;
-  font-style: normal;
-  letter-spacing: 0.015em;
-  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
-}
-
-.inter-regular {
-  font-family: var(--font-inter), "Inter", sans-serif;
-  font-optical-sizing: auto;
+/* Playfair Display font weights for headings */
+.playfair-regular {
+  font-family: var(--font-playfair), "Playfair Display", serif;
   font-weight: 400;
   font-style: normal;
-  letter-spacing: 0.01em;
-  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
-  line-height: 1.6;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
 }
 
-.inter-medium {
-  font-family: var(--font-inter), "Inter", sans-serif;
-  font-optical-sizing: auto;
+.playfair-medium {
+  font-family: var(--font-playfair), "Playfair Display", serif;
   font-weight: 500;
   font-style: normal;
-  letter-spacing: 0.005em;
-  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
 }
 
-.inter-semibold {
-  font-family: var(--font-inter), "Inter", sans-serif;
-  font-optical-sizing: auto;
+.playfair-semibold {
+  font-family: var(--font-playfair), "Playfair Display", serif;
   font-weight: 600;
   font-style: normal;
-  letter-spacing: 0em;
-  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
-.inter-bold {
-  font-family: var(--font-inter), "Inter", sans-serif;
-  font-optical-sizing: auto;
+.playfair-bold {
+  font-family: var(--font-playfair), "Playfair Display", serif;
   font-weight: 700;
   font-style: normal;
-  letter-spacing: -0.005em;
-  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
-}
-
-.inter-extrabold {
-  font-family: var(--font-inter), "Inter", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 800;
-  font-style: normal;
-  letter-spacing: -0.01em;
-  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
+  letter-spacing: -0.025em;
   line-height: 1.1;
 }
 
-.inter-black {
-  font-family: var(--font-inter), "Inter", sans-serif;
-  font-optical-sizing: auto;
+.playfair-extrabold {
+  font-family: var(--font-playfair), "Playfair Display", serif;
+  font-weight: 800;
+  font-style: normal;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.playfair-black {
+  font-family: var(--font-playfair), "Playfair Display", serif;
   font-weight: 900;
   font-style: normal;
-  letter-spacing: -0.015em;
-  font-feature-settings: "rlig" 1, "calt" 1, "kern" 1, "liga" 1, "ss01" 1;
+  letter-spacing: -0.035em;
   line-height: 1.05;
+}
+
+/* Merriweather font weights for body text */
+.merriweather-light {
+  font-family: var(--font-merriweather), "Merriweather", serif;
+  font-weight: 300;
+  font-style: normal;
+  letter-spacing: 0.015em;
+  line-height: 1.65;
+}
+
+.merriweather-regular {
+  font-family: var(--font-merriweather), "Merriweather", serif;
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: 0.005em;
+  line-height: 1.6;
+}
+
+.merriweather-bold {
+  font-family: var(--font-merriweather), "Merriweather", serif;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: 0em;
+  line-height: 1.5;
+}
+
+.merriweather-black {
+  font-family: var(--font-merriweather), "Merriweather", serif;
+  font-weight: 900;
+  font-style: normal;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
 }
 
 /* Advanced typography classes */

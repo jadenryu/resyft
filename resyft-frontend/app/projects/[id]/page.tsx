@@ -225,7 +225,7 @@ export default function ProjectDetailPage() {
         <SidebarInset>
           <div className="flex h-screen items-center justify-center">
             <div className="text-center">
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">Project Not Found</h2>
+              <h2 className="text-xl playfair-semibold text-gray-900 mb-2">Project Not Found</h2>
               <p className="text-gray-600 mb-4">The project you're looking for doesn't exist.</p>
               <Button onClick={() => router.push('/projects')}>
                 Back to Projects
@@ -249,7 +249,7 @@ export default function ProjectDetailPage() {
               <div className="flex items-center gap-3">
                 <Target className="w-5 h-5 text-blue-600" />
                 <div>
-                  <h1 className="text-lg font-semibold">{project.name}</h1>
+                  <h1 className="text-lg playfair-semibold">{project.name}</h1>
                   <p className="text-sm text-gray-600">{papers.length} papers</p>
                 </div>
               </div>
@@ -303,11 +303,11 @@ export default function ProjectDetailPage() {
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div>
-                          <h4 className="font-medium text-gray-900 mb-2">Description</h4>
+                          <h4 className="merriweather-regular text-gray-900 mb-2">Description</h4>
                           <p className="text-gray-600">{project.description}</p>
                         </div>
                         <div>
-                          <h4 className="font-medium text-gray-900 mb-2">Research Thesis</h4>
+                          <h4 className="merriweather-regular text-gray-900 mb-2">Research Thesis</h4>
                           <p className="text-gray-600 italic">"{project.thesis}"</p>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -336,7 +336,7 @@ export default function ProjectDetailPage() {
                           {papers.slice(0, 3).map(paper => (
                             <div key={paper.id} className="flex items-center justify-between p-3 border rounded-lg">
                               <div className="flex-1">
-                                <h4 className="font-medium text-sm line-clamp-1">{paper.title}</h4>
+                                <h4 className="merriweather-regular text-sm line-clamp-1">{paper.title}</h4>
                                 <p className="text-xs text-gray-600">
                                   {paper.authors[0]} et al. • {paper.journal} • {paper.year}
                                 </p>
@@ -374,7 +374,7 @@ export default function ProjectDetailPage() {
                             <FileText className="w-4 h-4 text-blue-500" />
                             <span className="text-sm">Total Papers</span>
                           </div>
-                          <span className="font-semibold">{papers.length}</span>
+                          <span className="playfair-semibold">{papers.length}</span>
                         </div>
                         
                         <div className="flex justify-between items-center">
@@ -382,7 +382,7 @@ export default function ProjectDetailPage() {
                             <CheckCircle className="w-4 h-4 text-green-500" />
                             <span className="text-sm">Analyzed</span>
                           </div>
-                          <span className="font-semibold">
+                          <span className="playfair-semibold">
                             {papers.filter(p => p.status === 'completed').length}
                           </span>
                         </div>
@@ -392,7 +392,7 @@ export default function ProjectDetailPage() {
                             <Quote className="w-4 h-4 text-purple-500" />
                             <span className="text-sm">Quotes Extracted</span>
                           </div>
-                          <span className="font-semibold">
+                          <span className="playfair-semibold">
                             {papers.reduce((acc, p) => acc + (p.quotes?.length || 0), 0)}
                           </span>
                         </div>
@@ -402,7 +402,7 @@ export default function ProjectDetailPage() {
                             <BarChart3 className="w-4 h-4 text-orange-500" />
                             <span className="text-sm">Statistics Found</span>
                           </div>
-                          <span className="font-semibold">
+                          <span className="playfair-semibold">
                             {papers.reduce((acc, p) => acc + (p.statistics?.length || 0), 0)}
                           </span>
                         </div>
@@ -439,7 +439,7 @@ export default function ProjectDetailPage() {
                             {project.collaborators.map(email => (
                               <div key={email} className="flex items-center gap-2 text-sm">
                                 <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                                  <span className="text-xs font-medium text-blue-700">
+                                  <span className="text-xs merriweather-regular text-blue-700">
                                     {email.charAt(0).toUpperCase()}
                                   </span>
                                 </div>
@@ -512,7 +512,7 @@ export default function ProjectDetailPage() {
                     <Card className="text-center py-12">
                       <CardContent>
                         <BookOpen className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                        <h3 className="font-semibold text-lg mb-2">No papers found</h3>
+                        <h3 className="playfair-semibold text-lg mb-2">No papers found</h3>
                         <p className="text-gray-600 mb-4">
                           {searchQuery ? "Try adjusting your search terms" : "Start by adding your first research paper"}
                         </p>
@@ -534,7 +534,7 @@ export default function ProjectDetailPage() {
                           <CardContent className="p-6">
                             <div className="flex justify-between items-start mb-4">
                               <div className="flex-1">
-                                <h3 className="font-semibold text-lg mb-2 hover:text-blue-600 cursor-pointer">
+                                <h3 className="playfair-semibold text-lg mb-2 hover:text-blue-600 cursor-pointer">
                                   {paper.title}
                                 </h3>
                                 <p className="text-gray-600 text-sm mb-2">
@@ -589,14 +589,14 @@ export default function ProjectDetailPage() {
                               <div className="space-y-4">
                                 {paper.summary && (
                                   <div>
-                                    <h4 className="font-medium text-sm mb-2">Summary</h4>
+                                    <h4 className="merriweather-regular text-sm mb-2">Summary</h4>
                                     <p className="text-gray-600 text-sm">{paper.summary}</p>
                                   </div>
                                 )}
 
                                 {paper.quotes && paper.quotes.length > 0 && (
                                   <div>
-                                    <h4 className="font-medium text-sm mb-2">Key Quotes</h4>
+                                    <h4 className="merriweather-regular text-sm mb-2">Key Quotes</h4>
                                     <div className="space-y-2">
                                       {paper.quotes.map((quote, idx) => (
                                         <div key={idx} className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500 relative group">
@@ -619,7 +619,7 @@ export default function ProjectDetailPage() {
 
                                 {paper.statistics && paper.statistics.length > 0 && (
                                   <div>
-                                    <h4 className="font-medium text-sm mb-2">Key Statistics</h4>
+                                    <h4 className="merriweather-regular text-sm mb-2">Key Statistics</h4>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                       {paper.statistics.map((stat, idx) => (
                                         <div key={idx} className="text-sm bg-gray-50 p-2 rounded group relative">
@@ -671,7 +671,7 @@ export default function ProjectDetailPage() {
                   <CardContent>
                     <div className="text-center py-12">
                       <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Insights Coming Soon</h3>
+                      <h3 className="text-lg playfair-semibold text-gray-900 mb-2">Insights Coming Soon</h3>
                       <p className="text-gray-600">
                         Advanced analytics and insights will be available once you have more analyzed papers.
                       </p>
@@ -692,7 +692,7 @@ export default function ProjectDetailPage() {
                   <CardContent>
                     <div className="text-center py-12">
                       <Settings className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Settings Panel</h3>
+                      <h3 className="text-lg playfair-semibold text-gray-900 mb-2">Settings Panel</h3>
                       <p className="text-gray-600">
                         Project-specific settings and extraction preferences will be available here.
                       </p>

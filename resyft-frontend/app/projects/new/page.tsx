@@ -309,7 +309,7 @@ export default function NewProjectPage() {
             <BackNavigation />
             <Separator orientation="vertical" className="h-6" />
             <div className="flex-1">
-              <h1 className="text-xl font-semibold">Create New Project</h1>
+              <h1 className="text-xl playfair-semibold">Create New Project</h1>
             </div>
           </div>
         </header>
@@ -339,7 +339,7 @@ export default function NewProjectPage() {
             >
               <div className="mb-6">
                 <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium">Step {currentStep} of 3</span>
+                  <span className="text-sm merriweather-regular">Step {currentStep} of 3</span>
                   <span className="text-sm text-gray-500">
                     {currentStep === 1 ? 'Basic Information' : currentStep === 2 ? 'Research Definition' : 'Advanced Settings'}
                   </span>
@@ -451,7 +451,7 @@ export default function NewProjectPage() {
                     {/* Step 2: Research Definition */}
                     <TabsContent value="2" className="space-y-6">
                       <div className="space-y-4">
-                        <h3 className="font-medium flex items-center gap-2">
+                        <h3 className="merriweather-regular flex items-center gap-2">
                           <Brain className="w-4 h-4" />
                           Define Your Research
                         </h3>
@@ -467,7 +467,7 @@ export default function NewProjectPage() {
                               <div key={type} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
                                 <RadioGroupItem value={type} id={type} className="mt-1" />
                                 <Label htmlFor={type} className="cursor-pointer flex-1">
-                                  <div className="font-medium capitalize">{type} Research</div>
+                                  <div className="merriweather-regular capitalize">{type} Research</div>
                                   <div className="text-xs text-gray-500 mt-1">{description}</div>
                                 </Label>
                               </div>
@@ -580,7 +580,7 @@ export default function NewProjectPage() {
                       <div className="space-y-6">
                         {/* Extraction Focus */}
                         <div>
-                          <h3 className="font-medium flex items-center gap-2 mb-4">
+                          <h3 className="merriweather-regular flex items-center gap-2 mb-4">
                             <FileText className="w-4 h-4" />
                             Extraction Focus
                           </h3>
@@ -615,7 +615,7 @@ export default function NewProjectPage() {
                         
                         {/* Automation Settings */}
                         <div>
-                          <h3 className="font-medium flex items-center gap-2 mb-4">
+                          <h3 className="merriweather-regular flex items-center gap-2 mb-4">
                             <Lightbulb className="w-4 h-4" />
                             Automation
                           </h3>
