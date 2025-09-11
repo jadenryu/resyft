@@ -3,7 +3,7 @@ import Image from "next/image"
 const testimonials = [
   {
     quote:
-      "Resyft has transformed my literature review process. What used to take hours now takes minutes, and I get better quality extracts from research papers.",
+      "Resyft's RAG database eliminated hallucination issues from our AI queries. Now we get accurate, document-grounded responses from our corpus every time.",
     name: "Dr. Sarah Chen",
     company: "Stanford University",
     avatar: "/placeholder.svg",
@@ -11,7 +11,7 @@ const testimonials = [
   },
   {
     quote:
-      "The AI-powered analysis gives me insights I would have missed reading through hundreds of papers manually.",
+      "Building our portable RAG database was seamless. The vector embeddings capture nuances from our technical documents without web data contamination.",
     name: "Dr. Marcus Johnson",
     company: "MIT",
     avatar: "/placeholder.svg",
@@ -19,7 +19,7 @@ const testimonials = [
   },
   {
     quote:
-      "Ready-to-cite text feature has saved me countless hours of formatting. Perfect for systematic reviews.",
+      "The document-only training approach ensures our AI model stays aligned with our specific knowledge base—zero hallucination from external sources.",
     name: "Prof. Emily Rodriguez",
     company: "Harvard Medical School",
     avatar: "/placeholder.svg",
@@ -27,7 +27,7 @@ const testimonials = [
   },
   {
     quote:
-      "The reliability scoring helps me prioritize high-quality sources and avoid questionable research.",
+      "Our enterprise RAG system processes sensitive documents locally. Industry-standard architecture with complete data isolation from web training sets.",
     name: "Dr. David Kim",
     company: "UC Berkeley",
     avatar: "/placeholder.svg",
@@ -35,7 +35,7 @@ const testimonials = [
   },
   {
     quote:
-      "As a PhD student, Resyft has accelerated my dissertation research by months. The citation management is flawless.",
+      "The vector search capabilities let me find semantic connections across my entire document corpus—much more accurate than traditional keyword search.",
     name: "Lisa Thompson",
     company: "Yale University",
     avatar: "/placeholder.svg",
@@ -43,7 +43,7 @@ const testimonials = [
   },
   {
     quote:
-      "The multi-paper synthesis feature helped me identify research gaps I never would have found otherwise.",
+      "Retrieval-augmented generation from our document embeddings provides responses I can trust—always grounded in our actual content, never hallucinated.",
     name: "Dr. Ahmed Hassan",
     company: "Oxford University",
     avatar: "/placeholder.svg",

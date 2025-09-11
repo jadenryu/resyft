@@ -13,7 +13,6 @@ import Link from 'next/link'
 import ShaderBackground from '../../components/shader-background'
 import Header from '../../components/shader-header'
 import HeroContent from '../../components/hero-content'
-import PulsingCircle from '../../components/pulsing-circle'
 import { TestimonialGridSection } from '../../components/testimonial-grid-section'
 import { HeroQuoteSection } from '../../components/hero-quote-section'
 import { 
@@ -179,7 +178,6 @@ export default function AboutPage() {
       <ShaderBackground>
         <Header />
         <HeroContent />
-        <PulsingCircle />
       </ShaderBackground>
 
       {/* Modern Research Agent Section */}
@@ -200,14 +198,14 @@ export default function AboutPage() {
                     Lightning Fast
                   </Badge>
                   <h2 className="text-3xl lg:text-4xl playfair-bold text-gray-900 leading-tight">
-                    Advanced AI research assistant
+                    Portable RAG Database System
                   </h2>
                   <p className="text-lg text-gray-600 merriweather-light leading-relaxed">
-                    Ask complex research questions and get comprehensive analysis powered by specialized AI agents.
+                    Build custom AI models trained exclusively on your documents. Zero hallucination from web data—only accurate, grounded responses from your corpus.
                   </p>
                 </div>
                 <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 merriweather-bold rounded-xl">
-                  Try Research Agent
+                  Build Your RAG Database
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </div>
@@ -217,7 +215,7 @@ export default function AboutPage() {
                 <div className="aspect-[4/3] relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200/60">
                   <img 
                     src="/stockpic.png" 
-                    alt="Research Agent Interface"
+                    alt="RAG Database Interface"
                     className="w-full h-full object-cover bg-white"
                   />
                 </div>
@@ -243,7 +241,7 @@ export default function AboutPage() {
                 <div className="aspect-[4/3] relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200/60">
                   <img 
                     src="/stockpic.png" 
-                    alt="Paper Upload Interface"
+                    alt="RAG Pipeline Interface"
                     className="w-full h-full object-cover bg-white"
                   />
                 </div>
@@ -256,14 +254,14 @@ export default function AboutPage() {
                     Smart Upload
                   </Badge>
                   <h2 className="text-3xl lg:text-4xl playfair-bold text-gray-900 leading-tight">
-                    Seamless paper processing
+                    Enterprise-grade RAG pipeline
                   </h2>
                   <p className="text-lg text-gray-600 merriweather-light leading-relaxed">
-                    Upload PDFs, paste URLs, or input text directly. Our AI automatically processes any research format.
+                    Upload documents to create vector embeddings in your private knowledge base. Industry-standard RAG architecture ensures document-only AI training.
                   </p>
                 </div>
                 <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 merriweather-bold rounded-xl">
-                  Upload Paper
+                  Start Vector Indexing
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </div>
@@ -290,14 +288,14 @@ export default function AboutPage() {
                     AI-Powered Tools
                   </Badge>
                   <h2 className="text-3xl lg:text-4xl playfair-bold text-gray-900 leading-tight">
-                    Specialized research tools
+                    Zero hallucination guarantee
                   </h2>
                   <p className="text-lg text-gray-600 merriweather-light leading-relaxed">
-                    Access paper analysis, literature search, and data synthesis tools designed for researchers.
+                    Retrieval-augmented generation ensures AI responses are grounded exclusively in your document corpus—no contamination from web training data.
                   </p>
                 </div>
                 <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 merriweather-bold rounded-xl">
-                  Explore Tools
+                  Query Your Corpus
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </div>
@@ -307,7 +305,7 @@ export default function AboutPage() {
                 <div className="aspect-[4/3] relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200/60">
                   <img 
                     src="/stockpic.png" 
-                    alt="Research Tools Interface"
+                    alt="RAG Query Interface"
                     className="w-full h-full object-cover bg-white"
                   />
                 </div>
@@ -327,10 +325,10 @@ export default function AboutPage() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl playfair-bold text-gray-900 mb-6">
-              Trusted by professionals worldwide
+              Trusted by enterprise teams worldwide
             </h2>
             <p className="text-xl merriweather-light text-gray-600 max-w-3xl mx-auto">
-              Join thousands of professionals who have streamlined their document analysis with Resyft's AI
+              Join thousands of professionals building portable RAG databases with zero hallucination from web data contamination
             </p>
           </motion.div>
           
@@ -338,19 +336,19 @@ export default function AboutPage() {
             {[
               { 
                 number: "50K+", 
-                label: "Documents Analyzed"
+                label: "Documents Processed"
               },
               { 
                 number: "95%", 
-                label: "Analysis Accuracy"
+                label: "Query Accuracy"
               },
               { 
-                number: "15s", 
-                label: "Average Processing Time"
+                number: "2s", 
+                label: "RAG Query Response"
               },
               { 
                 number: "1K+", 
-                label: "Professional Users"
+                label: "Active Users"
               }
             ].map((stat, index) => (
               <motion.div
@@ -392,7 +390,7 @@ export default function AboutPage() {
               Frequently Asked Questions
             </h2>
             <p className="text-xl merriweather-light text-gray-600 max-w-2xl mx-auto">
-              Everything you need to know about Resyft and research analysis
+              Everything you need to know about Resyft's portable RAG database architecture
             </p>
           </motion.div>
 
@@ -400,36 +398,36 @@ export default function AboutPage() {
             <Accordion type="single" collapsible className="w-full">
               {[
                 {
-                  question: "How accurate is Resyft's AI analysis?",
-                  answer: "Resyft achieves 95% accuracy in extracting key research elements like methods, sample sizes, and conclusions. Our AI is specifically trained on academic papers and continuously improves with each analysis."
+                  question: "How does RAG eliminate hallucination?",
+                  answer: "Resyft's retrieval-augmented generation architecture ensures AI responses are grounded exclusively in your document corpus. By training only on your vector embeddings, we achieve zero contamination from web training data, eliminating hallucination completely."
                 },
                 {
-                  question: "What types of research papers does Resyft support?",
-                  answer: "Resyft works with papers from all major academic databases including PubMed, arXiv, IEEE, and more. We support PDFs, direct URLs, and text input for maximum flexibility."
+                  question: "What document formats can be vectorized?",
+                  answer: "Our RAG pipeline processes any text-based format - PDFs, Word docs, text files, research papers, legal contracts, technical manuals, and more. Documents are chunked, embedded, and indexed in your private vector database for semantic search."
                 },
                 {
-                  question: "How does the reliability scoring work?",
-                  answer: "Our reliability scoring evaluates factors like sample size, methodology rigor, peer review status, and citation quality. Each paper receives a score from 0-100% to help you assess source credibility."
+                  question: "How does document-only training work?",
+                  answer: "Your RAG database creates vector embeddings exclusively from your document corpus. The AI model never accesses external web data or pre-trained knowledge, ensuring responses are always grounded in your specific content with zero hallucination risk."
                 },
                 {
-                  question: "Can I customize what information is extracted?",
-                  answer: "Yes! You can provide custom prompts to extract specific information relevant to your research. Whether you need statistical data, quotes, or methodological details, Resyft adapts to your needs."
+                  question: "What types of queries does the RAG system support?",
+                  answer: "Our vector search supports semantic queries like 'What are risk factors mentioned?' or exact retrieval like 'Find contract payment terms.' The RAG architecture understands context and provides document-grounded responses with precise source citations."
                 },
                 {
-                  question: "Is my research data secure and private?",
-                  answer: "Absolutely. We use enterprise-grade encryption and never store your research content. All analyses are processed securely and deleted after completion. Your intellectual property remains completely private."
+                  question: "Is my RAG database secure and private?",
+                  answer: "Absolutely. We use enterprise-grade encryption and your vector embeddings remain in an isolated knowledge base. Your document corpus never mixes with external training data and stays completely private to your organization."
                 },
                 {
-                  question: "How fast is the analysis process?",
-                  answer: "Most papers are analyzed in under 30 seconds. Complex documents may take up to 2 minutes. Our AI processes information much faster than manual reading while maintaining high accuracy."
+                  question: "How fast is vector search and retrieval?",
+                  answer: "Most RAG queries return results in under 2 seconds. Complex semantic searches across large document corpora may take up to 10 seconds. Vector indexing makes your entire knowledge base instantly searchable."
                 },
                 {
-                  question: "Do you offer institutional licenses?",
-                  answer: "Yes, we provide special pricing for universities, research institutions, and organizations. Contact our sales team for volume discounts and custom enterprise features."
+                  question: "Do you offer enterprise RAG deployments?",
+                  answer: "Yes, we provide enterprise-grade RAG database solutions for teams and organizations. Contact our sales team for shared vector databases, collaboration features, and custom on-premise deployments."
                 },
                 {
-                  question: "Can I export or cite the extracted information?",
-                  answer: "Definitely! Resyft provides properly formatted, ready-to-cite text that you can copy directly into your research. We follow standard academic citation formats and include source attribution."
+                  question: "Can I export RAG query results and embeddings?",
+                  answer: "Definitely! Resyft provides structured responses with precise document citations. Export query results, share vector search insights, or integrate RAG outputs into your workflow while maintaining full traceability to source documents."
                 }
               ].map((faq, index) => (
                 <motion.div
@@ -469,7 +467,7 @@ export default function AboutPage() {
                   Still have questions?
                 </h3>
                 <p className="text-gray-600 mb-4 merriweather-regular">
-                  Our research specialists are here to help you get the most out of Resyft.
+                  Our RAG architecture specialists are here to help you build your portable document database.
                 </p>
                 <Link href="/support">
                   <Button className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -493,15 +491,15 @@ export default function AboutPage() {
             className="max-w-4xl mx-auto text-center"
           >
             <h2 className="text-4xl md:text-5xl playfair-bold text-white mb-6">
-              Ready to accelerate your research?
+              Ready to build your RAG database?
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed merriweather-regular">
-              Join thousands of researchers who have streamlined their literature review process and discovered insights faster than ever before.
+              Join thousands of professionals building portable RAG systems with enterprise-grade document-only AI models.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
               <Link href="/signup">
                 <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white h-12 px-8 text-base merriweather-bold">
-                  Start Analyzing Papers
+                  Deploy Your RAG System
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </Link>
@@ -533,8 +531,8 @@ export default function AboutPage() {
                 </span>
               </div>
               <p className="text-gray-400 max-w-md mb-6 leading-relaxed merriweather-regular">
-                AI-powered research analysis platform that extracts insights from academic papers in seconds. 
-                Accelerate your research with intelligent document processing and citation-ready text generation.
+                Portable RAG database system that creates custom AI models from your documents. 
+                Industry-standard architecture with zero hallucination guarantee.
               </p>
             </div>
 
@@ -565,10 +563,10 @@ export default function AboutPage() {
               <div className="flex items-center space-x-4 mt-4 md:mt-0">
                 <Badge variant="secondary" className="bg-white/10 text-white border-white/20">
                   <Sparkles className="w-3 h-3 mr-1" />
-                  AI Powered
+                  RAG Architecture
                 </Badge>
                 <div className="text-gray-400 text-sm merriweather-regular">
-                  Made with ❤️ for researchers
+                  Enterprise document-only AI models
                 </div>
               </div>
             </div>

@@ -68,7 +68,7 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
-  const [selectedMode, setSelectedMode] = useState<"general" | "scholar">("scholar")
+  // Mode no longer needed for document assistant
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const landingInputRef = useRef<HTMLInputElement>(null)
   const chatInputRef = useRef<HTMLInputElement>(null)
@@ -144,8 +144,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           message: input,
-          conversation_history: conversationHistory.slice(-10),
-          mode: selectedMode
+          conversation_history: conversationHistory.slice(-10)
         })
       })
 
@@ -167,7 +166,7 @@ export default function Home() {
     } catch (error) {
       console.error('AI Response Error:', error)
       return {
-        response: `I understand you're asking about "${input}". As your research agent, I can help with paper analysis, literature search, data synthesis, hypothesis generation, and citation management. Could you provide more specific details?`,
+        response: `I understand you're asking about "${input}". As your RAG database assistant, I can help you query your document corpus, perform vector searches, and provide grounded responses without web data contamination. Please upload documents to build your knowledge base first.`,
         tools_used: []
       }
     }
@@ -189,10 +188,10 @@ export default function Home() {
         {/* Main Heading */}
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl playfair-bold text-slate-900 mb-4 leading-tight">
-            What research question do you have?
+            What would you like to know about your RAG database?
           </h1>
           <p className="text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
-            Advanced AI research assistant for paper analysis, literature synthesis, and citation management
+            Portable RAG system that builds custom AI models from your documents - trained exclusively on your content with zero hallucination from web data
           </p>
         </div>
 
@@ -212,7 +211,7 @@ export default function Home() {
                         handleSubmit(undefined, true)
                       }
                     }}
-                    placeholder="Ask anything about research..."
+                    placeholder="Query your private RAG database..."
                     className="w-full text-lg border-0 bg-transparent focus:ring-0 focus:outline-none placeholder:text-slate-400"
                     disabled={isLoading}
                     autoComplete="off"
@@ -266,9 +265,9 @@ export default function Home() {
         {/* Research Tools Section */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-6">
-            <h2 className="text-xl playfair-semibold text-slate-900">Research Tools</h2>
+            <h2 className="text-xl playfair-semibold text-slate-900">RAG Database Features</h2>
             <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200">
-              AI-Powered
+              Zero Hallucination
             </Badge>
           </div>
 
@@ -276,16 +275,16 @@ export default function Home() {
             {/* Paper Analysis Agent */}
             <div 
               className="bg-white rounded-xl border border-slate-200 p-6 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
-              onClick={() => handleExampleClick("Analyze this research paper and extract key findings, methodology, and statistical significance")}
+              onClick={() => handleExampleClick("What are the main risk factors mentioned across my RAG database?")}
             >
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors flex-shrink-0">
                   <FileText className="w-5 h-5 text-blue-600" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="playfair-regular text-slate-900 mb-2">Paper Analysis</h3>
+                  <h3 className="playfair-regular text-slate-900 mb-2">RAG Vector Search</h3>
                   <p className="text-slate-600 text-sm leading-relaxed merriweather-light">
-                    Extract methodology, findings, and statistical insights from research papers
+                    Query your document embeddings to find semantic patterns across your entire knowledge base
                   </p>
                 </div>
               </div>
@@ -294,16 +293,16 @@ export default function Home() {
             {/* Literature Search */}
             <div 
               className="bg-white rounded-xl border border-slate-200 p-6 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
-              onClick={() => handleExampleClick("Search for recent literature on my research topic and provide citation-ready summaries")}
+              onClick={() => handleExampleClick("Find all contract payment terms in my document corpus")}
             >
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors flex-shrink-0">
                   <Search className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="playfair-regular text-slate-900 mb-2">Literature Search</h3>
+                  <h3 className="playfair-regular text-slate-900 mb-2">Document-Grounded Retrieval</h3>
                   <p className="text-slate-600 text-sm leading-relaxed merriweather-light">
-                    Find and synthesize relevant academic sources with proper citations
+                    Retrieval-augmented generation ensures responses are grounded in your documents only
                   </p>
                 </div>
               </div>
@@ -312,16 +311,16 @@ export default function Home() {
             {/* Data Synthesis Agent */}
             <div 
               className="bg-white rounded-xl border border-slate-200 p-6 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
-              onClick={() => handleExampleClick("Synthesize data from multiple research papers and identify patterns and trends")}
+              onClick={() => handleExampleClick("Generate insights from my document corpus without external data contamination")}
             >
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors flex-shrink-0">
                   <Sparkles className="w-5 h-5 text-purple-600" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="playfair-regular text-slate-900 mb-2">Data Synthesis</h3>
+                  <h3 className="playfair-regular text-slate-900 mb-2">RAG-Based Analysis</h3>
                   <p className="text-slate-600 text-sm leading-relaxed merriweather-light">
-                    Combine insights from multiple sources to identify research patterns
+                    AI analysis trained exclusively on your document vectors—no web contamination
                   </p>
                 </div>
               </div>
@@ -331,7 +330,7 @@ export default function Home() {
 
         {/* Footer */}
         <div className="text-center">
-          <p className="text-sm text-slate-500">Powered by Resyft AI Research Platform</p>
+          <p className="text-sm text-slate-500">Powered by Resyft Portable RAG Database</p>
         </div>
       </div>
     </div>
@@ -352,8 +351,8 @@ export default function Home() {
                 <div className="w-1 h-1 rounded-full bg-blue-300"></div>
               </div>
               <div>
-                <h1 className="text-lg playfair-semibold text-slate-900">Research Agent</h1>
-                <p className="text-xs text-slate-500 merriweather-regular">Advanced AI Research Platform</p>
+                <h1 className="text-lg playfair-semibold text-slate-900">RAG Assistant</h1>
+                <p className="text-xs text-slate-500 merriweather-regular">Document-Only AI Models</p>
               </div>
             </div>
             {messages.length > 0 && (
@@ -460,7 +459,7 @@ export default function Home() {
                           <input
                             ref={chatInputRef}
                             type="text"
-                            placeholder="Ask me anything about your research..."
+                            placeholder="Query your document embeddings..."
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault()
@@ -486,7 +485,7 @@ export default function Home() {
                         </div>
                         <div className="flex items-center justify-between mt-2">
                           <div className="text-xs text-slate-600 merriweather-regular">Press Enter to send</div>
-                          <div className="text-xs text-slate-500">Powered by Resyft AI</div>
+                          <div className="text-xs text-slate-500">RAG-based AI</div>
                         </div>
                       </div>
                     </form>

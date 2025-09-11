@@ -7,13 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useMutation } from '@tanstack/react-query'
 // Define ExtractionRequest interface locally
 interface ExtractionRequest {
-  paper_url?: string
-  paper_text?: string
-  extraction_type: 'all' | 'statistics' | 'quotes' | 'summary' | 'methodology' | 'quality'
+  document_url?: string
+  document_text?: string
+  extraction_type: 'all' | 'summary' | 'key_points' | 'insights' | 'entities' | 'questions'
 }
 
-export function PaperUpload() {
-  const [paperUrl, setPaperUrl] = useState('')
+export function DocumentUpload() {
+  const [documentUrl, setDocumentUrl] = useState('')
   const [extractionType, setExtractionType] = useState<ExtractionRequest['extraction_type']>('all')
   
   const extractMutation = useMutation({
@@ -30,10 +30,10 @@ export function PaperUpload() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!paperUrl) return
+    if (!documentUrl) return
     
     extractMutation.mutate({
-      paper_url: paperUrl,
+      document_url: documentUrl,
       extraction_type: extractionType,
     })
   }
@@ -42,14 +42,14 @@ export function PaperUpload() {
     <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8 mb-12">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="paper-url" className="block text-sm merriweather-regular text-gray-700 mb-2">
-            Research Paper URL
+          <label htmlFor="document-url" className="block text-sm merriweather-regular text-gray-700 mb-2">
+            Document URL
           </label>
           <Textarea
-            id="paper-url"
-            placeholder="Paste the URL to a research paper..."
-            value={paperUrl}
-            onChange={(e) => setPaperUrl(e.target.value)}
+            id="document-url"
+            placeholder="Paste the URL to any document..."
+            value={documentUrl}
+            onChange={(e) => setDocumentUrl(e.target.value)}
             className="w-full"
             rows={3}
           />
@@ -68,9 +68,11 @@ export function PaperUpload() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Information</SelectItem>
-              <SelectItem value="numerical">Numerical Data</SelectItem>
-              <SelectItem value="quotes">Important Quotes</SelectItem>
-              <SelectItem value="details">Key Details</SelectItem>
+              <SelectItem value="summary">Summary</SelectItem>
+              <SelectItem value="key_points">Key Points</SelectItem>
+              <SelectItem value="insights">Insights</SelectItem>
+              <SelectItem value="entities">Named Entities</SelectItem>
+              <SelectItem value="questions">Key Questions</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -78,15 +80,15 @@ export function PaperUpload() {
         <Button 
           type="submit" 
           className="w-full"
-          disabled={!paperUrl || extractMutation.isPending}
+          disabled={!documentUrl || extractMutation.isPending}
         >
-          {extractMutation.isPending ? 'Analyzing...' : 'Analyze Paper'}
+          {extractMutation.isPending ? 'Processing...' : 'Process Document'}
         </Button>
       </form>
 
       {extractMutation.isSuccess && (
         <div className="mt-8 p-6 bg-gray-50 rounded-lg">
-          <h3 className="text-lg playfair-semibold mb-4">Extraction Results</h3>
+          <h3 className="text-lg playfair-semibold mb-4">Processing Results</h3>
           <pre className="text-sm overflow-auto">
             {JSON.stringify(extractMutation.data, null, 2)}
           </pre>
@@ -95,7 +97,7 @@ export function PaperUpload() {
 
       {extractMutation.isError && (
         <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-lg">
-          Error: Failed to extract information. Please try again.
+          Error: Failed to process document. Please try again.
         </div>
       )}
     </div>

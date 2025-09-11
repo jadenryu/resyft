@@ -39,14 +39,14 @@ import {
 
 const data = {
   user: {
-    name: "Research User",
+    name: "Document User",
     email: "user@resyft.com",
     avatar: "/resyft-2.png",
   },
   navMain: [
     {
-      title: "Research Agent",
-      url: "/research-agent",
+      title: "Chat Assistant",
+      url: "/",
       icon: MessageSquare,
       isActive: true,
     },
@@ -66,7 +66,7 @@ const data = {
       ],
     },
     {
-      title: "Upload Paper",
+      title: "Upload Documents",
       url: "/upload",
       icon: Upload,
     },
@@ -103,7 +103,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate playfair-semibold">Resyft</span>
-                  <span className="truncate text-xs">Research Analysis</span>
+                  <span className="truncate text-xs">Document Intelligence</span>
                 </div>
               </a>
             </SidebarMenuButton>
