@@ -217,7 +217,7 @@ export default function UploadPage() {
     if (!title) {
       validationErrors.push({
         field: 'title',
-        message: 'Please provide a title for this paper'
+        message: 'Please provide a title for this document'
       })
     }
     
@@ -327,7 +327,7 @@ export default function UploadPage() {
             <BackNavigation />
             <Separator orientation="vertical" className="h-6" />
             <div className="flex-1">
-              <h1 className="text-xl playfair-semibold">Upload Paper</h1>
+              <h1 className="text-xl playfair-semibold">Upload Documents</h1>
             </div>
           </div>
         </header>
@@ -365,9 +365,9 @@ export default function UploadPage() {
             >
               <Card>
                 <CardHeader>
-                  <CardTitle>Add Research Paper</CardTitle>
+                  <CardTitle>Add Document</CardTitle>
                   <CardDescription>
-                    Upload a PDF, provide a URL, or paste text directly
+                    Upload any document type - PDF, Word, text files, or paste content directly
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -555,10 +555,10 @@ export default function UploadPage() {
                   
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="title">Paper Title *</Label>
+                      <Label htmlFor="title">Document Title *</Label>
                       <Input
                         id="title"
-                        placeholder="Enter the paper title"
+                        placeholder="Enter the document title"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         className="mt-2"
@@ -625,7 +625,7 @@ export default function UploadPage() {
                     <Alert className="border-green-200 bg-green-50">
                       <CheckCircle className="h-4 w-4 text-green-600" />
                       <AlertDescription className="text-green-800">
-                        Paper uploaded successfully! Redirecting to dashboard...
+                        Document uploaded successfully! Redirecting to dashboard...
                       </AlertDescription>
                     </Alert>
                   )}
@@ -657,7 +657,7 @@ export default function UploadPage() {
                       ) : (
                         <>
                           <Upload className="w-4 h-4 mr-2" />
-                          Upload Paper
+                          Upload Document
                         </>
                       )}
                     </Button>
@@ -673,7 +673,7 @@ export default function UploadPage() {
                   <Clock className="w-5 h-5 text-gray-400" />
                   <div className="text-sm text-gray-600">
                     <p className="merriweather-regular">Processing Time</p>
-                    <p>Papers typically take 30-60 seconds to analyze and extract insights</p>
+                    <p>Documents typically take 30-60 seconds to process and extract insights</p>
                   </div>
                 </div>
               </CardContent>

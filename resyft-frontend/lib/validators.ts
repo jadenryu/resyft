@@ -431,16 +431,16 @@ export async function checkURLAccessibility(url: string): Promise<{
 }
 
 // Zod schemas for form validation
-export const paperUploadSchema = z.object({
-  paperUrl: z.string().url("Please enter a valid URL").min(1, "Paper URL is required"),
-  extractionType: z.enum(['all', 'statistics', 'quotes', 'summary', 'methodology', 'quality'])
+export const documentUploadSchema = z.object({
+  documentUrl: z.string().url("Please enter a valid URL").min(1, "Document URL is required"),
+  extractionType: z.enum(['all', 'summary', 'key_points', 'insights', 'entities', 'questions'])
 })
 
-export type PaperUploadInput = z.infer<typeof paperUploadSchema>
+export type DocumentUploadInput = z.infer<typeof documentUploadSchema>
 
 export const quickAnalysisSchema = z.object({
   query: z.string().min(1, "Query is required").max(500, "Query must be less than 500 characters"),
-  paperUrls: z.array(z.string().url("Please enter valid URLs")).min(1, "At least one paper URL is required")
+  documentUrls: z.array(z.string().url("Please enter valid URLs")).min(1, "At least one document URL is required")
 })
 
 export type QuickAnalysisInput = z.infer<typeof quickAnalysisSchema>

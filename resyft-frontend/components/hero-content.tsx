@@ -11,35 +11,36 @@ export default function HeroContent() {
           }}
         >
           <div className="absolute top-0 left-1 right-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-full" />
-          <span className="text-white/90 text-xs font-light relative z-10">🔍 Advanced Document Analysis</span>
+          <span className="text-white/90 text-xs font-light relative z-10">🔍 Portable RAG Database</span>
         </div>
 
         {/* Main Heading */}
-        <h1 className="text-5xl md:text-6xl md:leading-16 tracking-tight font-light text-white mb-4">
-          <span className="merriweather-regular italic instrument">Intelligent</span> Document
+        <h1 className="text-5xl md:text-6xl leading-tight tracking-tight font-light text-white mb-4">
+          <span className="merriweather-regular italic instrument">Personal AI</span>
           <br />
-          <span className="font-light tracking-tight text-white">Analysis</span>
+          <span className="font-light tracking-tight text-white">Document</span>
+          <br />
+          <span className="font-light tracking-tight text-white">Assistant</span>
         </h1>
 
         {/* Description */}
         <p className="text-xs font-light text-white/70 mb-6 leading-relaxed">
-          Transform your documents with AI-powered analysis. Extract insights, identify patterns, and unlock valuable
-          information from any document format with precision and speed.
+          Build your own portable RAG database from personal documents. Your AI model trains exclusively on your content—zero web data, zero hallucination, maximum accuracy.
         </p>
 
         <div className="mb-6">
           <div className="flex items-center gap-6 text-xs text-white/60">
             <span className="flex items-center gap-2">
               <div className="w-1 h-1 bg-white/40 rounded-full"></div>
-              OCR & Text Extraction
+              Document-Only Training
             </span>
             <span className="flex items-center gap-2">
               <div className="w-1 h-1 bg-white/40 rounded-full"></div>
-              Data Classification
+              Zero Hallucination
             </span>
             <span className="flex items-center gap-2">
               <div className="w-1 h-1 bg-white/40 rounded-full"></div>
-              Smart Insights
+              Portable RAG System
             </span>
           </div>
         </div>
@@ -50,7 +51,7 @@ export default function HeroContent() {
             View Demo
           </button>
           <button className="px-8 py-3 rounded-full bg-white text-black font-normal text-xs transition-all duration-200 hover:bg-white/90 cursor-pointer">
-            Start Analysis
+            Upload Documents
           </button>
         </div>
       </div>
