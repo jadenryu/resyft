@@ -166,7 +166,7 @@ export default function Home() {
     } catch (error) {
       console.error('AI Response Error:', error)
       return {
-        response: `I understand you're asking about "${input}". As your RAG database assistant, I can help you query your document corpus, perform vector searches, and provide grounded responses without web data contamination. Please upload documents to build your knowledge base first.`,
+        response: `I understand you're asking about "${input}". As your vector database assistant, I can help you query your document corpus, perform vector searches, and provide grounded responses without web data contamination. Please upload documents to build your knowledge base first.`,
         tools_used: []
       }
     }
@@ -188,10 +188,10 @@ export default function Home() {
         {/* Main Heading */}
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl playfair-bold text-slate-900 mb-4 leading-tight">
-            What would you like to know about your RAG database?
+            What would you like to know about your vector database?
           </h1>
           <p className="text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
-            Portable RAG system that builds custom AI models from your documents - trained exclusively on your content with zero hallucination from web data
+            Portable vector system with Retrieval-Augmented Generation that builds custom AI models from your documents - trained exclusively on your content with zero hallucination from web data
           </p>
         </div>
 
@@ -211,7 +211,7 @@ export default function Home() {
                         handleSubmit(undefined, true)
                       }
                     }}
-                    placeholder="Query your private RAG database..."
+                    placeholder="Query your private vector database..."
                     className="w-full text-lg border-0 bg-transparent focus:ring-0 focus:outline-none placeholder:text-slate-400"
                     disabled={isLoading}
                     autoComplete="off"
@@ -275,7 +275,7 @@ export default function Home() {
             {/* Paper Analysis Agent */}
             <div 
               className="bg-white rounded-xl border border-slate-200 p-6 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
-              onClick={() => handleExampleClick("What are the main risk factors mentioned across my RAG database?")}
+              onClick={() => handleExampleClick("What are the main risk factors mentioned across my vector database?")}
             >
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors flex-shrink-0">

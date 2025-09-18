@@ -779,7 +779,7 @@ export default function NewProjectPage() {
                     <div className="flex gap-4">
                       <Button
                         variant="outline"
-                        onClick={() => router.push('/dashboard')}
+                        onClick={() => router.push('/projects')}
                         disabled={processing}
                       >
                         Cancel
