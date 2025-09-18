@@ -1,4 +1,4 @@
-// Dynamic Pydantic AI Model Configuration for Extraction
+// Dynamic AI Model Configuration for Document Processing
 // This module creates different structured output models based on user settings
 
 import type { ExtractionSettings } from './extraction-settings'
@@ -73,11 +73,11 @@ export class ExtractionModelFactory {
       return "Do not extract any quotes from this document."
     }
 
-    let prompt = `Extract meaningful quotes from this research paper with the following requirements:
+    let prompt = `Extract meaningful quotes from this document with the following requirements:
 - Maximum ${settings.maxPerPaper} quotes per paper
 - Quote length between ${settings.minLength} and ${settings.maxLength} characters
-- Priority: ${settings.priority === 'relevance' ? 'Most relevant to the main research question' :
-              settings.priority === 'novelty' ? 'Novel insights and original findings' :
+- Priority: ${settings.priority === 'relevance' ? 'Most relevant to the main topic' :
+              settings.priority === 'novelty' ? 'Novel insights and key findings' :
               'Statistical findings and numerical results'}
 
 For each quote, provide:
@@ -88,7 +88,7 @@ For each quote, provide:
 - Section where it appears
 - Priority type classification
 
-Return only high-quality quotes that add substantial value to research understanding.`
+Return only high-quality quotes that add substantial value to document understanding.`
 
     return prompt
   }
@@ -98,7 +98,7 @@ Return only high-quality quotes that add substantial value to research understan
       return "Do not extract statistical data from this document."
     }
 
-    let prompt = `Extract statistical information from this research paper with these specifications:
+    let prompt = `Extract statistical information from this document with these specifications:
 - Only include studies with sample size >= ${settings.minSampleSize}
 ${settings.includeConfidenceIntervals ? '- Include confidence intervals when available' : '- Do not extract confidence intervals'}
 ${settings.includePValues ? '- Include p-values and significance tests' : '- Do not extract p-values'}
@@ -111,7 +111,7 @@ For each statistic, provide:
 - Confidence level in the extraction accuracy (0-100)
 - Page number if available
 
-Focus on the most meaningful statistical findings that support the paper's conclusions.`
+Focus on the most meaningful statistical findings that support the document's conclusions.`
 
     return prompt
   }
@@ -123,7 +123,7 @@ Focus on the most meaningful statistical findings that support the paper's concl
       'detailed': '400-600 words'
     }
 
-    let prompt = `Create a ${lengthMap[settings.length]} summary of this research paper.
+    let prompt = `Create a ${lengthMap[settings.length]} summary of this document.
 
 Include the following elements:
 ${settings.includeMethodology ? '- Methodology and research approach' : ''}
@@ -134,8 +134,8 @@ Focus areas: ${settings.focusAreas.join(', ')}
 
 The summary should be:
 - Concise and well-structured
-- Focused on key findings and contributions
-- Written for academic audiences
+- Focused on key findings and main points
+- Written for general audiences
 - Highlighting the most important insights
 
 Provide the summary along with:
@@ -156,16 +156,16 @@ Provide the summary along with:
     const recencyPct = (settings.recencyWeight / totalWeight) * 100
     const methodologyPct = (settings.methodologyWeight / totalWeight) * 100
 
-    let prompt = `Assess the relevance of this paper using these weighted criteria:
+    let prompt = `Assess the relevance of this document using these weighted criteria:
 
-- Keyword matching (${keywordPct.toFixed(1)}% weight): How well does the paper match research keywords
+- Keyword matching (${keywordPct.toFixed(1)}% weight): How well does the document match specified keywords
 - Citation impact (${citationPct.toFixed(1)}% weight): Citation count and influence in the field
-- Publication recency (${recencyPct.toFixed(1)}% weight): How recent and current the research is
-- Methodology quality (${methodologyPct.toFixed(1)}% weight): Rigor and quality of research methods
+- Publication recency (${recencyPct.toFixed(1)}% weight): How recent and current the document is
+- Content quality (${methodologyPct.toFixed(1)}% weight): Rigor and quality of content structure
 
 ${settings.customKeywords.length > 0 ? 
   `Custom priority keywords: ${settings.customKeywords.join(', ')}
-   Give additional weight to papers containing these specific terms.` : ''}
+   Give additional weight to documents containing these specific terms.` : ''}
 
 Provide:
 - Overall relevance score (0-100)
@@ -173,7 +173,7 @@ Provide:
 - List of matching keywords found
 - Detailed explanation of scoring rationale
 
-The assessment should help researchers prioritize papers for their literature review.`
+The assessment should help users prioritize documents for their analysis.`
 
     return prompt
   }
@@ -192,7 +192,7 @@ Generate:
 - Complete bibliography
 ${settings.groupByTheme ? '- Thematically organized content groups' : ''}
 
-Ensure all formatting follows academic standards and is ready for direct use in research papers.`
+Ensure all formatting follows professional standards and is ready for direct use in documents.`
 
     return prompt
   }
@@ -200,7 +200,7 @@ Ensure all formatting follows academic standards and is ready for direct use in 
   // Generate complete system prompt combining all enabled extraction types
   static createSystemPrompt(settings: ExtractionSettings): string {
     const sections: string[] = [
-      "You are an expert research paper analysis AI. Extract information from the provided paper according to user-specified requirements.",
+      "You are an expert document analysis AI. Extract information from the provided document according to user-specified requirements.",
       "",
       "EXTRACTION REQUIREMENTS:"
     ]
@@ -223,7 +223,7 @@ Ensure all formatting follows academic standards and is ready for direct use in 
       "- Be thorough but concise",
       "- Maintain high accuracy standards", 
       "- Provide confidence scores for extractions",
-      "- Follow academic writing conventions",
+      "- Follow professional writing conventions",
       "- Return structured, well-organized results"
     )
 
