@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { researchTools, toolHandlers } from '../../../lib/research-tools'
+import { documentTools, toolHandlers } from '../../../lib/research-tools'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     const messages = [
       {
         role: 'system',
-        content: `You are a helpful research assistant powered by Google Gemini 2.5 Flash Lite. You have access to specialized research tools for analyzing papers, extracting statistics, assessing methodology, and more. Use these tools when users ask for specific research tasks. Be conversational and educational. Always explain what tool you're using and why it's helpful for their request.${preferred_tool ? `\n\nIMPORTANT: The user has specifically requested to use the tool: ${preferred_tool}. Please prioritize using this tool if it's relevant to their request.` : ''}`
+        content: `You are a Personal AI Document Assistant powered by Google Gemini 2.5 Flash Lite. You help users analyze, summarize, and extract insights from their personal documents. You have access to specialized document processing tools for extracting data, generating summaries, and finding key quotes. You operate exclusively on documents the user provides - you do not access external information or the internet. Use these tools when users ask for document analysis tasks. Be conversational and helpful. Always explain what tool you're using and why it's helpful for their document analysis.${preferred_tool ? `\n\nIMPORTANT: The user has specifically requested to use the tool: ${preferred_tool}. Please prioritize using this tool if it's relevant to their request.` : ''}`
       },
       ...conversation_history,
       {
@@ -32,12 +32,12 @@ export async function POST(request: NextRequest) {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://resyft.com',
-        'X-Title': 'Resyft Research Agent',
+        'X-Title': 'Resyft Document Assistant',
       },
       body: JSON.stringify({
         model: model,
         messages: messages,
-        tools: researchTools,
+        tools: documentTools,
         tool_choice: 'auto',
         temperature: 0.7,
         max_tokens: 1500
@@ -93,12 +93,12 @@ export async function POST(request: NextRequest) {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
           'HTTP-Referer': 'https://resyft.com',
-          'X-Title': 'Resyft Research Agent',
+          'X-Title': 'Resyft Document Assistant',
         },
         body: JSON.stringify({
           model: model,
           messages: messages,
-          tools: researchTools,
+          tools: documentTools,
           temperature: 0.7,
           max_tokens: 1500
         })
