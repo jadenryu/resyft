@@ -36,7 +36,7 @@ export default function PulsingCircle() {
           </defs>
           <text className="text-sm fill-white/80 instrument">
             <textPath href="#circle" startOffset="0%">
-              RAG Database • Zero Hallucination • Document-Only AI • RAG Database •
+              Vector Database • Zero Hallucination • Document-Only AI • Retrieval-Augmented Generation •
             </textPath>
           </text>
         </motion.svg>

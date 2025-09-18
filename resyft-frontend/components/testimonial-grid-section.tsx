@@ -3,7 +3,7 @@ import Image from "next/image"
 const testimonials = [
   {
     quote:
-      "Resyft's RAG database eliminated hallucination issues from our AI queries. Now we get accurate, document-grounded responses from our corpus every time.",
+      "Resyft's vector database eliminated hallucination issues from our AI queries. Now we get accurate, document-grounded responses from our corpus every time.",
     name: "Dr. Sarah Chen",
     company: "Stanford University",
     avatar: "/placeholder.svg",
@@ -11,7 +11,7 @@ const testimonials = [
   },
   {
     quote:
-      "Building our portable RAG database was seamless. The vector embeddings capture nuances from our technical documents without web data contamination.",
+      "Building our portable vector database was seamless. The vector embeddings capture nuances from our technical documents without web data contamination.",
     name: "Dr. Marcus Johnson",
     company: "MIT",
     avatar: "/placeholder.svg",
@@ -27,7 +27,7 @@ const testimonials = [
   },
   {
     quote:
-      "Our enterprise RAG system processes sensitive documents locally. Industry-standard architecture with complete data isolation from web training sets.",
+      "Our enterprise Retrieval-Augmented Generation system processes sensitive documents locally. Industry-standard architecture with complete data isolation from web training sets.",
     name: "Dr. David Kim",
     company: "UC Berkeley",
     avatar: "/placeholder.svg",

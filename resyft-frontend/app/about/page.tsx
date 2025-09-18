@@ -328,7 +328,7 @@ export default function AboutPage() {
               Trusted by enterprise teams worldwide
             </h2>
             <p className="text-xl merriweather-light text-gray-600 max-w-3xl mx-auto">
-              Join thousands of professionals building portable RAG databases with zero hallucination from web data contamination
+              Join thousands of professionals building portable vector databases with zero hallucination from web data contamination
             </p>
           </motion.div>
           
@@ -390,7 +390,7 @@ export default function AboutPage() {
               Frequently Asked Questions
             </h2>
             <p className="text-xl merriweather-light text-gray-600 max-w-2xl mx-auto">
-              Everything you need to know about Resyft's portable RAG database architecture
+              Everything you need to know about Resyft's portable vector database architecture
             </p>
           </motion.div>
 
@@ -407,14 +407,14 @@ export default function AboutPage() {
                 },
                 {
                   question: "How does document-only training work?",
-                  answer: "Your RAG database creates vector embeddings exclusively from your document corpus. The AI model never accesses external web data or pre-trained knowledge, ensuring responses are always grounded in your specific content with zero hallucination risk."
+                  answer: "Your vector database creates vector embeddings exclusively from your document corpus. The AI model never accesses external web data or pre-trained knowledge, ensuring responses are always grounded in your specific content with zero hallucination risk."
                 },
                 {
-                  question: "What types of queries does the RAG system support?",
+                  question: "What types of queries does the Retrieval-Augmented Generation system support?",
                   answer: "Our vector search supports semantic queries like 'What are risk factors mentioned?' or exact retrieval like 'Find contract payment terms.' The RAG architecture understands context and provides document-grounded responses with precise source citations."
                 },
                 {
-                  question: "Is my RAG database secure and private?",
+                  question: "Is my vector database secure and private?",
                   answer: "Absolutely. We use enterprise-grade encryption and your vector embeddings remain in an isolated knowledge base. Your document corpus never mixes with external training data and stays completely private to your organization."
                 },
                 {
@@ -423,7 +423,7 @@ export default function AboutPage() {
                 },
                 {
                   question: "Do you offer enterprise RAG deployments?",
-                  answer: "Yes, we provide enterprise-grade RAG database solutions for teams and organizations. Contact our sales team for shared vector databases, collaboration features, and custom on-premise deployments."
+                  answer: "Yes, we provide enterprise-grade vector database solutions for teams and organizations. Contact our sales team for shared vector databases, collaboration features, and custom on-premise deployments."
                 },
                 {
                   question: "Can I export RAG query results and embeddings?",
@@ -491,10 +491,10 @@ export default function AboutPage() {
             className="max-w-4xl mx-auto text-center"
           >
             <h2 className="text-4xl md:text-5xl playfair-bold text-white mb-6">
-              Ready to build your RAG database?
+              Ready to build your vector database?
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed merriweather-regular">
-              Join thousands of professionals building portable RAG systems with enterprise-grade document-only AI models.
+              Join thousands of professionals building portable Retrieval-Augmented Generation systems with enterprise-grade document-only AI models.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
               <Link href="/signup">
@@ -531,7 +531,7 @@ export default function AboutPage() {
                 </span>
               </div>
               <p className="text-gray-400 max-w-md mb-6 leading-relaxed merriweather-regular">
-                Portable RAG database system that creates custom AI models from your documents. 
+                Portable vector database system that creates custom AI models from your documents. 
                 Industry-standard architecture with zero hallucination guarantee.
               </p>
             </div>
