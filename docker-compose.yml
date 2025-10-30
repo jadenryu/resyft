@@ -1,0 +1,200 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: resyft-postgres
+    environment:
+      POSTGRES_DB: resyft_school
+      POSTGRES_USER: resyft_user
+      POSTGRES_PASSWORD: resyft_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./supabase_schema_v2.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - resyft-network
+
+  # Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: resyft-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__HTTP_PORT: 6333
+      QDRANT__SERVICE__GRPC_PORT: 6334
+    networks:
+      - resyft-network
+
+  # Redis for caching and queues
+  redis:
+    image: redis:7-alpine
+    container_name: resyft-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - resyft-network
+
+  # AI Service (FastAPI)
+  ai-service:
+    build:
+      context: ./resyft-ai-service
+      dockerfile: Dockerfile
+    container_name: resyft-ai-service
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql://resyft_user:resyft_password@postgres:5432/resyft_school
+      - QDRANT_URL=http://qdrant:6333
+      - REDIS_URL=redis://redis:6379
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - DEFAULT_EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
+      - CHUNK_SIZE=512
+      - CHUNK_OVERLAP=64
+      - DEBUG=true
+    volumes:
+      - ./resyft-ai-service:/app
+      - /app/venv  # Exclude virtual environment
+    depends_on:
+      - postgres
+      - qdrant
+      - redis
+    networks:
+      - resyft-network
+    restart: unless-stopped
+
+  # Backend Service (Express.js)
+  backend:
+    build:
+      context: ./resyft-backend
+      dockerfile: Dockerfile
+    container_name: resyft-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://resyft_user:resyft_password@postgres:5432/resyft_school
+      - AI_SERVICE_URL=http://ai-service:8001
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-your-jwt-secret}
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+      - NODE_ENV=development
+    volumes:
+      - ./resyft-backend:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+      - redis
+      - ai-service
+    networks:
+      - resyft-network
+    restart: unless-stopped
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ./resyft-frontend
+      dockerfile: Dockerfile
+    container_name: resyft-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - NEXT_PUBLIC_AI_SERVICE_URL=http://localhost:8001
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+    volumes:
+      - ./resyft-frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+      - ai-service
+    networks:
+      - resyft-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy (Optional, for production-like setup)
+  nginx:
+    image: nginx:alpine
+    container_name: resyft-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro  # Optional SSL certificates
+    depends_on:
+      - frontend
+      - backend
+      - ai-service
+    networks:
+      - resyft-network
+    restart: unless-stopped
+    profiles:
+      - production  # Only run with docker-compose --profile production
+
+  # pgAdmin for database management (development only)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: resyft-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@resyft.local
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - resyft-network
+    profiles:
+      - development  # Only run with docker-compose --profile development
+
+  # Qdrant Web UI (development only)
+  qdrant-web-ui:
+    image: qdrant/qdrant:latest
+    container_name: resyft-qdrant-ui
+    ports:
+      - "6333:6333"
+    environment:
+      QDRANT__WEB_UI__ENABLED: true
+    depends_on:
+      - qdrant
+    networks:
+      - resyft-network
+    profiles:
+      - development
+
+volumes:
+  postgres_data:
+    driver: local
+  qdrant_data:
+    driver: local
+  redis_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  resyft-network:
+    driver: bridge
+
+# Health checks and logging
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
