@@ -1,0 +1,141 @@
+RESYFT TECH STACK ROADMAP FOR PRODUCTION
+
+=== CORE INFRASTRUCTURE ===
+
+Database & Authentication: Supabase
+- PostgreSQL database for storing user data, projects, extracted paper data
+- Built-in authentication for user management
+- Real-time subscriptions for collaborative features
+- Row Level Security for data protection
+
+Backend Hosting: Railway
+- Node.js/TypeScript for API server
+- Express.js or Fastify for REST API framework
+- Background job processing with Bull/BullMQ for paper processing
+- Redis for caching and queue management
+
+Frontend Hosting: Vercel
+- Next.js 14+ with App Router for the web application
+- React with TypeScript for type safety
+- Tailwind CSS for styling
+- Shadcn/ui for component library
+
+=== LANGUAGES & FRAMEWORKS ===
+
+Primary Languages:
+- TypeScript (Frontend & Backend) - Type safety across the stack
+- Python (AI/ML Services) - For paper processing and NLP tasks
+
+Frontend Stack:
+- Next.js 14+ (React framework)
+- TypeScript
+- Tailwind CSS + Shadcn/ui
+- React Query/TanStack Query for data fetching
+- Zustand for state management
+- React Hook Form + Zod for form validation
+
+Backend Stack:
+- Node.js with TypeScript
+- Express.js or Fastify
+- Prisma ORM for database operations
+- tRPC for type-safe API communication
+- Zod for validation schemas
+
+AI/ML Services:
+- Python with FastAPI
+- OpenRouter API for LLM access (multiple models)
+- OpenAI Python SDK (for OpenRouter compatibility)
+- PyPDF2 or pdfplumber for PDF parsing
+- Crawl4AI for web scraping research papers
+
+=== ADDITIONAL SERVICES ===
+
+File Storage:
+- Supabase Storage for PDF uploads
+- Cloudinary for image optimization (if needed)
+
+Email Service:
+- Resend or SendGrid for transactional emails
+
+Payment Processing (if premium features):
+- Stripe for subscriptions
+
+Monitoring & Analytics:
+- Vercel Analytics for frontend
+- Sentry for error tracking
+- PostHog for product analytics
+
+=== DEVELOPMENT WORKFLOW ===
+
+Version Control: GitHub
+CI/CD Pipeline:
+- GitHub Actions for automated testing
+- Vercel for automatic frontend deployments
+- Railway for backend deployments
+
+Testing:
+- Vitest for unit tests
+- Playwright for E2E tests
+- Jest for backend testing
+
+=== ARCHITECTURE OVERVIEW ===
+
+1. User uploads paper link/PDF via Next.js frontend (Vercel)
+2. Frontend sends request to Node.js API (Railway)
+3. API queues paper processing job in Redis
+4. Python worker service processes paper:
+   - Extracts text from PDF/webpage
+   - Sends to LLM for analysis
+   - Extracts requested information
+   - Calculates reliability scores
+5. Results stored in Supabase PostgreSQL
+6. Frontend receives real-time updates via Supabase subscriptions
+
+=== PRODUCTION CONSIDERATIONS ===
+
+Security:
+- Environment variables for sensitive data
+- API rate limiting with express-rate-limit
+- Input validation at every layer
+- CORS configuration
+- Content Security Policy headers
+
+Performance:
+- CDN for static assets (Vercel Edge Network)
+- Database indexing for common queries
+- Redis caching for frequently accessed data
+- Lazy loading for frontend components
+- Image optimization
+
+Scalability:
+- Horizontal scaling on Railway
+- Database connection pooling
+- Queue-based architecture for paper processing
+- Microservices approach for AI/ML components
+
+=== DEVELOPMENT PHASES ===
+
+Phase 1: MVP (4-6 weeks)
+- Basic authentication with Supabase
+- Simple paper upload and processing
+- Core extraction features
+- Basic UI with Tailwind
+
+Phase 2: Enhanced Features (4-6 weeks)
+- User projects and saved papers
+- Advanced extraction preferences
+- Reliability scoring system
+- Improved UI/UX
+
+Phase 3: Production Ready (4-6 weeks)
+- Performance optimization
+- Comprehensive testing
+- Security hardening
+- Documentation
+- Monitoring setup
+
+Phase 4: Scale & Iterate
+- User feedback implementation
+- Advanced features
+- Mobile responsiveness
+- API for third-party integrations
