@@ -1,0 +1,14 @@
+Hi, thank you for helping me with resyft so far. 
+
+I want you to complete the next steps to the best of your ability while making no errors and ensuring maximum 
+functionality and user experience. First, please transform some features to focus on this new platform. 
+
+First, we have the platform, but we need to reframe the target. we keep the llm and that stuff, but I want to incorporate a vector 
+database, qdrant in this case. the reason is that we need to shift this from a research platform into one that is for school productivity.
+essentially, users can make clusters for each class that they have, upload documents to this, which gets embedded into the vector database
+for future retrieval for any questions, comments, or concerns. this helps studying for topics woven deeply into uploaded course material. 
+
+regarding the functinolaity, please use optimized functions for both time and performance. ensure that there are no errors in the code.
+i realize I have to uplaod manual information for some parts of the implementation. please let me know what information you need 
+for this implementation to succeed in production. use context7 to refer to relevant documentation if needed to reduce errros. double check
+that there are no errors. 
