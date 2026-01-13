@@ -1,24 +1,9 @@
+# Core API
 fastapi==0.115.5
 uvicorn==0.32.1
 pydantic==2.10.3
-pydantic-ai-slim[openai]==0.0.49
 python-multipart==0.0.18
-httpx==0.28.1
 python-dotenv==1.0.1
-supabase==2.11.0
-beautifulsoup4==4.12.2
-requests==2.31.0
-aiohttp==3.10.11
 
-# Vector database and embeddings
-qdrant-client==1.12.1
-fastembed==0.4.2
-
-# Document processing
+# PDF processing
 PyMuPDF==1.25.2
-python-docx==1.1.2
-pypdf2==3.0.1
-
-# Text processing and chunking
-langchain-text-splitters==0.3.4
-tiktoken==0.8.0
