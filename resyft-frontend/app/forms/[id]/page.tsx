@@ -98,7 +98,11 @@ export default function FormDetailPage() {
       formData.append('file', file)
 
       // Call the AI service to analyze the PDF
-      const aiServiceUrl = process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:8001'
+      let aiServiceUrl = process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:8001'
+      // Ensure URL has protocol prefix
+      if (aiServiceUrl && !aiServiceUrl.startsWith('http://') && !aiServiceUrl.startsWith('https://')) {
+        aiServiceUrl = `https://${aiServiceUrl}`
+      }
       console.log('Calling AI service at:', aiServiceUrl)
 
       const response = await fetch(`${aiServiceUrl}/analyze-form`, {
@@ -132,7 +136,10 @@ export default function FormDetailPage() {
     } catch (error) {
       console.error('Analysis error:', error)
       // Show helpful message about AI service
-      const aiServiceUrl = process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:8001'
+      let aiServiceUrl = process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:8001'
+      if (aiServiceUrl && !aiServiceUrl.startsWith('http://') && !aiServiceUrl.startsWith('https://')) {
+        aiServiceUrl = `https://${aiServiceUrl}`
+      }
       setSegments([])
       setExtractedFields([
         { name: 'Connection Error', value: `Could not connect to AI service at ${aiServiceUrl}`, type: 'error', confidence: 0 },
