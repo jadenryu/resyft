@@ -54,7 +54,7 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
 
       // Dynamically import pdf.js
       const pdfjsLib = await import('pdfjs-dist')
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`
 
       let pdfData: ArrayBuffer | Uint8Array
 
