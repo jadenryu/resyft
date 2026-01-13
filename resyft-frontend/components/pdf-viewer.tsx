@@ -264,12 +264,13 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
       )}
 
       {/* PDF Content */}
-      <div className="flex-1 overflow-auto bg-gray-200 p-4">
-        {loading ? (
-          <div className="flex items-center justify-center h-full">
+      <div className="flex-1 overflow-auto bg-gray-200 p-4 relative">
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-200/80 z-10">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
           </div>
-        ) : !pdfUrl && !pdfBase64 ? (
+        )}
+        {!pdfUrl && !pdfBase64 && !loading ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500">
             <Upload className="w-12 h-12 mb-4" />
             <p>No PDF loaded</p>
