@@ -32,7 +32,7 @@ export function LoginForm({
     if (error) {
       setMessage(error.message)
     } else {
-      router.push('/projects')
+      router.push('/dashboard')
     }
     setLoading(false)
   }
@@ -42,7 +42,7 @@ export function LoginForm({
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-2xl playfair-bold">Welcome Back</h1>
         <p className="text-muted-foreground text-sm text-balance">
-          Sign in to continue analyzing research papers
+          Sign in to continue filling forms smarter
         </p>
       </div>
       <div className="grid gap-6">
