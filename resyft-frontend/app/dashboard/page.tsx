@@ -10,9 +10,12 @@ import {
   Plus,
   FileText,
   LogOut,
-  Search,
   ChevronRight,
-  Loader2
+  Loader2,
+  ExternalLink,
+  Upload,
+  X,
+  Info
 } from "lucide-react"
 import { classifyHealthInsuranceQuery } from "../modelWorking"
 
@@ -30,6 +33,38 @@ interface Project {
   createdAt: string
 }
 
+// Form resources - where to find actual forms
+const formResources: Record<string, { url: string; source: string }> = {
+  "HIPAA Authorization Form": {
+    url: "https://www.hhs.gov/hipaa/for-professionals/privacy/guidance/access/index.html",
+    source: "HHS.gov"
+  },
+  "COBRA Continuation Form": {
+    url: "https://www.dol.gov/agencies/ebsa/laws-and-regulations/laws/cobra",
+    source: "Department of Labor"
+  },
+  "Medicaid Application": {
+    url: "https://www.healthcare.gov/medicaid-chip/getting-medicaid-chip/",
+    source: "Healthcare.gov"
+  },
+  "Enrollment Change Form": {
+    url: "https://www.medicare.gov/forms-help-resources/forms",
+    source: "Medicare.gov"
+  },
+  "Disability Documentation Form": {
+    url: "https://www.ssa.gov/forms/",
+    source: "Social Security Administration"
+  },
+  "Income Verification Form": {
+    url: "https://www.irs.gov/forms-instructions",
+    source: "IRS.gov"
+  },
+  "Dependent Information Form": {
+    url: "https://www.healthcare.gov/income-and-household-information/household-size/",
+    source: "Healthcare.gov"
+  }
+}
+
 export default function Dashboard() {
   const router = useRouter()
   const supabase = createClient()
@@ -38,7 +73,7 @@ export default function Dashboard() {
   const [showPopup, setShowPopup] = useState(false)
   const [projectText, setProjectText] = useState("")
   const [projects, setProjects] = useState<Project[]>([])
-  const [miscForms, setMiscForms] = useState<FormData[]>([])
+  const [selectedForm, setSelectedForm] = useState<FormData | null>(null)
 
   useEffect(() => {
     const checkUser = async () => {
@@ -89,6 +124,14 @@ export default function Dashboard() {
 
     setProjectText("")
     setShowPopup(false)
+  }
+
+  const handleFormClick = (form: FormData) => {
+    setSelectedForm(form)
+  }
+
+  const getFormResource = (formName: string) => {
+    return formResources[formName] || null
   }
 
   if (loading) {
@@ -190,7 +233,7 @@ export default function Dashboard() {
                       <Card
                         key={idx}
                         className="hover:shadow-md transition-shadow cursor-pointer group"
-                        onClick={() => router.push(`/forms/${project.id}-${idx}`)}
+                        onClick={() => handleFormClick(form)}
                       >
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between">
@@ -200,10 +243,10 @@ export default function Dashboard() {
                               </h3>
                               <p className="text-sm text-gray-500 mt-1">{form.purpose}</p>
                             </div>
-                            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                            <Info className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
                           </div>
                           <div className="mt-3 pt-3 border-t">
-                            <p className="text-xs text-blue-600 hover:underline cursor-pointer">
+                            <p className="text-xs text-blue-600">
                               {form.accessibility}
                             </p>
                           </div>
@@ -250,6 +293,76 @@ export default function Dashboard() {
               >
                 Get Recommendations
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Form Details Modal */}
+      {selectedForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg mx-4">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">{selectedForm.formName}</h2>
+                <p className="text-sm text-gray-500 mt-1">{selectedForm.purpose}</p>
+              </div>
+              <button
+                onClick={() => setSelectedForm(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Form Info */}
+              <div className="bg-blue-50 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-blue-900 mb-2">About This Form</h3>
+                <p className="text-sm text-blue-800">{selectedForm.accessibility}</p>
+              </div>
+
+              {/* Where to Find */}
+              {getFormResource(selectedForm.formName) && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-gray-900 mb-2">Where to Get This Form</h3>
+                  <a
+                    href={getFormResource(selectedForm.formName)?.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    {getFormResource(selectedForm.formName)?.source}
+                  </a>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="border-t pt-4 space-y-3">
+                <p className="text-sm text-gray-600">
+                  Already have this form? Upload it to analyze and highlight important fields.
+                </p>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setSelectedForm(null)}
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    onClick={() => {
+                      setSelectedForm(null)
+                      router.push('/forms/new')
+                    }}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Form
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
