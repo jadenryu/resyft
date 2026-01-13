@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Button } from './ui/button'
-import { ZoomIn, ZoomOut, Upload, Highlighter, Type, Loader2 } from 'lucide-react'
+import { ZoomIn, ZoomOut, Upload, Highlighter, Type, Loader2, AlertTriangle } from 'lucide-react'
 
 interface Segment {
   text: string
@@ -14,6 +14,7 @@ interface Segment {
   height: number
   page_width: number
   page_height: number
+  is_pii?: boolean
 }
 
 interface PDFViewerProps {
@@ -30,12 +31,16 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
   const [numPages, setNumPages] = useState(0)
   const [selectedSegment, setSelectedSegment] = useState<number | null>(null)
   const [currentTool, setCurrentTool] = useState<'highlight' | 'textbox' | null>(null)
+  const [showPiiOnly, setShowPiiOnly] = useState(false)
   const viewerRef = useRef<HTMLDivElement>(null)
   const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map())
 
+  // Count PII segments
+  const piiCount = segments.filter(s => s.is_pii).length
+
   useEffect(() => {
     loadPDF()
-  }, [pdfUrl, pdfBase64, scale])
+  }, [pdfUrl, pdfBase64, scale, segments, showPiiOnly])
 
   const loadPDF = async () => {
     if (!pdfUrl && !pdfBase64) {
@@ -98,7 +103,10 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
 
         // Add segment overlays for this page
         const pageSegments = segments.filter(s => s.page_number === pageNum)
-        pageSegments.forEach((segment, localIdx) => {
+        pageSegments.forEach((segment) => {
+          // Skip non-PII if showPiiOnly is enabled
+          if (showPiiOnly && !segment.is_pii) return
+
           const globalIdx = segments.indexOf(segment)
           const overlay = createSegmentOverlay(segment, viewport, globalIdx)
           container.appendChild(overlay)
@@ -117,9 +125,18 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
 
   const createSegmentOverlay = (segment: Segment, viewport: any, index: number) => {
     const overlay = document.createElement('div')
-    overlay.className = `absolute border-2 cursor-pointer transition-colors hover:bg-blue-100/30 ${
-      selectedSegment === index ? 'bg-blue-200/40 border-blue-500' : 'border-blue-300/50'
-    }`
+    const isPii = segment.is_pii
+
+    // PII segments get red highlighting, others get blue
+    if (isPii) {
+      overlay.className = `absolute border-2 cursor-pointer transition-colors bg-red-200/40 border-red-500 hover:bg-red-300/50 ${
+        selectedSegment === index ? 'bg-red-300/60 border-red-600' : ''
+      }`
+    } else {
+      overlay.className = `absolute border-2 cursor-pointer transition-colors hover:bg-blue-100/30 ${
+        selectedSegment === index ? 'bg-blue-200/40 border-blue-500' : 'border-blue-300/50'
+      }`
+    }
 
     const scaleX = viewport.width / segment.page_width
     const scaleY = viewport.height / segment.page_height
@@ -128,7 +145,20 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
     overlay.style.top = `${segment.top * scaleY}px`
     overlay.style.width = `${segment.width * scaleX}px`
     overlay.style.height = `${segment.height * scaleY}px`
-    overlay.style.borderColor = getColorForType(segment.type)
+
+    // PII gets red border, others get type-based color
+    if (!isPii) {
+      overlay.style.borderColor = getColorForType(segment.type)
+    }
+
+    // Add PII indicator icon
+    if (isPii) {
+      const icon = document.createElement('div')
+      icon.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs font-bold'
+      icon.innerHTML = '!'
+      icon.title = 'Personal Information Detected'
+      overlay.appendChild(icon)
+    }
 
     overlay.onclick = () => {
       setSelectedSegment(index)
@@ -200,12 +230,38 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
           Note
         </Button>
 
+        <div className="h-6 w-px bg-gray-300 mx-2" />
+
+        {/* PII Filter Toggle */}
+        {piiCount > 0 && (
+          <Button
+            variant={showPiiOnly ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setShowPiiOnly(!showPiiOnly)}
+            className={showPiiOnly ? 'bg-red-500 hover:bg-red-600' : 'text-red-600 border-red-300 hover:bg-red-50'}
+          >
+            <AlertTriangle className="w-4 h-4 mr-1" />
+            PII ({piiCount})
+          </Button>
+        )}
+
         <div className="flex-1" />
 
         <span className="text-sm text-gray-500">
           {numPages > 0 ? `${numPages} pages` : ''}
         </span>
       </div>
+
+      {/* PII Warning Banner */}
+      {piiCount > 0 && (
+        <div className="bg-red-50 border-b border-red-200 px-4 py-2 flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-red-500" />
+          <span className="text-sm text-red-700">
+            <strong>{piiCount} personal information field{piiCount > 1 ? 's' : ''}</strong> detected in this form.
+            Fields highlighted in <span className="text-red-600 font-semibold">red</span> may contain sensitive data.
+          </span>
+        </div>
+      )}
 
       {/* PDF Content */}
       <div className="flex-1 overflow-auto bg-gray-200 p-4">

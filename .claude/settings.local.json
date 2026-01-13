@@ -3,11 +3,8 @@
     "allow": [
       "Bash(npm install:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(npm run build:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nConsolidate Form Filler app, remove research paper features\n\n- Remove all research paper analysis endpoints and services\n- Add form analysis endpoint \\(/analyze-form\\) to AI service\n- Add PDF viewer component with segment overlays\n- Add dashboard page with form recommendations\n- Add purpose/category selection to signup flow\n- Update branding from research papers to Form Filler\n- Clean up unused components and files\n- Delete standalone login and PDF accessor files\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git push:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)"
-    ]
+      "Bash(npm run build:*)"
+    ],
+    "includeCoAuthoredBy": false,
   }
 }

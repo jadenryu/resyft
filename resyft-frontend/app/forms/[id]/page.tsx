@@ -14,7 +14,8 @@ import {
   Loader2,
   CheckCircle,
   AlertCircle,
-  ChevronRight
+  ChevronRight,
+  AlertTriangle
 } from 'lucide-react'
 
 interface Segment {
@@ -27,6 +28,7 @@ interface Segment {
   height: number
   page_width: number
   page_height: number
+  is_pii?: boolean
 }
 
 interface ExtractedField {
