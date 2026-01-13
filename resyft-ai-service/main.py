@@ -1,17 +1,20 @@
 import os
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional
 
 app = FastAPI()
 
+# CORS - allow all origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 class FormSegment(BaseModel):
@@ -50,19 +53,29 @@ def check_pii(text: str) -> bool:
 
 @app.get("/")
 def root():
-    return {"status": "ok"}
+    return {"status": "ok", "service": "form-filler-ai"}
 
 @app.get("/health")
 def health():
     return {"status": "healthy"}
 
-@app.post("/analyze-form", response_model=FormAnalysisResponse)
+# Handle OPTIONS preflight for analyze-form
+@app.options("/analyze-form")
+async def options_analyze_form():
+    return JSONResponse(content={}, headers={
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+    })
+
+@app.post("/analyze-form")
 async def analyze_form(file: UploadFile = File(...)):
     try:
         import fitz
         import tempfile
 
         content = await file.read()
+
         with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
             tmp.write(content)
             tmp_path = tmp.name
@@ -87,6 +100,20 @@ async def analyze_form(file: UploadFile = File(...)):
         num_pages = len(doc)
         doc.close()
         os.unlink(tmp_path)
-        return FormAnalysisResponse(success=True, filename=file.filename or "file.pdf", num_pages=num_pages, segments=segments, fields=[])
+
+        return FormAnalysisResponse(
+            success=True,
+            filename=file.filename or "file.pdf",
+            num_pages=num_pages,
+            segments=segments,
+            fields=[]
+        )
     except Exception as e:
-        return FormAnalysisResponse(success=False, filename=file.filename or "file.pdf", num_pages=0, segments=[], fields=[], error=str(e))
+        return FormAnalysisResponse(
+            success=False,
+            filename=file.filename or "file.pdf",
+            num_pages=0,
+            segments=[],
+            fields=[],
+            error=str(e)
+        )
