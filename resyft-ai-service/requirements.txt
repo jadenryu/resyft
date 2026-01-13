@@ -1,8 +1,5 @@
-# Core API
 fastapi==0.115.5
-uvicorn[standard]==0.32.1
+uvicorn==0.32.1
 pydantic==2.10.3
 python-multipart==0.0.18
-
-# PDF processing - use pymupdf (new package name)
 pymupdf==1.25.2
