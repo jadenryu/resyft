@@ -27,12 +27,11 @@ RUN useradd --create-home --shell /bin/bash resyft && \
     chown -R resyft:resyft /app
 USER resyft
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8001/health || exit 1
+# Set default port (Railway will override via PORT env var)
+ENV PORT=8001
 
 # Expose port
 EXPOSE 8001
 
-# Run the application
-CMD ["python", "main_v2.py"]
+# Run the application - Railway sets PORT env var
+CMD uvicorn main:app --host 0.0.0.0 --port $PORT
