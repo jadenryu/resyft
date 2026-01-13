@@ -1,0 +1,15 @@
+1. thank you for helping me with resyft so far. here are the next steps.
+
+2. the first step is to remove redundant, irrelevant, or unnecessary material. for example, it is imperative that all materials relating to the previous research/document analysis is gone, unless it relates with the file analysis 
+app transformation. please delete all information pertaining to this topic (irrelevant info)
+
+3. examine the codebase and type in the chat what errors there are in the program and the optimal way to solve these errors. for example, are they api keys correct? is the vercel deployment correct? is the railway deployment
+correct? remember, we are using a new supabase database, thus all api keys regarding the new database must replace the old database. where may this have been skipped over? 
+
+4. answer in text, is the content merged from the pull requests still prevalent in the app? the pull requests merged important features that should also be integrated into resyft. 
+
+5. delete any unused endpoints that regard to the previous app. 
+
+6. keep all functions functional, efficient, and straightforward. 
+
+
