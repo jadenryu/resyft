@@ -96,7 +96,7 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
 
         const context = canvas.getContext('2d')
         if (context) {
-          await page.render({ canvasContext: context, viewport, canvas }).promise
+          await page.render({ canvasContext: context, viewport }).promise
         }
 
         container.appendChild(canvas)
@@ -270,14 +270,13 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
             <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
           </div>
         )}
-        {!pdfUrl && !pdfBase64 && !loading ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+        {!pdfUrl && !pdfBase64 && !loading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
             <Upload className="w-12 h-12 mb-4" />
             <p>No PDF loaded</p>
           </div>
-        ) : (
-          <div ref={viewerRef} className="flex flex-col items-center" />
         )}
+        <div ref={viewerRef} className="flex flex-col items-center min-h-full" />
       </div>
     </div>
   )
