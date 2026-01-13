@@ -1,4 +1,5 @@
 import os
+import httpx
 from fastapi import FastAPI, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -192,5 +193,97 @@ async def analyze_form(file: UploadFile = File(...)):
             num_pages=0,
             segments=[],
             fields=[],
+            error=str(e)
+        )
+
+class SummaryRequest(BaseModel):
+    segments: List[FormSegment]
+    filename: str
+
+class SummaryResponse(BaseModel):
+    success: bool
+    summary: Optional[str] = None
+    error: Optional[str] = None
+
+@app.options("/summarize-form")
+async def options_summarize_form():
+    return JSONResponse(content={}, headers={
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+    })
+
+@app.post("/summarize-form")
+async def summarize_form(request: SummaryRequest):
+    try:
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            return SummaryResponse(
+                success=False,
+                error="OpenRouter API key not configured"
+            )
+
+        # Build context from segments
+        text_content = []
+        pii_fields = []
+        form_fields = []
+
+        for seg in request.segments:
+            if seg.is_pii:
+                pii_fields.append(seg.text)
+            if seg.type in ["Form Field", "Checkbox", "Dropdown"]:
+                form_fields.append(seg.text)
+            text_content.append(f"[{seg.type}] {seg.text}")
+
+        # Limit content to avoid token limits
+        content_preview = "\n".join(text_content[:100])
+
+        prompt = f"""Analyze this form and provide a brief, helpful summary in 2-3 sentences.
+
+Form: {request.filename}
+Content preview:
+{content_preview}
+
+PII fields detected: {len(pii_fields)}
+Form fields detected: {len(form_fields)}
+
+Provide:
+1. What type of form this appears to be
+2. Its main purpose
+3. Any important notes about filling it out
+
+Keep response under 100 words."""
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": os.getenv("YOUR_SITE_URL", "http://localhost:3000"),
+                },
+                json={
+                    "model": os.getenv("OPENROUTER_MODEL", "anthropic/claude-3.5-sonnet"),
+                    "messages": [
+                        {"role": "user", "content": prompt}
+                    ],
+                    "max_tokens": 200,
+                },
+                timeout=30.0
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                summary = data["choices"][0]["message"]["content"]
+                return SummaryResponse(success=True, summary=summary)
+            else:
+                return SummaryResponse(
+                    success=False,
+                    error=f"API error: {response.status_code}"
+                )
+
+    except Exception as e:
+        return SummaryResponse(
+            success=False,
             error=str(e)
         )

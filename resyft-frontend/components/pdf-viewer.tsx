@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Button } from './ui/button'
-import { ZoomIn, ZoomOut, Upload, Highlighter, Type, Loader2, AlertTriangle, X, Trash2 } from 'lucide-react'
+import { ZoomIn, ZoomOut, Upload, Highlighter, Type, Loader2, AlertTriangle, X, Download, StickyNote, TextCursor } from 'lucide-react'
+import { PDFDocument } from 'pdf-lib'
 
 interface Segment {
   text: string
@@ -15,11 +16,14 @@ interface Segment {
   page_width: number
   page_height: number
   is_pii?: boolean
+  field_name?: string
+  field_type?: string
 }
 
 interface Annotation {
   id: string
   type: 'highlight' | 'note'
+  style: 'sticky' | 'textbox'
   page: number
   x: number
   y: number
@@ -27,6 +31,12 @@ interface Annotation {
   height: number
   color?: string
   text?: string
+}
+
+interface FormFieldValue {
+  fieldName: string
+  value: string
+  type: string
 }
 
 interface PDFViewerProps {
@@ -42,15 +52,18 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
   const [scale, setScale] = useState(1.5)
   const [numPages, setNumPages] = useState(0)
   const [selectedSegment, setSelectedSegment] = useState<number | null>(null)
-  const [currentTool, setCurrentTool] = useState<'highlight' | 'textbox' | null>(null)
+  const [currentTool, setCurrentTool] = useState<'highlight' | 'note-sticky' | 'note-textbox' | null>(null)
   const [showPiiOnly, setShowPiiOnly] = useState(false)
   const [annotations, setAnnotations] = useState<Annotation[]>([])
   const [editingNote, setEditingNote] = useState<string | null>(null)
   const [isDrawing, setIsDrawing] = useState(false)
   const [drawStart, setDrawStart] = useState<{ x: number; y: number; page: number } | null>(null)
+  const [formFieldValues, setFormFieldValues] = useState<Map<string, string>>(new Map())
+  const [savingPdf, setSavingPdf] = useState(false)
   const viewerRef = useRef<HTMLDivElement>(null)
   const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map())
   const pageViewports = useRef<Map<number, any>>(new Map())
+  const originalPdfBytes = useRef<Uint8Array | null>(null)
 
   // Count PII segments
   const piiCount = segments.filter(s => s.is_pii).length
@@ -73,7 +86,7 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
       const pdfjsLib = await import('pdfjs-dist')
       pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`
 
-      let pdfData: ArrayBuffer | Uint8Array
+      let pdfData: Uint8Array
 
       if (pdfBase64) {
         const binaryString = atob(pdfBase64)
@@ -84,10 +97,13 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
         pdfData = bytes
       } else if (pdfUrl) {
         const response = await fetch(pdfUrl)
-        pdfData = await response.arrayBuffer()
+        pdfData = new Uint8Array(await response.arrayBuffer())
       } else {
         return
       }
+
+      // Store original PDF bytes for later modification
+      originalPdfBytes.current = pdfData
 
       const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise
       setNumPages(pdf.numPages)
@@ -156,6 +172,48 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
   const createSegmentOverlay = (segment: Segment, viewport: any, index: number) => {
     const overlay = document.createElement('div')
     const isPii = segment.is_pii
+    const isFormField = segment.type === 'Form Field' || segment.type === 'Checkbox' || segment.type === 'Dropdown'
+
+    const scaleX = viewport.width / segment.page_width
+    const scaleY = viewport.height / segment.page_height
+
+    overlay.style.left = `${segment.left * scaleX}px`
+    overlay.style.top = `${segment.top * scaleY}px`
+    overlay.style.width = `${segment.width * scaleX}px`
+    overlay.style.height = `${segment.height * scaleY}px`
+
+    // Form fields get special treatment with input overlays
+    if (isFormField) {
+      overlay.className = 'absolute'
+
+      if (segment.type === 'Checkbox') {
+        const checkbox = document.createElement('input')
+        checkbox.type = 'checkbox'
+        checkbox.className = 'w-full h-full cursor-pointer accent-blue-600'
+        checkbox.title = segment.text
+        const fieldKey = `${segment.page_number}-${segment.left}-${segment.top}`
+        checkbox.checked = formFieldValues.get(fieldKey) === 'true'
+        checkbox.onchange = (e) => {
+          const target = e.target as HTMLInputElement
+          handleFormFieldChange(fieldKey, target.checked ? 'true' : 'false')
+        }
+        overlay.appendChild(checkbox)
+      } else {
+        const input = document.createElement('input')
+        input.type = 'text'
+        input.className = 'w-full h-full px-1 text-sm bg-blue-50/80 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white'
+        input.placeholder = segment.text.split(':')[0] || 'Enter value...'
+        const fieldKey = `${segment.page_number}-${segment.left}-${segment.top}`
+        input.value = formFieldValues.get(fieldKey) || ''
+        input.onchange = (e) => {
+          const target = e.target as HTMLInputElement
+          handleFormFieldChange(fieldKey, target.value)
+        }
+        input.onclick = (e) => e.stopPropagation()
+        overlay.appendChild(input)
+      }
+      return overlay
+    }
 
     // PII segments get red highlighting, others get blue
     if (isPii) {
@@ -167,14 +225,6 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
         selectedSegment === index ? 'bg-blue-200/40 border-blue-500' : 'border-blue-300/50'
       }`
     }
-
-    const scaleX = viewport.width / segment.page_width
-    const scaleY = viewport.height / segment.page_height
-
-    overlay.style.left = `${segment.left * scaleX}px`
-    overlay.style.top = `${segment.top * scaleY}px`
-    overlay.style.width = `${segment.width * scaleX}px`
-    overlay.style.height = `${segment.height * scaleY}px`
 
     // PII gets red border, others get type-based color
     if (!isPii) {
@@ -221,6 +271,112 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
     return colors[type] || '#6b8ca8'
   }
 
+  const handleFormFieldChange = (fieldKey: string, value: string) => {
+    setFormFieldValues(prev => {
+      const newMap = new Map(prev)
+      newMap.set(fieldKey, value)
+      return newMap
+    })
+  }
+
+  const downloadFilledPdf = async () => {
+    if (!originalPdfBytes.current) {
+      alert('No PDF loaded')
+      return
+    }
+
+    setSavingPdf(true)
+    try {
+      const pdfDoc = await PDFDocument.load(originalPdfBytes.current)
+      const form = pdfDoc.getForm()
+      const fields = form.getFields()
+
+      // Try to fill form fields
+      let filledCount = 0
+      fields.forEach(field => {
+        const fieldName = field.getName()
+        // Find matching value from our form field values
+        formFieldValues.forEach((value, key) => {
+          if (value && value.trim()) {
+            try {
+              const textField = form.getTextField(fieldName)
+              if (textField) {
+                textField.setText(value)
+                filledCount++
+              }
+            } catch {
+              // Field might not be a text field
+              try {
+                const checkBox = form.getCheckBox(fieldName)
+                if (checkBox && value === 'true') {
+                  checkBox.check()
+                  filledCount++
+                }
+              } catch {
+                // Ignore if field type doesn't match
+              }
+            }
+          }
+        })
+      })
+
+      // If no AcroForm fields, add text annotations for our values
+      if (fields.length === 0 && formFieldValues.size > 0) {
+        const pages = pdfDoc.getPages()
+        // Add text at form field positions
+        segments.forEach(segment => {
+          if (segment.type === 'Form Field' || segment.type === 'Checkbox') {
+            const fieldKey = `${segment.page_number}-${segment.left}-${segment.top}`
+            const value = formFieldValues.get(fieldKey)
+            if (value && segment.page_number <= pages.length) {
+              const page = pages[segment.page_number - 1]
+              const { height } = page.getSize()
+              // PDF coordinates are from bottom-left
+              page.drawText(value, {
+                x: segment.left + 2,
+                y: height - segment.top - segment.height + 2,
+                size: Math.min(segment.height - 4, 12),
+              })
+              filledCount++
+            }
+          }
+        })
+      }
+
+      const pdfBytes = await pdfDoc.save()
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'filled-form.pdf'
+      a.click()
+      URL.revokeObjectURL(url)
+
+      if (filledCount === 0 && formFieldValues.size > 0) {
+        alert('Form values saved, but this PDF may not support editable fields. The values have been added as text overlays.')
+      }
+    } catch (err) {
+      console.error('Error saving PDF:', err)
+      alert('Failed to save PDF. Try exporting the data instead.')
+    } finally {
+      setSavingPdf(false)
+    }
+  }
+
+  const exportFormData = () => {
+    const data: Record<string, string> = {}
+    formFieldValues.forEach((value, key) => {
+      data[key] = value
+    })
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'form-data.json'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const handleZoomIn = () => setScale(s => Math.min(s + 0.25, 3))
   const handleZoomOut = () => setScale(s => Math.max(s - 0.25, 0.5))
 
@@ -248,31 +404,61 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
           }
         }
       } else if (annotation.type === 'note') {
-        el.className += ' bg-blue-100 border-2 border-blue-400 rounded shadow-md cursor-pointer'
-        el.style.minWidth = '150px'
-        el.style.minHeight = '80px'
-        el.style.padding = '8px'
-        el.innerHTML = `
-          <div class="flex justify-between items-start mb-1">
-            <span class="text-xs font-semibold text-blue-600">Note</span>
-            <button class="text-gray-400 hover:text-red-500 delete-btn" title="Delete note">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 6L6 18M6 6l12 12"/>
-              </svg>
-            </button>
-          </div>
-          <div class="text-sm text-gray-700 note-text" contenteditable="true">${annotation.text || 'Click to add note...'}</div>
-        `
-        const deleteBtn = el.querySelector('.delete-btn')
-        deleteBtn?.addEventListener('click', (e) => {
-          e.stopPropagation()
-          deleteAnnotation(annotation.id)
-        })
-        const noteText = el.querySelector('.note-text')
-        noteText?.addEventListener('blur', (e) => {
-          const target = e.target as HTMLElement
-          updateAnnotationText(annotation.id, target.innerText)
-        })
+        if (annotation.style === 'textbox') {
+          // Clear textbox style - minimal, like a text input
+          el.className += ' bg-white/90 border border-gray-300 rounded cursor-text'
+          el.style.minWidth = '120px'
+          el.style.minHeight = '24px'
+          el.style.padding = '4px 8px'
+          el.innerHTML = `
+            <div class="flex items-center gap-1">
+              <input type="text" class="flex-1 text-sm bg-transparent border-none outline-none note-input"
+                     placeholder="Type here..." value="${annotation.text || ''}" />
+              <button class="text-gray-400 hover:text-red-500 delete-btn flex-shrink-0" title="Delete">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+          `
+          const deleteBtn = el.querySelector('.delete-btn')
+          deleteBtn?.addEventListener('click', (e) => {
+            e.stopPropagation()
+            deleteAnnotation(annotation.id)
+          })
+          const noteInput = el.querySelector('.note-input') as HTMLInputElement
+          noteInput?.addEventListener('change', (e) => {
+            const target = e.target as HTMLInputElement
+            updateAnnotationText(annotation.id, target.value)
+          })
+        } else {
+          // Sticky note style - colorful with header
+          el.className += ' bg-yellow-100 border-2 border-yellow-400 rounded shadow-lg cursor-pointer'
+          el.style.minWidth = '150px'
+          el.style.minHeight = '80px'
+          el.style.padding = '8px'
+          el.innerHTML = `
+            <div class="flex justify-between items-start mb-1">
+              <span class="text-xs font-semibold text-yellow-700">Note</span>
+              <button class="text-gray-400 hover:text-red-500 delete-btn" title="Delete note">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            <div class="text-sm text-gray-700 note-text" contenteditable="true">${annotation.text || 'Click to add note...'}</div>
+          `
+          const deleteBtn = el.querySelector('.delete-btn')
+          deleteBtn?.addEventListener('click', (e) => {
+            e.stopPropagation()
+            deleteAnnotation(annotation.id)
+          })
+          const noteText = el.querySelector('.note-text')
+          noteText?.addEventListener('blur', (e) => {
+            const target = e.target as HTMLElement
+            updateAnnotationText(annotation.id, target.innerText)
+          })
+        }
       }
 
       layer.appendChild(el)
@@ -303,16 +489,33 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
 
-    if (currentTool === 'textbox') {
-      // For notes, create immediately on click
+    if (currentTool === 'note-sticky') {
+      // Sticky note - larger, colorful
       const newAnnotation: Annotation = {
         id: `note-${Date.now()}`,
         type: 'note',
+        style: 'sticky',
         page: pageNum,
         x,
         y,
-        width: 200,
+        width: 180,
         height: 100,
+        text: ''
+      }
+      setAnnotations(prev => [...prev, newAnnotation])
+      setTimeout(() => renderAnnotations(), 0)
+      setCurrentTool(null)
+    } else if (currentTool === 'note-textbox') {
+      // Textbox - minimal, clear style
+      const newAnnotation: Annotation = {
+        id: `note-${Date.now()}`,
+        type: 'note',
+        style: 'textbox',
+        page: pageNum,
+        x,
+        y,
+        width: 150,
+        height: 28,
         text: ''
       }
       setAnnotations(prev => [...prev, newAnnotation])
@@ -452,12 +655,21 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
           Highlight
         </Button>
         <Button
-          variant={currentTool === 'textbox' ? 'default' : 'outline'}
+          variant={currentTool === 'note-sticky' ? 'default' : 'outline'}
           size="sm"
-          onClick={() => setCurrentTool(currentTool === 'textbox' ? null : 'textbox')}
+          onClick={() => setCurrentTool(currentTool === 'note-sticky' ? null : 'note-sticky')}
+          className={currentTool === 'note-sticky' ? 'bg-yellow-500 hover:bg-yellow-600' : ''}
         >
-          <Type className="w-4 h-4 mr-1" />
-          Note
+          <StickyNote className="w-4 h-4 mr-1" />
+          Sticky
+        </Button>
+        <Button
+          variant={currentTool === 'note-textbox' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setCurrentTool(currentTool === 'note-textbox' ? null : 'note-textbox')}
+        >
+          <TextCursor className="w-4 h-4 mr-1" />
+          Text
         </Button>
 
         <div className="h-6 w-px bg-gray-300 mx-2" />
@@ -474,6 +686,24 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
             PII ({piiCount})
           </Button>
         )}
+
+        <div className="h-6 w-px bg-gray-300 mx-2" />
+
+        {/* Download Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={downloadFilledPdf}
+          disabled={savingPdf || !pdfBase64}
+          className="text-green-600 border-green-300 hover:bg-green-50"
+        >
+          {savingPdf ? (
+            <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+          ) : (
+            <Download className="w-4 h-4 mr-1" />
+          )}
+          Download
+        </Button>
 
         <div className="flex-1" />
 
@@ -499,14 +729,16 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
           <span className="text-sm text-blue-700">
             {currentTool === 'highlight'
               ? 'Click and drag to create a highlight. Press ESC or click the button again to cancel.'
-              : 'Click anywhere on the PDF to add a note. Press ESC or click the button again to cancel.'}
+              : currentTool === 'note-sticky'
+              ? 'Click anywhere to add a sticky note. Press ESC to cancel.'
+              : 'Click anywhere to add a text box. Press ESC to cancel.'}
           </span>
         </div>
       )}
 
       {/* PDF Content */}
       <div
-        className={`flex-1 overflow-auto bg-gray-200 p-4 relative ${currentTool === 'highlight' ? 'cursor-crosshair' : currentTool === 'textbox' ? 'cursor-cell' : ''}`}
+        className={`flex-1 overflow-auto bg-gray-200 p-4 relative ${currentTool === 'highlight' ? 'cursor-crosshair' : currentTool ? 'cursor-cell' : ''}`}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}

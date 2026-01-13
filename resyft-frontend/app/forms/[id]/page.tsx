@@ -52,6 +52,8 @@ export default function FormDetailPage() {
   const [segments, setSegments] = useState<Segment[]>([])
   const [selectedSegment, setSelectedSegment] = useState<Segment | null>(null)
   const [extractedFields, setExtractedFields] = useState<ExtractedField[]>([])
+  const [aiSummary, setAiSummary] = useState<string | null>(null)
+  const [loadingSummary, setLoadingSummary] = useState(false)
 
   useEffect(() => {
     const checkUser = async () => {
@@ -121,6 +123,9 @@ export default function FormDetailPage() {
               ...prev
             ])
           }
+
+          // Fetch AI summary
+          fetchAiSummary(data.segments || [], file.name, aiServiceUrl)
         } else {
           console.error('Analysis failed:', data.error)
           setExtractedFields([
@@ -145,6 +150,36 @@ export default function FormDetailPage() {
         { name: 'Connection Error', value: `Could not connect to AI service at ${aiServiceUrl}`, type: 'error', confidence: 0 },
         { name: 'Note', value: 'Make sure NEXT_PUBLIC_AI_SERVICE_URL is set in environment variables', type: 'info', confidence: 0 }
       ])
+    }
+  }
+
+  const fetchAiSummary = async (segments: Segment[], filename: string, aiServiceUrl: string) => {
+    setLoadingSummary(true)
+    setAiSummary(null)
+
+    try {
+      const response = await fetch(`${aiServiceUrl}/summarize-form`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          segments: segments,
+          filename: filename
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.summary) {
+          setAiSummary(data.summary)
+        }
+      }
+    } catch (error) {
+      console.error('Summary fetch error:', error)
+      // Silently fail - summary is optional
+    } finally {
+      setLoadingSummary(false)
     }
   }
 
@@ -213,6 +248,26 @@ export default function FormDetailPage() {
 
         {/* Sidebar - Extracted Fields */}
         <div className="w-96 bg-white overflow-auto">
+          {/* AI Summary Section */}
+          {(aiSummary || loadingSummary) && (
+            <div className="p-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <h3 className="font-semibold text-blue-900 text-sm">AI Summary</h3>
+              </div>
+              {loadingSummary ? (
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Generating summary...</span>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-700 leading-relaxed">{aiSummary}</p>
+              )}
+            </div>
+          )}
+
           <div className="p-4 border-b">
             <h2 className="font-semibold text-gray-900">Extracted Fields</h2>
             <p className="text-sm text-gray-500">
