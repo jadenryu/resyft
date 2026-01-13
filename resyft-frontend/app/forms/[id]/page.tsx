@@ -97,6 +97,8 @@ export default function FormDetailPage() {
 
       // Call the AI service to analyze the PDF
       const aiServiceUrl = process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:8001'
+      console.log('Calling AI service at:', aiServiceUrl)
+
       const response = await fetch(`${aiServiceUrl}/analyze-form`, {
         method: 'POST',
         body: formData
@@ -104,15 +106,35 @@ export default function FormDetailPage() {
 
       if (response.ok) {
         const data = await response.json()
-        setSegments(data.segments || [])
-        setExtractedFields(data.fields || [])
+        if (data.success) {
+          setSegments(data.segments || [])
+          setExtractedFields(data.fields || [])
+          if (data.form_type) {
+            setExtractedFields(prev => [
+              { name: 'Form Type', value: data.form_type, type: 'text', confidence: 0.95 },
+              ...prev
+            ])
+          }
+        } else {
+          console.error('Analysis failed:', data.error)
+          setExtractedFields([
+            { name: 'Error', value: data.error || 'Analysis failed', type: 'error', confidence: 0 }
+          ])
+        }
+      } else {
+        console.error('Response not OK:', response.status, response.statusText)
+        setExtractedFields([
+          { name: 'Error', value: `Server error: ${response.status}`, type: 'error', confidence: 0 }
+        ])
       }
     } catch (error) {
       console.error('Analysis error:', error)
-      // For now, create mock segments if the service isn't running
+      // Show helpful message about AI service
+      const aiServiceUrl = process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:8001'
       setSegments([])
       setExtractedFields([
-        { name: 'Form Type', value: 'Detected automatically', type: 'text', confidence: 0.95 }
+        { name: 'Connection Error', value: `Could not connect to AI service at ${aiServiceUrl}`, type: 'error', confidence: 0 },
+        { name: 'Note', value: 'Make sure NEXT_PUBLIC_AI_SERVICE_URL is set in environment variables', type: 'info', confidence: 0 }
       ])
     }
   }
