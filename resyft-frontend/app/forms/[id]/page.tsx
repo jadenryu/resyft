@@ -84,7 +84,7 @@ function renderMarkdown(text: string): React.ReactNode {
     const lines = part.split('\n')
     return lines.map((line, lineIdx) => {
       // Process the line for inline formatting
-      let processed: React.ReactNode[] = []
+      const processed: React.ReactNode[] = []
       let remaining = line
       let keyCounter = 0
 
@@ -106,19 +106,24 @@ function renderMarkdown(text: string): React.ReactNode {
       }
       if (remaining) processed.push(remaining)
 
-      // Handle inline code `code`
-      processed = processed.flatMap((node, nodeIdx) => {
-        if (typeof node !== 'string') return [node]
+      // Handle inline code `code` - process each node
+      const finalProcessed: React.ReactNode[] = []
+      processed.forEach((node, nodeIdx) => {
+        if (typeof node !== 'string') {
+          finalProcessed.push(node)
+          return
+        }
         const codeParts = node.split(/`([^`]+)`/)
-        return codeParts.map((codePart, codeIdx) => {
+        codeParts.forEach((codePart, codeIdx) => {
           if (codeIdx % 2 === 1) {
-            return (
+            finalProcessed.push(
               <code key={`c-${i}-${lineIdx}-${nodeIdx}-${codeIdx}`} className="bg-gray-200 px-1 rounded text-sm font-mono">
                 {codePart}
               </code>
             )
+          } else if (codePart) {
+            finalProcessed.push(codePart)
           }
-          return codePart
         })
       })
 
@@ -128,7 +133,7 @@ function renderMarkdown(text: string): React.ReactNode {
         return (
           <div key={`l-${i}-${lineIdx}`} className="flex gap-2 ml-2">
             <span>•</span>
-            <span>{processed.slice(1)}</span>
+            <span>{finalProcessed}</span>
           </div>
         )
       }
@@ -139,14 +144,14 @@ function renderMarkdown(text: string): React.ReactNode {
         return (
           <div key={`l-${i}-${lineIdx}`} className="flex gap-2 ml-2">
             <span>{numberedMatch[1]}.</span>
-            <span>{processed}</span>
+            <span>{finalProcessed}</span>
           </div>
         )
       }
 
       return (
         <span key={`l-${i}-${lineIdx}`}>
-          {processed}
+          {finalProcessed}
           {lineIdx < lines.length - 1 && <br />}
         </span>
       )
