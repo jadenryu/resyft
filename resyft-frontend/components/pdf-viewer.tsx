@@ -23,7 +23,7 @@ interface Segment {
 interface Annotation {
   id: string
   type: 'highlight' | 'note'
-  style: 'sticky' | 'textbox'
+  style?: 'sticky' | 'textbox'
   page: number
   x: number
   y: number
