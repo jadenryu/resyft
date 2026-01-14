@@ -5,6 +5,6 @@
       "mcp__ide__getDiagnostics",
       "Bash(npm run build:*)"
     ],
-    "includeCoAuthoredBy": false,
+    "includeCoAuthoredBy": false
   }
 }

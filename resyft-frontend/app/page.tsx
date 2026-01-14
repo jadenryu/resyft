@@ -264,7 +264,7 @@ export default function LandingPage() {
               Frequently Asked Questions
             </h2>
             <p className="text-xl font-light text-gray-600 max-w-2xl mx-auto">
-              Everything you need to know about Form Filler
+              Everything you need to know about Resyft
             </p>
           </motion.div>
 
@@ -285,7 +285,7 @@ export default function LandingPage() {
                 },
                 {
                   question: "Do I need to create an account?",
-                  answer: "Yes, a free account is required to use Form Filler. This allows you to save your projects, track your progress, and access your form recommendations anytime."
+                  answer: "Yes, a free account is required to use Resyft. This allows you to save your projects, track your progress, and access your form recommendations anytime."
                 },
                 {
                   question: "What if the AI recommends the wrong forms?",
@@ -293,15 +293,15 @@ export default function LandingPage() {
                 },
                 {
                   question: "Can I use this for my business?",
-                  answer: "Yes! Form Filler is great for businesses of all sizes. Whether you need to handle employee paperwork, tax forms, or regulatory compliance, our AI can help you find and organize the right forms."
+                  answer: "Yes! Resyft is great for businesses of all sizes. Whether you need to handle employee paperwork, tax forms, or regulatory compliance, our AI can help you find and organize the right forms."
                 },
                 {
                   question: "Is there a mobile app?",
-                  answer: "Form Filler is a web application that works on any device with a browser. The responsive design means it works great on phones and tablets too."
+                  answer: "Rsyft is a web application that works on any device with a browser. The responsive design means it works great on phones and tablets too."
                 },
                 {
                   question: "How much does it cost?",
-                  answer: "Form Filler is free to get started. We offer premium plans for power users who need to process large volumes of forms or need additional features."
+                  answer: "Resyft is free to get started. We offer premium plans for power users who need to process large volumes of forms or need additional features."
                 }
               ].map((faq, index) => (
                 <motion.div
@@ -341,7 +341,7 @@ export default function LandingPage() {
                   Still have questions?
                 </h3>
                 <p className="text-gray-600 mb-4 font-normal">
-                  Our team is here to help you get started with Form Filler.
+                  Our team is here to help you get started with Resyft.
                 </p>
                 <Link href="/signup">
                   <Button className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -368,7 +368,7 @@ export default function LandingPage() {
               Ready to simplify your paperwork?
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed font-normal">
-              Join thousands of professionals who use Form Filler to find the right forms,
+              Join thousands of professionals who use Resyft to find the right forms,
               analyze documents, and stay organized.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
@@ -400,7 +400,7 @@ export default function LandingPage() {
               <div className="flex items-center space-x-3 mb-6">
                 <FileText className="w-10 h-10 text-blue-500" />
                 <span className="text-2xl font-bold text-white">
-                  Form Filler
+                  Resyft
                 </span>
               </div>
               <p className="text-gray-400 max-w-md mb-6 leading-relaxed font-normal">
@@ -431,7 +431,7 @@ export default function LandingPage() {
           <div className="border-t border-gray-700 pt-8 mt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <div className="text-gray-400 text-sm font-normal">
-                &copy; 2025 Form Filler. All rights reserved.
+                &copy; 2026 Resyft. All rights reserved.
               </div>
               <div className="flex items-center space-x-4 mt-4 md:mt-0">
                 <Badge variant="secondary" className="bg-white/10 text-white border-white/20">
