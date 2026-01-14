@@ -196,7 +196,7 @@ export default function FormDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 font-[var(--font-inter)]">
       {/* Header */}
       <header className="bg-white border-b px-6 py-4">
         <div className="flex items-center gap-4">

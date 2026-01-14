@@ -631,7 +631,7 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full font-[var(--font-inter)]">
       {/* Toolbar */}
       <div className="flex items-center gap-2 p-2 bg-gray-100 border-b">
         <Button variant="outline" size="sm" onClick={handleZoomOut}>

@@ -15,7 +15,9 @@ import {
   ExternalLink,
   Upload,
   X,
-  Info
+  Info,
+  Menu,
+  ChevronLeft
 } from "lucide-react"
 import { classifyHealthInsuranceQuery, generateProjectName } from "../modelWorking"
 
@@ -74,6 +76,7 @@ export default function Dashboard() {
   const [projectText, setProjectText] = useState("")
   const [projects, setProjects] = useState<Project[]>([])
   const [selectedForm, setSelectedForm] = useState<FormData | null>(null)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   useEffect(() => {
     const checkUser = async () => {
@@ -141,20 +144,30 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 font-[var(--font-inter)]">
       {/* Header */}
-      <header className="bg-slate-900 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
-        <div>
-          <h1 className="text-xl font-bold text-white">Form Filler</h1>
-          <p className="text-xs text-slate-400">Smart form recommendations</p>
+      <header className="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="text-gray-600 hover:bg-gray-100"
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900">Form Filler</h1>
+            <p className="text-xs text-gray-500">Smart form recommendations</p>
+          </div>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-slate-300">{user?.email}</span>
+          <span className="text-sm text-gray-600">{user?.email}</span>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="text-white hover:bg-slate-800"
+            className="text-gray-600 hover:bg-gray-100"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Log out
@@ -164,39 +177,72 @@ export default function Dashboard() {
 
       <div className="flex">
         {/* Sidebar */}
-        <aside className="w-64 bg-white border-r min-h-[calc(100vh-64px)] p-4">
-          <Button
-            onClick={() => setShowPopup(true)}
-            className="w-full bg-blue-600 hover:bg-blue-700 mb-2"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Project
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => router.push('/forms/upload')}
-            className="w-full mb-4"
-          >
-            <FileText className="w-4 h-4 mr-2" />
-            Upload Form
-          </Button>
-
-          <div className="space-y-2">
-            <p className="text-xs text-gray-500 uppercase font-medium">Your Projects</p>
-            {projects.length === 0 ? (
-              <p className="text-sm text-gray-400 py-2">No projects yet</p>
-            ) : (
-              projects.map(project => (
+        <aside className={`bg-white border-r min-h-[calc(100vh-65px)] transition-all duration-300 ${sidebarCollapsed ? 'w-16 p-2' : 'w-64 p-4'}`}>
+          {sidebarCollapsed ? (
+            <div className="flex flex-col items-center gap-2">
+              <Button
+                onClick={() => setShowPopup(true)}
+                size="icon"
+                className="bg-blue-600 hover:bg-blue-700"
+                title="New Project"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => router.push('/forms/upload')}
+                title="Upload Form"
+              >
+                <FileText className="w-4 h-4" />
+              </Button>
+              <div className="h-px w-full bg-gray-200 my-2" />
+              {projects.map(project => (
                 <button
                   key={project.id}
-                  className="w-full text-left p-2 rounded hover:bg-gray-100 transition-colors"
+                  className="w-10 h-10 rounded bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-600"
+                  title={project.name}
                 >
-                  <p className="text-sm font-medium truncate">{project.name}</p>
-                  <p className="text-xs text-gray-500">{project.forms.length} forms</p>
+                  {project.name.charAt(0).toUpperCase()}
                 </button>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              <Button
+                onClick={() => setShowPopup(true)}
+                className="w-full bg-blue-600 hover:bg-blue-700 mb-2"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New Project
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => router.push('/forms/upload')}
+                className="w-full mb-4"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Upload Form
+              </Button>
+
+              <div className="space-y-2">
+                <p className="text-xs text-gray-500 uppercase font-medium">Your Projects</p>
+                {projects.length === 0 ? (
+                  <p className="text-sm text-gray-400 py-2">No projects yet</p>
+                ) : (
+                  projects.map(project => (
+                    <button
+                      key={project.id}
+                      className="w-full text-left p-2 rounded hover:bg-gray-100 transition-colors"
+                    >
+                      <p className="text-sm font-medium truncate">{project.name}</p>
+                      <p className="text-xs text-gray-500">{project.forms.length} forms</p>
+                    </button>
+                  ))
+                )}
+              </div>
+            </>
+          )}
         </aside>
 
         {/* Main Content */}

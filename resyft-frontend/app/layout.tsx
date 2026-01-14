@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Merriweather } from "next/font/google";
+import { Playfair_Display, Merriweather, Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
@@ -14,6 +14,13 @@ const merriweather = Merriweather({
   subsets: ["latin"],
   weight: ["300", "400", "700", "900"],
   variable: "--font-merriweather",
+  display: "swap"
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
   display: "swap"
 });
 
@@ -37,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${playfair.variable} ${merriweather.variable}`} suppressHydrationWarning>
+      <body className={`${playfair.variable} ${merriweather.variable} ${inter.variable}`} suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>
