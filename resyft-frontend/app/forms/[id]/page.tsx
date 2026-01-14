@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { createClient } from '../../../lib/supabase'
 import { Button } from '../../../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card'
@@ -15,7 +15,9 @@ import {
   CheckCircle,
   AlertCircle,
   ChevronRight,
-  AlertTriangle
+  AlertTriangle,
+  Save,
+  FolderPlus
 } from 'lucide-react'
 
 interface Segment {
@@ -38,9 +40,26 @@ interface ExtractedField {
   confidence: number
 }
 
+interface FormData {
+  formName: string
+  purpose: string
+  accessibility: string
+  isCustom?: boolean
+  pdfBase64?: string
+}
+
+interface Project {
+  id: string
+  name: string
+  description: string
+  forms: FormData[]
+  createdAt: string
+}
+
 export default function FormDetailPage() {
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
   const supabase = createClient()
 
   const [user, setUser] = useState<any>(null)
@@ -55,6 +74,15 @@ export default function FormDetailPage() {
   const [aiSummary, setAiSummary] = useState<string | null>(null)
   const [loadingSummary, setLoadingSummary] = useState(false)
 
+  // Form metadata
+  const [formName, setFormName] = useState('')
+  const [formPurpose, setFormPurpose] = useState('')
+  const [formNotes, setFormNotes] = useState('')
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
+  const [projects, setProjects] = useState<Project[]>([])
+  const [showSaveModal, setShowSaveModal] = useState(false)
+  const [saving, setSaving] = useState(false)
+
   useEffect(() => {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -63,10 +91,23 @@ export default function FormDetailPage() {
         return
       }
       setUser(user)
+
+      // Load projects from localStorage
+      const saved = localStorage.getItem('formfiller_projects')
+      if (saved) {
+        setProjects(JSON.parse(saved))
+      }
+
+      // Check if projectId is in URL params
+      const projectId = searchParams.get('projectId')
+      if (projectId) {
+        setSelectedProjectId(projectId)
+      }
+
       setLoading(false)
     }
     checkUser()
-  }, [router, supabase])
+  }, [router, supabase, searchParams])
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -187,6 +228,45 @@ export default function FormDetailPage() {
     setSelectedSegment(segment)
   }
 
+  const handleSaveToProject = () => {
+    if (!formName.trim()) {
+      alert('Please enter a form name')
+      return
+    }
+    if (!selectedProjectId) {
+      alert('Please select a project')
+      return
+    }
+
+    setSaving(true)
+
+    const newForm: FormData = {
+      formName: formName.trim(),
+      purpose: formPurpose.trim() || 'Custom uploaded form',
+      accessibility: formNotes.trim() || 'User uploaded document',
+      isCustom: true,
+      pdfBase64: pdfBase64 || undefined
+    }
+
+    // Update the project in localStorage
+    const saved = localStorage.getItem('formfiller_projects')
+    if (saved) {
+      const allProjects: Project[] = JSON.parse(saved)
+      const projectIdx = allProjects.findIndex(p => p.id === selectedProjectId)
+      if (projectIdx !== -1) {
+        allProjects[projectIdx].forms.push(newForm)
+        localStorage.setItem('formfiller_projects', JSON.stringify(allProjects))
+        setProjects(allProjects)
+      }
+    }
+
+    setSaving(false)
+    setShowSaveModal(false)
+
+    // Navigate back to project
+    router.push(`/projects/${selectedProjectId}`)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -199,18 +279,35 @@ export default function FormDetailPage() {
     <div className="min-h-screen bg-gray-50 font-[var(--font-inter)]">
       {/* Header */}
       <header className="bg-white border-b px-6 py-4">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard')}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <div className="h-6 w-px bg-gray-300" />
-          <h1 className="text-lg font-semibold">Form Viewer</h1>
-          {analyzing && (
-            <Badge className="bg-blue-100 text-blue-700">
-              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-              Analyzing...
-            </Badge>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" onClick={() => {
+              if (selectedProjectId) {
+                router.push(`/projects/${selectedProjectId}`)
+              } else {
+                router.push('/dashboard')
+              }
+            }}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <div className="h-6 w-px bg-gray-300" />
+            <h1 className="text-lg font-semibold">Form Viewer</h1>
+            {analyzing && (
+              <Badge className="bg-blue-100 text-blue-700">
+                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                Analyzing...
+              </Badge>
+            )}
+          </div>
+          {pdfBase64 && (
+            <Button
+              className="bg-green-600 hover:bg-green-700"
+              onClick={() => setShowSaveModal(true)}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Save to Project
+            </Button>
           )}
         </div>
       </header>
@@ -323,6 +420,123 @@ export default function FormDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Save to Project Modal */}
+      {showSaveModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center gap-2 mb-4">
+              <FolderPlus className="w-5 h-5 text-blue-600" />
+              <h2 className="text-xl font-semibold">Save Form to Project</h2>
+            </div>
+
+            <div className="space-y-4">
+              {/* Form Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Form Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  placeholder="e.g., W-2 Tax Form 2024"
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Purpose/Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Purpose
+                </label>
+                <input
+                  type="text"
+                  value={formPurpose}
+                  onChange={(e) => setFormPurpose(e.target.value)}
+                  placeholder="e.g., Report wages and taxes"
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Notes/Accessibility */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Notes
+                </label>
+                <textarea
+                  value={formNotes}
+                  onChange={(e) => setFormNotes(e.target.value)}
+                  placeholder="Any additional notes about this form..."
+                  rows={2}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                />
+              </div>
+
+              {/* Project Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Add to Project <span className="text-red-500">*</span>
+                </label>
+                {projects.length === 0 ? (
+                  <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded-lg">
+                    No projects yet.{' '}
+                    <button
+                      onClick={() => {
+                        setShowSaveModal(false)
+                        router.push('/dashboard')
+                      }}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Create a project first
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    value={selectedProjectId || ''}
+                    onChange={(e) => setSelectedProjectId(e.target.value || null)}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select a project...</option>
+                    {projects.map(project => (
+                      <option key={project.id} value={project.id}>
+                        {project.name} ({project.forms.length} forms)
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowSaveModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                onClick={handleSaveToProject}
+                disabled={!formName.trim() || !selectedProjectId || saving}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Form
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

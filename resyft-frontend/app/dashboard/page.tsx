@@ -200,8 +200,9 @@ export default function Dashboard() {
               {projects.map(project => (
                 <button
                   key={project.id}
-                  className="w-10 h-10 rounded bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-600"
+                  className="w-10 h-10 rounded bg-gray-100 hover:bg-blue-100 hover:text-blue-600 flex items-center justify-center text-sm font-medium text-gray-600 transition-colors"
                   title={project.name}
+                  onClick={() => router.push(`/projects/${project.id}`)}
                 >
                   {project.name.charAt(0).toUpperCase()}
                 </button>
@@ -233,7 +234,8 @@ export default function Dashboard() {
                   projects.map(project => (
                     <button
                       key={project.id}
-                      className="w-full text-left p-2 rounded hover:bg-gray-100 transition-colors"
+                      className="w-full text-left p-2 rounded hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      onClick={() => router.push(`/projects/${project.id}`)}
                     >
                       <p className="text-sm font-medium truncate">{project.name}</p>
                       <p className="text-xs text-gray-500">{project.forms.length} forms</p>
@@ -263,42 +265,33 @@ export default function Dashboard() {
               </Button>
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {projects.map(project => (
-                <div key={project.id}>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-bold text-gray-900">{project.name}</h2>
-                    <Badge variant="outline">{project.forms.length} forms</Badge>
-                  </div>
-                  <p className="text-gray-600 mb-4 text-sm">{project.description}</p>
-
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {project.forms.map((form, idx) => (
-                      <Card
-                        key={idx}
-                        className="hover:shadow-md transition-shadow cursor-pointer group"
-                        onClick={() => handleFormClick(form)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                                {form.formName}
-                              </h3>
-                              <p className="text-sm text-gray-500 mt-1">{form.purpose}</p>
-                            </div>
-                            <Info className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
-                          </div>
-                          <div className="mt-3 pt-3 border-t">
-                            <p className="text-xs text-blue-600">
-                              {form.accessibility}
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
+                <Card
+                  key={project.id}
+                  className="hover:shadow-lg transition-all cursor-pointer group border-2 hover:border-blue-300"
+                  onClick={() => router.push(`/projects/${project.id}`)}
+                >
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
+                          {project.name}
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">{project.description}</p>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0" />
+                    </div>
+                    <div className="flex items-center justify-between pt-3 border-t">
+                      <Badge variant="outline" className="text-xs">
+                        {project.forms.length} {project.forms.length === 1 ? 'form' : 'forms'}
+                      </Badge>
+                      <span className="text-xs text-gray-400">
+                        {new Date(project.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
