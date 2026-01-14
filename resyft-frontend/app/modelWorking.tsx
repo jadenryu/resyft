@@ -172,18 +172,67 @@ export function classifyHealthInsuranceQuery(text: string): FormData[] {
   if (!text || text.trim().length === 0) {
     return [];
   }
-  
+
   const predictions = predictNaiveBayes(text);
-  
+
   const forms: FormData[] = [];
   const labels: LabelKey[] = ['hipaa', 'cobra', 'medicaid', 'enrollment', 'disability', 'income', 'dependents'];
-  
+
   labels.forEach(label => {
     if (predictions[label]) {
       forms.push(formMapping[label]);
       console.log("Found These Thingies:", formMapping[label].formName);
     }
   });
-  
+
   return forms;
+}
+
+// Generate a suitable project name from description when no forms match
+export function generateProjectName(description: string): string {
+  if (!description || description.trim().length === 0) {
+    return "New Project";
+  }
+
+  const text = description.toLowerCase();
+  const words = tokenize(description);
+
+  // Keywords to detect project types
+  const projectTypes: Record<string, string[]> = {
+    "Health Insurance": ["health", "insurance", "medical", "healthcare", "coverage", "plan"],
+    "Tax Documents": ["tax", "taxes", "irs", "filing", "return", "deduction"],
+    "Employment": ["job", "work", "employment", "employer", "hire", "salary", "position"],
+    "Legal Documents": ["legal", "court", "lawyer", "attorney", "lawsuit", "contract"],
+    "Immigration": ["visa", "immigration", "passport", "citizenship", "green card"],
+    "Housing": ["housing", "rent", "mortgage", "apartment", "lease", "home"],
+    "Education": ["school", "college", "university", "student", "education", "tuition"],
+    "Business": ["business", "company", "startup", "corporation", "llc", "incorporate"],
+    "Financial Aid": ["financial aid", "scholarship", "loan", "fafsa", "grant"],
+    "Government Benefits": ["benefits", "government", "social security", "welfare", "assistance"],
+    "Family Documents": ["family", "marriage", "divorce", "child", "custody", "birth"],
+    "Medical Records": ["records", "medical", "doctor", "hospital", "treatment"],
+  };
+
+  // Find matching project type
+  for (const [projectType, keywords] of Object.entries(projectTypes)) {
+    for (const keyword of keywords) {
+      if (text.includes(keyword)) {
+        return `${projectType} Project`;
+      }
+    }
+  }
+
+  // If no specific match, create a name from key nouns in the description
+  const importantWords = words.filter(w =>
+    w.length > 4 &&
+    !['about', 'would', 'could', 'should', 'their', 'there', 'these', 'those', 'which', 'where', 'being'].includes(w)
+  );
+
+  if (importantWords.length > 0) {
+    // Capitalize first letter
+    const keyWord = importantWords[0].charAt(0).toUpperCase() + importantWords[0].slice(1);
+    return `${keyWord} Project`;
+  }
+
+  return "Custom Project";
 }

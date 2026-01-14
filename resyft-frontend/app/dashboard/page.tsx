@@ -17,7 +17,7 @@ import {
   X,
   Info
 } from "lucide-react"
-import { classifyHealthInsuranceQuery } from "../modelWorking"
+import { classifyHealthInsuranceQuery, generateProjectName } from "../modelWorking"
 
 interface FormData {
   formName: string
@@ -105,14 +105,12 @@ export default function Dashboard() {
 
     const forms = classifyHealthInsuranceQuery(projectText)
 
-    if (forms.length === 0) {
-      alert("No matching forms found. Please try again with more details about your needs.")
-      return
-    }
+    // Generate a smart project name based on the description
+    const projectName = generateProjectName(projectText)
 
     const newProject: Project = {
       id: Date.now().toString(),
-      name: `Project ${projects.length + 1}`,
+      name: projectName,
       description: projectText,
       forms,
       createdAt: new Date().toISOString()
