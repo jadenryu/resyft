@@ -277,25 +277,25 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
       return overlay
     }
 
-    // Hidden by default, only show border/background when selected
-    // pointer-events-auto makes them clickable even though parent is pointer-events-none
+    // PII segments are ALWAYS visible with red highlight
+    // Regular segments are hidden by default, only show when selected
     if (isPii) {
-      overlay.className = `absolute pointer-events-auto cursor-pointer transition-all duration-200 ${
-        selectedSegment === index ? 'bg-red-200/40 border-2 border-red-500' : 'border-transparent'
+      // PII always visible with red background/border
+      overlay.className = `absolute pointer-events-auto cursor-pointer transition-all duration-200 bg-red-200/50 border-2 border-red-500 ${
+        selectedSegment === index ? 'bg-red-300/60 ring-2 ring-red-400' : ''
       }`
-    } else {
-      overlay.className = `absolute pointer-events-auto cursor-pointer transition-all duration-200 ${
-        selectedSegment === index ? 'bg-blue-200/40 border-2 border-blue-500' : 'border-transparent'
-      }`
-    }
 
-    // Add PII indicator icon only when selected
-    if (isPii && selectedSegment === index) {
+      // Always show PII indicator icon
       const icon = document.createElement('div')
-      icon.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs font-bold'
+      icon.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs font-bold z-10'
       icon.innerHTML = '!'
       icon.title = 'Personal Information Detected'
       overlay.appendChild(icon)
+    } else {
+      // Regular segments hidden by default
+      overlay.className = `absolute pointer-events-auto cursor-pointer transition-all duration-200 ${
+        selectedSegment === index ? 'bg-blue-200/40 border-2 border-blue-500' : 'border-transparent'
+      }`
     }
 
     // Store segment index for identification
