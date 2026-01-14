@@ -369,8 +369,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
-              <div className="flex items-center space-x-3 mb-6">
-                <FileText className="w-10 h-10 text-blue-500" />
+              <div className="mb-6">
                 <span className="text-2xl font-bold text-white">
                   Resyft
                 </span>
