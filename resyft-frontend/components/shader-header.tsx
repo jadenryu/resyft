@@ -1,14 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { FileText } from "lucide-react"
 
 export default function ShaderHeader() {
   return (
     <header className="relative z-20 flex items-center justify-between p-6">
       {/* Logo */}
-      <div className="flex items-center gap-2">
-        <FileText className="w-8 h-8 text-white" />
+      <div className="flex items-center">
         <span className="text-xl font-semibold text-white">Resyft</span>
       </div>
 
