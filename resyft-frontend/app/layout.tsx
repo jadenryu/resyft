@@ -18,8 +18,8 @@ const merriweather = Merriweather({
 });
 
 export const metadata: Metadata = {
-  title: "Resyft - Research Paper Analysis",
-  description: "Extract and distill essential data from research papers quickly and accurately",
+  title: "Resyft - Smart Form Management",
+  description: "AI-powered form recommendations, PDF analysis, and intelligent document management",
   icons: {
     icon: [
       { url: '/icon.png', sizes: '32x32', type: 'image/png' },
