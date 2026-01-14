@@ -138,7 +138,11 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
 
         container.appendChild(canvas)
 
-        // Add segment overlays for this page
+        // Add segment overlays container for this page
+        const segmentLayer = document.createElement('div')
+        segmentLayer.className = 'absolute inset-0'
+        segmentLayer.dataset.segmentLayer = String(pageNum)
+
         const pageSegments = segments.filter(s => s.page_number === pageNum)
         pageSegments.forEach((segment) => {
           // Skip non-PII if showPiiOnly is enabled
@@ -146,8 +150,9 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
 
           const globalIdx = segments.indexOf(segment)
           const overlay = createSegmentOverlay(segment, viewport, globalIdx)
-          container.appendChild(overlay)
+          segmentLayer.appendChild(overlay)
         })
+        container.appendChild(segmentLayer)
 
         // Add annotation layer for this page
         const annotationLayer = document.createElement('div')
@@ -215,24 +220,19 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
       return overlay
     }
 
-    // PII segments get red highlighting, others get blue
+    // Hidden by default, only show border/background when selected
     if (isPii) {
-      overlay.className = `absolute border-2 cursor-pointer transition-colors bg-red-200/40 border-red-500 hover:bg-red-300/50 ${
-        selectedSegment === index ? 'bg-red-300/60 border-red-600' : ''
+      overlay.className = `absolute cursor-pointer transition-all duration-200 ${
+        selectedSegment === index ? 'bg-red-200/40 border-2 border-red-500' : 'border-transparent'
       }`
     } else {
-      overlay.className = `absolute border-2 cursor-pointer transition-colors hover:bg-blue-100/30 ${
-        selectedSegment === index ? 'bg-blue-200/40 border-blue-500' : 'border-blue-300/50'
+      overlay.className = `absolute cursor-pointer transition-all duration-200 ${
+        selectedSegment === index ? 'bg-blue-200/40 border-2 border-blue-500' : 'border-transparent'
       }`
     }
 
-    // PII gets red border, others get type-based color
-    if (!isPii) {
-      overlay.style.borderColor = getColorForType(segment.type)
-    }
-
-    // Add PII indicator icon
-    if (isPii) {
+    // Add PII indicator icon only when selected
+    if (isPii && selectedSegment === index) {
       const icon = document.createElement('div')
       icon.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs font-bold'
       icon.innerHTML = '!'
@@ -240,8 +240,12 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
       overlay.appendChild(icon)
     }
 
-    overlay.onclick = () => {
-      setSelectedSegment(index)
+    // Store segment index for identification
+    overlay.dataset.segmentIndex = String(index)
+
+    overlay.onclick = (e) => {
+      e.stopPropagation()
+      setSelectedSegment(selectedSegment === index ? null : index)
       onSegmentClick?.(segment, index)
     }
 
@@ -688,6 +692,18 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [currentTool])
+
+  // Toggle segment layer pointer-events based on current tool
+  useEffect(() => {
+    const segmentLayers = viewerRef.current?.querySelectorAll('[data-segment-layer]')
+    segmentLayers?.forEach(layer => {
+      if (currentTool) {
+        (layer as HTMLElement).style.pointerEvents = 'none'
+      } else {
+        (layer as HTMLElement).style.pointerEvents = 'auto'
+      }
+    })
   }, [currentTool])
 
   if (error) {
