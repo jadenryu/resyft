@@ -64,19 +64,35 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
   const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map())
   const pageViewports = useRef<Map<number, any>>(new Map())
   const originalPdfBytes = useRef<Uint8Array | null>(null)
+  const renderIdRef = useRef<number>(0)
+  const isRenderingRef = useRef<boolean>(false)
 
   // Count PII segments
   const piiCount = segments.filter(s => s.is_pii).length
 
+  // Separate effect for PDF rendering (only on PDF/scale change)
   useEffect(() => {
-    loadPDF()
-  }, [pdfUrl, pdfBase64, scale, segments, showPiiOnly])
+    renderPDF()
+  }, [pdfUrl, pdfBase64, scale])
 
-  const loadPDF = async () => {
+  // Separate effect for segment overlays (updates without re-rendering PDF)
+  useEffect(() => {
+    if (!isRenderingRef.current && viewerRef.current) {
+      updateSegmentOverlays()
+    }
+  }, [segments, showPiiOnly, selectedSegment])
+
+  const renderPDF = async () => {
     if (!pdfUrl && !pdfBase64) {
       setLoading(false)
       return
     }
+
+    // Prevent concurrent renders
+    if (isRenderingRef.current) return
+    isRenderingRef.current = true
+
+    const currentRenderId = ++renderIdRef.current
 
     try {
       setLoading(true)
@@ -99,6 +115,13 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
         const response = await fetch(pdfUrl)
         pdfData = new Uint8Array(await response.arrayBuffer())
       } else {
+        isRenderingRef.current = false
+        return
+      }
+
+      // Check if this render is still valid
+      if (currentRenderId !== renderIdRef.current) {
+        isRenderingRef.current = false
         return
       }
 
@@ -106,15 +129,30 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
       originalPdfBytes.current = pdfData
 
       const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise
+
+      // Check again after async operation
+      if (currentRenderId !== renderIdRef.current) {
+        isRenderingRef.current = false
+        return
+      }
+
       setNumPages(pdf.numPages)
 
       // Clear viewer
       if (viewerRef.current) {
         viewerRef.current.innerHTML = ''
       }
+      canvasRefs.current.clear()
+      pageViewports.current.clear()
 
       // Render each page
       for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        // Check if render was cancelled
+        if (currentRenderId !== renderIdRef.current) {
+          isRenderingRef.current = false
+          return
+        }
+
         const page = await pdf.getPage(pageNum)
         const viewport = page.getViewport({ scale })
         pageViewports.current.set(pageNum, viewport)
@@ -138,20 +176,10 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
 
         container.appendChild(canvas)
 
-        // Add segment overlays container for this page
+        // Add segment overlays container for this page (pointer-events-none, children will be auto)
         const segmentLayer = document.createElement('div')
-        segmentLayer.className = 'absolute inset-0'
+        segmentLayer.className = 'absolute inset-0 pointer-events-none'
         segmentLayer.dataset.segmentLayer = String(pageNum)
-
-        const pageSegments = segments.filter(s => s.page_number === pageNum)
-        pageSegments.forEach((segment) => {
-          // Skip non-PII if showPiiOnly is enabled
-          if (showPiiOnly && !segment.is_pii) return
-
-          const globalIdx = segments.indexOf(segment)
-          const overlay = createSegmentOverlay(segment, viewport, globalIdx)
-          segmentLayer.appendChild(overlay)
-        })
         container.appendChild(segmentLayer)
 
         // Add annotation layer for this page
@@ -163,6 +191,9 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
         viewerRef.current?.appendChild(container)
       }
 
+      // Add segment overlays after pages are rendered
+      updateSegmentOverlays()
+
       // Render existing annotations
       renderAnnotations()
 
@@ -171,7 +202,33 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
       console.error('Error loading PDF:', err)
       setError('Failed to load PDF')
       setLoading(false)
+    } finally {
+      isRenderingRef.current = false
     }
+  }
+
+  const updateSegmentOverlays = () => {
+    if (!viewerRef.current) return
+
+    // Clear existing segment overlays
+    const segmentLayers = viewerRef.current.querySelectorAll('[data-segment-layer]')
+    segmentLayers.forEach(layer => {
+      layer.innerHTML = ''
+    })
+
+    // Add segment overlays for each page
+    segments.forEach((segment, globalIdx) => {
+      if (showPiiOnly && !segment.is_pii) return
+
+      const viewport = pageViewports.current.get(segment.page_number)
+      if (!viewport) return
+
+      const segmentLayer = viewerRef.current?.querySelector(`[data-segment-layer="${segment.page_number}"]`)
+      if (!segmentLayer) return
+
+      const overlay = createSegmentOverlay(segment, viewport, globalIdx)
+      segmentLayer.appendChild(overlay)
+    })
   }
 
   const createSegmentOverlay = (segment: Segment, viewport: any, index: number) => {
@@ -189,7 +246,7 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
 
     // Form fields get special treatment with input overlays
     if (isFormField) {
-      overlay.className = 'absolute'
+      overlay.className = 'absolute pointer-events-auto'
 
       if (segment.type === 'Checkbox') {
         const checkbox = document.createElement('input')
@@ -221,12 +278,13 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
     }
 
     // Hidden by default, only show border/background when selected
+    // pointer-events-auto makes them clickable even though parent is pointer-events-none
     if (isPii) {
-      overlay.className = `absolute cursor-pointer transition-all duration-200 ${
+      overlay.className = `absolute pointer-events-auto cursor-pointer transition-all duration-200 ${
         selectedSegment === index ? 'bg-red-200/40 border-2 border-red-500' : 'border-transparent'
       }`
     } else {
-      overlay.className = `absolute cursor-pointer transition-all duration-200 ${
+      overlay.className = `absolute pointer-events-auto cursor-pointer transition-all duration-200 ${
         selectedSegment === index ? 'bg-blue-200/40 border-2 border-blue-500' : 'border-transparent'
       }`
     }
@@ -694,15 +752,19 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [currentTool])
 
-  // Toggle segment layer pointer-events based on current tool
+  // Toggle segment overlay pointer-events based on current tool
+  // When a tool is active, overlays become click-through so annotations can be placed
   useEffect(() => {
     const segmentLayers = viewerRef.current?.querySelectorAll('[data-segment-layer]')
     segmentLayers?.forEach(layer => {
-      if (currentTool) {
-        (layer as HTMLElement).style.pointerEvents = 'none'
-      } else {
-        (layer as HTMLElement).style.pointerEvents = 'auto'
-      }
+      const overlays = layer.querySelectorAll('[data-segment-index]')
+      overlays.forEach(overlay => {
+        if (currentTool) {
+          (overlay as HTMLElement).style.pointerEvents = 'none'
+        } else {
+          (overlay as HTMLElement).style.pointerEvents = 'auto'
+        }
+      })
     })
   }, [currentTool])
 
