@@ -157,8 +157,8 @@ export default function Dashboard() {
             <Menu className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">Form Filler</h1>
-            <p className="text-xs text-gray-500">Smart form recommendations</p>
+            <h1 className="text-xl font-semibold text-gray-900">Resyft</h1>
+            <p className="text-xs text-gray-500">Intelligent form parsing backed by AI</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
