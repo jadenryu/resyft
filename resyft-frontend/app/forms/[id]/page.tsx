@@ -398,8 +398,32 @@ export default function FormDetailPage() {
         aiServiceUrl = `https://${aiServiceUrl}`
       }
 
-      // Build context from segments
-      const formContext = segments.slice(0, 50).map(s => `[${s.type}] ${s.text}`).join('\n')
+      // Build context from segments - group by page for better organization
+      const segmentsByPage: Record<number, typeof segments> = {}
+      segments.forEach(s => {
+        if (!segmentsByPage[s.page_number]) segmentsByPage[s.page_number] = []
+        segmentsByPage[s.page_number].push(s)
+      })
+
+      let formContext = `Form: ${formName || 'Uploaded PDF'}\nTotal Pages: ${Object.keys(segmentsByPage).length}\nTotal Fields: ${segments.filter(s => s.type === 'Form Field' || s.type === 'Checkbox' || s.type === 'Dropdown').length}\n\n`
+
+      // Include all segments, organized by page (up to ~300 segments to stay within token limits)
+      let segmentCount = 0
+      const maxSegments = 300
+
+      for (const pageNum of Object.keys(segmentsByPage).map(Number).sort((a, b) => a - b)) {
+        if (segmentCount >= maxSegments) {
+          formContext += `\n[... additional content truncated for brevity ...]\n`
+          break
+        }
+        formContext += `\n--- Page ${pageNum} ---\n`
+        for (const seg of segmentsByPage[pageNum]) {
+          if (segmentCount >= maxSegments) break
+          const piiMarker = seg.is_pii ? ' [PII]' : ''
+          formContext += `[${seg.type}${piiMarker}] ${seg.text}\n`
+          segmentCount++
+        }
+      }
 
       const response = await fetch(`${aiServiceUrl}/chat`, {
         method: 'POST',
