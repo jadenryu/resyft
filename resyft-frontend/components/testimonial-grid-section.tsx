@@ -1,10 +1,7 @@
-import Image from "next/image"
-
 interface TestimonialProps {
   quote: string
   name: string
   company: string
-  avatar: string
   type: "large-blue" | "small-dark" | "large-light"
 }
 
@@ -12,65 +9,56 @@ const testimonials: TestimonialProps[] = [
   {
     quote:
       "The form recommendations saved me hours of research. I didn't know which insurance forms I needed, and it figured it out instantly.",
-    name: "Sarah Chen",
-    company: "Small Business Owner",
-    avatar: "/placeholder.svg",
+    name: "A. Business",
+    company: "Business Professional",
     type: "large-blue",
   },
   {
     quote:
       "Uploading my tax forms and having them automatically analyzed was incredible. No more manual data entry.",
-    name: "Marcus Johnson",
-    company: "Freelance Designer",
-    avatar: "/placeholder.svg",
+    name: "B. Creative",
+    company: "Creative Professional",
     type: "small-dark",
   },
   {
     quote:
       "As a healthcare administrator, managing patient forms is a nightmare. This tool made it so much easier.",
-    name: "Emily Rodriguez",
-    company: "Healthcare Admin",
-    avatar: "/placeholder.svg",
+    name: "C. Healthcare",
+    company: "Healthcare Professional",
     type: "small-dark",
   },
   {
     quote:
       "The AI understood exactly what forms I needed for my business incorporation. Saved me from hiring a consultant.",
-    name: "David Kim",
-    company: "Startup Founder",
-    avatar: "/placeholder.svg",
+    name: "D. Founder",
+    company: "Startup Professional",
     type: "small-dark",
   },
   {
     quote:
       "Finally, a tool that understands the complexity of insurance paperwork. It recommended forms I didn't even know existed.",
-    name: "Lisa Thompson",
-    company: "Insurance Agent",
-    avatar: "/placeholder.svg",
+    name: "E. Insurance",
+    company: "Insurance Professional",
     type: "small-dark",
   },
   {
     quote:
       "The PDF analysis feature extracted all the fields perfectly. I was able to review and fill forms much faster.",
-    name: "Ahmed Hassan",
-    company: "Financial Advisor",
-    avatar: "/placeholder.svg",
+    name: "F. Finance",
+    company: "Finance Professional",
     type: "small-dark",
   },
   {
     quote:
       "From form discovery to completion, this tool streamlines every step. It's become indispensable for my practice.",
-    name: "Jennifer Adams",
-    company: "Legal Assistant",
-    avatar: "/placeholder.svg",
+    name: "G. Legal",
+    company: "Legal Professional",
     type: "large-light",
   },
 ]
 
-const TestimonialCard = ({ quote, name, company, avatar, type }: TestimonialProps) => {
+const TestimonialCard = ({ quote, name, company, type }: TestimonialProps) => {
   const isLargeCard = type.startsWith("large")
-  const avatarSize = isLargeCard ? 48 : 36
-  const avatarBorderRadius = isLargeCard ? "rounded-[41px]" : "rounded-[30.75px]"
   const padding = isLargeCard ? "p-6" : "p-[30px]"
 
   let cardClasses = `flex flex-col justify-between items-start overflow-hidden rounded-[10px] shadow-[0px_2px_4px_rgba(0,0,0,0.08)] relative ${padding}`
@@ -117,15 +105,7 @@ const TestimonialCard = ({ quote, name, company, avatar, type }: TestimonialProp
     <div className={`${cardClasses} ${cardWidth} ${cardHeight}`}>
       {backgroundElements}
       <div className={`relative z-10 font-normal break-words ${quoteClasses}`}>{quote}</div>
-      <div className="relative z-10 flex justify-start items-center gap-3">
-        <Image
-          src={avatar || "/placeholder.svg"}
-          alt={`${name} avatar`}
-          width={avatarSize}
-          height={avatarSize}
-          className={`${avatarBorderRadius}`}
-          style={{ border: "1px solid rgba(255, 255, 255, 0.08)" }}
-        />
+      <div className="relative z-10 flex justify-start items-center">
         <div className="flex flex-col justify-start items-start gap-0.5">
           <div className={nameClasses}>{name}</div>
           <div className={companyClasses}>{company}</div>
