@@ -65,6 +65,95 @@ interface ChatMessage {
   content: string
 }
 
+// Simple markdown renderer for chat messages
+function renderMarkdown(text: string): React.ReactNode {
+  // Split by code blocks first
+  const parts = text.split(/```([\s\S]*?)```/)
+
+  return parts.map((part, i) => {
+    // Odd indices are code blocks
+    if (i % 2 === 1) {
+      return (
+        <pre key={i} className="bg-gray-800 text-gray-100 rounded p-2 my-2 text-xs overflow-x-auto">
+          <code>{part.trim()}</code>
+        </pre>
+      )
+    }
+
+    // Process inline formatting
+    const lines = part.split('\n')
+    return lines.map((line, lineIdx) => {
+      // Process the line for inline formatting
+      let processed: React.ReactNode[] = []
+      let remaining = line
+      let keyCounter = 0
+
+      // Handle bold **text**
+      while (remaining.includes('**')) {
+        const start = remaining.indexOf('**')
+        const end = remaining.indexOf('**', start + 2)
+        if (end === -1) break
+
+        if (start > 0) {
+          processed.push(remaining.slice(0, start))
+        }
+        processed.push(
+          <strong key={`b-${i}-${lineIdx}-${keyCounter++}`}>
+            {remaining.slice(start + 2, end)}
+          </strong>
+        )
+        remaining = remaining.slice(end + 2)
+      }
+      if (remaining) processed.push(remaining)
+
+      // Handle inline code `code`
+      processed = processed.flatMap((node, nodeIdx) => {
+        if (typeof node !== 'string') return [node]
+        const codeParts = node.split(/`([^`]+)`/)
+        return codeParts.map((codePart, codeIdx) => {
+          if (codeIdx % 2 === 1) {
+            return (
+              <code key={`c-${i}-${lineIdx}-${nodeIdx}-${codeIdx}`} className="bg-gray-200 px-1 rounded text-sm font-mono">
+                {codePart}
+              </code>
+            )
+          }
+          return codePart
+        })
+      })
+
+      // Handle bullet points
+      const trimmedLine = line.trim()
+      if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('• ')) {
+        return (
+          <div key={`l-${i}-${lineIdx}`} className="flex gap-2 ml-2">
+            <span>•</span>
+            <span>{processed.slice(1)}</span>
+          </div>
+        )
+      }
+
+      // Handle numbered lists
+      const numberedMatch = trimmedLine.match(/^(\d+)\.\s/)
+      if (numberedMatch) {
+        return (
+          <div key={`l-${i}-${lineIdx}`} className="flex gap-2 ml-2">
+            <span>{numberedMatch[1]}.</span>
+            <span>{processed}</span>
+          </div>
+        )
+      }
+
+      return (
+        <span key={`l-${i}-${lineIdx}`}>
+          {processed}
+          {lineIdx < lines.length - 1 && <br />}
+        </span>
+      )
+    })
+  })
+}
+
 export default function FormDetailPage() {
   const router = useRouter()
   const params = useParams()
@@ -547,7 +636,9 @@ export default function FormDetailPage() {
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-100 text-gray-800'
                       }`}>
-                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                        <div className="text-sm">
+                          {msg.role === 'user' ? msg.content : renderMarkdown(msg.content)}
+                        </div>
                       </div>
                     </div>
                   ))
