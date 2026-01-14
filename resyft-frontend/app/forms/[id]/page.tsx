@@ -17,7 +17,11 @@ import {
   ChevronRight,
   AlertTriangle,
   Save,
-  FolderPlus
+  FolderPlus,
+  MessageSquare,
+  Send,
+  Bot,
+  User
 } from 'lucide-react'
 
 interface Segment {
@@ -56,6 +60,11 @@ interface Project {
   createdAt: string
 }
 
+interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
 export default function FormDetailPage() {
   const router = useRouter()
   const params = useParams()
@@ -83,6 +92,12 @@ export default function FormDetailPage() {
   const [showSaveModal, setShowSaveModal] = useState(false)
   const [saving, setSaving] = useState(false)
 
+  // Chat state
+  const [sidebarTab, setSidebarTab] = useState<'fields' | 'chat'>('fields')
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+  const [chatInput, setChatInput] = useState('')
+  const [chatLoading, setChatLoading] = useState(false)
+
   useEffect(() => {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -102,6 +117,14 @@ export default function FormDetailPage() {
       const projectId = searchParams.get('projectId')
       if (projectId) {
         setSelectedProjectId(projectId)
+      }
+
+      // Check for PDF in sessionStorage (coming from project view)
+      const storedPdf = sessionStorage.getItem('viewerPdfBase64')
+      if (storedPdf) {
+        setPdfBase64(storedPdf)
+        // Clear after loading so it doesn't persist incorrectly
+        sessionStorage.removeItem('viewerPdfBase64')
       }
 
       setLoading(false)
@@ -267,6 +290,51 @@ export default function FormDetailPage() {
     router.push(`/projects/${selectedProjectId}`)
   }
 
+  const handleSendMessage = async () => {
+    if (!chatInput.trim() || chatLoading) return
+
+    const userMessage = chatInput.trim()
+    setChatInput('')
+    setChatMessages(prev => [...prev, { role: 'user', content: userMessage }])
+    setChatLoading(true)
+
+    try {
+      let aiServiceUrl = process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:8001'
+      if (aiServiceUrl && !aiServiceUrl.startsWith('http://') && !aiServiceUrl.startsWith('https://')) {
+        aiServiceUrl = `https://${aiServiceUrl}`
+      }
+
+      // Build context from segments
+      const formContext = segments.slice(0, 50).map(s => `[${s.type}] ${s.text}`).join('\n')
+
+      const response = await fetch(`${aiServiceUrl}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage,
+          context: formContext,
+          history: chatMessages.slice(-10) // Last 10 messages for context
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.response) {
+          setChatMessages(prev => [...prev, { role: 'assistant', content: data.response }])
+        } else {
+          setChatMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }])
+        }
+      } else {
+        setChatMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, the AI service is unavailable. Please try again later.' }])
+      }
+    } catch (error) {
+      console.error('Chat error:', error)
+      setChatMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I could not connect to the AI service.' }])
+    } finally {
+      setChatLoading(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -343,79 +411,183 @@ export default function FormDetailPage() {
           )}
         </div>
 
-        {/* Sidebar - Extracted Fields */}
-        <div className="w-96 bg-white overflow-auto">
-          {/* AI Summary Section */}
-          {(aiSummary || loadingSummary) && (
-            <div className="p-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
-              <div className="flex items-center gap-2 mb-2">
-                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <h3 className="font-semibold text-blue-900 text-sm">AI Summary</h3>
-              </div>
-              {loadingSummary ? (
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Generating summary...</span>
-                </div>
-              ) : (
-                <p className="text-sm text-gray-700 leading-relaxed">{aiSummary}</p>
-              )}
-            </div>
-          )}
-
-          <div className="p-4 border-b">
-            <h2 className="font-semibold text-gray-900">Extracted Fields</h2>
-            <p className="text-sm text-gray-500">
-              {extractedFields.length} fields detected
-            </p>
+        {/* Sidebar */}
+        <div className="w-96 bg-white flex flex-col">
+          {/* Tabs */}
+          <div className="flex border-b">
+            <button
+              onClick={() => setSidebarTab('fields')}
+              className={`flex-1 px-4 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+                sidebarTab === 'fields'
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              Fields
+            </button>
+            <button
+              onClick={() => setSidebarTab('chat')}
+              className={`flex-1 px-4 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+                sidebarTab === 'chat'
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <MessageSquare className="w-4 h-4" />
+              AI Chat
+            </button>
           </div>
 
-          {extractedFields.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">
-              <AlertCircle className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-              <p>Upload a form to see extracted fields</p>
+          {sidebarTab === 'fields' ? (
+            <div className="flex-1 overflow-auto">
+              {/* AI Summary Section */}
+              {(aiSummary || loadingSummary) && (
+                <div className="p-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <h3 className="font-semibold text-blue-900 text-sm">AI Summary</h3>
+                  </div>
+                  {loadingSummary ? (
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Generating summary...</span>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-700 leading-relaxed">{aiSummary}</p>
+                  )}
+                </div>
+              )}
+
+              <div className="p-4 border-b">
+                <h2 className="font-semibold text-gray-900">Extracted Fields</h2>
+                <p className="text-sm text-gray-500">
+                  {extractedFields.length} fields detected
+                </p>
+              </div>
+
+              {extractedFields.length === 0 ? (
+                <div className="p-6 text-center text-gray-500">
+                  <AlertCircle className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                  <p>Upload a form to see extracted fields</p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {extractedFields.map((field, idx) => (
+                    <div key={idx} className="p-4 hover:bg-gray-50 cursor-pointer">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{field.name}</p>
+                          <p className="text-sm text-gray-600 mt-1">{field.value || '(empty)'}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {field.confidence > 0.8 ? (
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                          ) : (
+                            <AlertCircle className="w-4 h-4 text-yellow-500" />
+                          )}
+                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="outline" className="text-xs">
+                          {field.type}
+                        </Badge>
+                        <span className="text-xs text-gray-400">
+                          {Math.round(field.confidence * 100)}% confidence
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Selected Segment Info */}
+              {selectedSegment && (
+                <div className="p-4 border-t bg-blue-50">
+                  <h3 className="text-sm font-medium text-blue-900 mb-2">Selected Segment</h3>
+                  <p className="text-sm text-blue-800">{selectedSegment.text}</p>
+                  <Badge className="mt-2 bg-blue-100 text-blue-700">
+                    {selectedSegment.type}
+                  </Badge>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="divide-y">
-              {extractedFields.map((field, idx) => (
-                <div key={idx} className="p-4 hover:bg-gray-50 cursor-pointer">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{field.name}</p>
-                      <p className="text-sm text-gray-600 mt-1">{field.value || '(empty)'}</p>
+            <div className="flex-1 flex flex-col">
+              {/* Chat Messages */}
+              <div className="flex-1 overflow-auto p-4 space-y-4">
+                {chatMessages.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Bot className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                    <h3 className="font-medium text-gray-700 mb-1">AI Form Assistant</h3>
+                    <p className="text-sm text-gray-500">
+                      Ask me anything about this form. I can help you understand fields, requirements, and how to fill it out.
+                    </p>
+                  </div>
+                ) : (
+                  chatMessages.map((msg, idx) => (
+                    <div
+                      key={idx}
+                      className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+                    >
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        msg.role === 'user' ? 'bg-blue-600' : 'bg-gray-200'
+                      }`}>
+                        {msg.role === 'user' ? (
+                          <User className="w-4 h-4 text-white" />
+                        ) : (
+                          <Bot className="w-4 h-4 text-gray-600" />
+                        )}
+                      </div>
+                      <div className={`max-w-[80%] rounded-lg px-3 py-2 ${
+                        msg.role === 'user'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {field.confidence > 0.8 ? (
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4 text-yellow-500" />
-                      )}
-                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                  ))
+                )}
+                {chatLoading && (
+                  <div className="flex gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                      <Bot className="w-4 h-4 text-gray-600" />
+                    </div>
+                    <div className="bg-gray-100 rounded-lg px-3 py-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="outline" className="text-xs">
-                      {field.type}
-                    </Badge>
-                    <span className="text-xs text-gray-400">
-                      {Math.round(field.confidence * 100)}% confidence
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                )}
+              </div>
 
-          {/* Selected Segment Info */}
-          {selectedSegment && (
-            <div className="p-4 border-t bg-blue-50">
-              <h3 className="text-sm font-medium text-blue-900 mb-2">Selected Segment</h3>
-              <p className="text-sm text-blue-800">{selectedSegment.text}</p>
-              <Badge className="mt-2 bg-blue-100 text-blue-700">
-                {selectedSegment.type}
-              </Badge>
+              {/* Chat Input */}
+              <div className="p-4 border-t">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                    placeholder="Ask about this form..."
+                    className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={chatLoading || !pdfBase64}
+                  />
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={chatLoading || !chatInput.trim() || !pdfBase64}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </div>
+                {!pdfBase64 && (
+                  <p className="text-xs text-gray-400 mt-2">Upload a form to start chatting</p>
+                )}
+              </div>
             </div>
           )}
         </div>

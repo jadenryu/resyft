@@ -130,7 +130,7 @@ export default function ProjectDetailPage() {
     if (form.isCustom && form.pdfBase64) {
       // Store the PDF in sessionStorage and navigate to form viewer
       sessionStorage.setItem('viewerPdfBase64', form.pdfBase64)
-      router.push('/forms/new')
+      router.push(`/forms/new?projectId=${projectId}`)
     } else {
       setSelectedForm(form)
     }

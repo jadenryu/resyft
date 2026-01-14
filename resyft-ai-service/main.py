@@ -287,3 +287,96 @@ Keep response under 100 words."""
             success=False,
             error=str(e)
         )
+
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    message: str
+    context: str
+    history: List[ChatMessage] = []
+
+class ChatResponse(BaseModel):
+    success: bool
+    response: Optional[str] = None
+    error: Optional[str] = None
+
+@app.options("/chat")
+async def options_chat():
+    return JSONResponse(content={}, headers={
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+    })
+
+@app.post("/chat")
+async def chat(request: ChatRequest):
+    try:
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            return ChatResponse(
+                success=False,
+                error="OpenRouter API key not configured"
+            )
+
+        # Build conversation messages
+        messages = [
+            {
+                "role": "system",
+                "content": f"""You are a helpful AI assistant that helps users understand and fill out forms.
+You have access to the following form content:
+
+{request.context}
+
+Help the user understand the form, explain what information is needed for each field,
+and provide guidance on how to complete it correctly. Be concise and helpful.
+If asked about something not in the form, politely explain that you can only help with the current form."""
+            }
+        ]
+
+        # Add conversation history
+        for msg in request.history:
+            messages.append({
+                "role": msg.role,
+                "content": msg.content
+            })
+
+        # Add current message
+        messages.append({
+            "role": "user",
+            "content": request.message
+        })
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": os.getenv("YOUR_SITE_URL", "http://localhost:3000"),
+                },
+                json={
+                    "model": os.getenv("OPENROUTER_MODEL", "anthropic/claude-3.5-sonnet"),
+                    "messages": messages,
+                    "max_tokens": 500,
+                },
+                timeout=30.0
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                reply = data["choices"][0]["message"]["content"]
+                return ChatResponse(success=True, response=reply)
+            else:
+                return ChatResponse(
+                    success=False,
+                    error=f"API error: {response.status_code}"
+                )
+
+    except Exception as e:
+        return ChatResponse(
+            success=False,
+            error=str(e)
+        )
