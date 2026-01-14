@@ -124,7 +124,7 @@ export function TestimonialGridSection() {
             Trusted by professionals everywhere
           </h2>
           <p className="self-stretch text-center text-slate-600 text-lg md:text-lg lg:text-xl font-light leading-relaxed max-w-4xl mx-auto">
-            {"Real feedback from people using Form Filler to simplify their work"} <br />{" "}
+            {"Real feedback from people using Resyft to simplify their work"} <br />{" "}
             {"and get the right forms faster than ever before"}
           </p>
         </div>

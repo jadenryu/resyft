@@ -326,34 +326,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Still Have Questions Section */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="container mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center"
-          >
-            <Card className="max-w-2xl mx-auto border border-blue-200 bg-blue-50">
-              <CardContent className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  Still have questions?
-                </h3>
-                <p className="text-gray-600 mb-4 font-normal">
-                  Our team is here to help you get started with Resyft.
-                </p>
-                <Link href="/signup">
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                    Get Started Free
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="py-24 px-4 bg-gray-900">

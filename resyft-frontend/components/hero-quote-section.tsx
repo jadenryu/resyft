@@ -25,7 +25,7 @@ export function HeroQuoteSection() {
 
           {/* Quote Text */}
           <blockquote className="text-2xl md:text-3xl lg:text-4xl font-semibold leading-tight mb-10 text-gray-800 max-w-3xl mx-auto">
-            &ldquo;Form Filler has completely changed how I handle paperwork. What used to take days of research now takes minutes, and I always get the right forms the first time.&rdquo;
+            &ldquo;Resyft has completely changed how I handle paperwork. What used to take days of research now takes minutes, and I always get the right forms the first time.&rdquo;
           </blockquote>
 
           {/* Author Info */}
