@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Button } from './ui/button'
 import { ZoomIn, ZoomOut, Upload, Highlighter, Type, Loader2, AlertTriangle, X, Download, StickyNote, TextCursor } from 'lucide-react'
-import { PDFDocument } from 'pdf-lib'
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 
 interface Segment {
   text: string
@@ -290,6 +290,7 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
       const pdfDoc = await PDFDocument.load(originalPdfBytes.current)
       const form = pdfDoc.getForm()
       const fields = form.getFields()
+      const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica)
 
       // Try to fill form fields
       let filledCount = 0
@@ -336,11 +337,75 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
                 x: segment.left + 2,
                 y: height - segment.top - segment.height + 2,
                 size: Math.min(segment.height - 4, 12),
+                font: helveticaFont,
               })
               filledCount++
             }
           }
         })
+      }
+
+      // Add annotations (highlights and notes) to PDF
+      const pages = pdfDoc.getPages()
+      for (const annotation of annotations) {
+        if (annotation.page > pages.length) continue
+        const page = pages[annotation.page - 1]
+        const { width: pageWidth, height: pageHeight } = page.getSize()
+
+        // Get the viewport for this page to calculate scale
+        const viewport = pageViewports.current.get(annotation.page)
+        if (!viewport) continue
+
+        // Convert screen coordinates to PDF coordinates
+        const scaleX = pageWidth / viewport.width
+        const scaleY = pageHeight / viewport.height
+        const pdfX = annotation.x * scaleX
+        const pdfY = pageHeight - (annotation.y * scaleY) - (annotation.height * scaleY)
+        const pdfWidth = annotation.width * scaleX
+        const pdfHeight = annotation.height * scaleY
+
+        if (annotation.type === 'highlight') {
+          // Draw semi-transparent yellow rectangle for highlight
+          page.drawRectangle({
+            x: pdfX,
+            y: pdfY,
+            width: pdfWidth,
+            height: pdfHeight,
+            color: rgb(1, 1, 0), // Yellow
+            opacity: 0.3,
+          })
+        } else if (annotation.type === 'note' && annotation.text) {
+          if (annotation.style === 'sticky') {
+            // Draw sticky note background
+            page.drawRectangle({
+              x: pdfX,
+              y: pdfY,
+              width: pdfWidth,
+              height: pdfHeight,
+              color: rgb(1, 1, 0.8), // Light yellow
+              borderColor: rgb(0.9, 0.8, 0),
+              borderWidth: 1,
+            })
+            // Draw note text
+            page.drawText(annotation.text, {
+              x: pdfX + 4,
+              y: pdfY + pdfHeight - 14,
+              size: 9,
+              font: helveticaFont,
+              color: rgb(0, 0, 0),
+              maxWidth: pdfWidth - 8,
+            })
+          } else {
+            // Textbox style - just draw the text
+            page.drawText(annotation.text, {
+              x: pdfX + 2,
+              y: pdfY + pdfHeight - 12,
+              size: 10,
+              font: helveticaFont,
+              color: rgb(0, 0, 0),
+            })
+          }
+        }
       }
 
       const pdfBytes = await pdfDoc.save()
@@ -352,7 +417,10 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
       a.click()
       URL.revokeObjectURL(url)
 
-      if (filledCount === 0 && formFieldValues.size > 0) {
+      const totalEdits = filledCount + annotations.length
+      if (totalEdits > 0) {
+        // Success - don't show alert, just download
+      } else if (formFieldValues.size > 0) {
         alert('Form values saved, but this PDF may not support editable fields. The values have been added as text overlays.')
       }
     } catch (err) {
