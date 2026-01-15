@@ -12,7 +12,7 @@ export function Header() {
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
           <img 
-            src="/resyft-2.png" 
+            src="/2.png" 
             alt="Resyft Icon" 
             className="w-8 h-8 object-contain"
           />

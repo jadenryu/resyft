@@ -41,7 +41,7 @@ const data = {
   user: {
     name: "Document User",
     email: "user@resyft.com",
-    avatar: "/resyft-2.png",
+    avatar: "/2.png",
   },
   navMain: [
     {
@@ -96,7 +96,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <a href="/">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <img 
-                    src="/resyft-2.png" 
+                    src="/2.png" 
                     alt="Resyft" 
                     className="size-6 object-contain" 
                   />

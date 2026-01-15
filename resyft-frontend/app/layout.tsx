@@ -30,10 +30,10 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/icon.png', sizes: '32x32', type: 'image/png' },
-      { url: '/resyft-2.png', sizes: 'any', type: 'image/png' }
+      { url: '/2.png', sizes: 'any', type: 'image/png' }
     ],
-    shortcut: '/resyft-2.png',
-    apple: '/resyft-2.png',
+    shortcut: '/2.png',
+    apple: '/2.png',
   },
 };
 

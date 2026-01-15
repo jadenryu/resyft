@@ -5,7 +5,7 @@ export default function LoginPage() {
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="bg-white relative hidden lg:block">
         <img
-          src="/resyft.png"
+          src="/1.png"
           alt="Resyft"
           className="w-full h-full object-cover"
         />
@@ -14,7 +14,7 @@ export default function LoginPage() {
         <div className="flex justify-center gap-2 md:justify-start">
           <a href="/" className="flex items-center gap-2 merriweather-regular">
             <img 
-              src="/resyft-2.png" 
+              src="/2.png" 
               alt="Resyft Logo" 
               className="w-8 h-8 object-contain"
             />
