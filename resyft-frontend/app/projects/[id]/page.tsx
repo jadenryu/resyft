@@ -19,12 +19,26 @@ import {
   Edit2
 } from 'lucide-react'
 
+interface Segment {
+  text: string
+  type: string
+  page_number: number
+  top: number
+  left: number
+  width: number
+  height: number
+  page_width: number
+  page_height: number
+  is_pii?: boolean
+}
+
 interface FormData {
   formName: string
   purpose: string
   accessibility: string
   isCustom?: boolean
   pdfBase64?: string
+  segments?: Segment[]
 }
 
 interface Project {

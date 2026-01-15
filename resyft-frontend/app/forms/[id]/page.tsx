@@ -50,6 +50,7 @@ interface FormData {
   accessibility: string
   isCustom?: boolean
   pdfBase64?: string
+  segments?: Segment[]  // Store segments for project-wide AI context
 }
 
 interface Project {
@@ -362,7 +363,8 @@ export default function FormDetailPage() {
       purpose: formPurpose.trim() || 'Custom uploaded form',
       accessibility: formNotes.trim() || 'User uploaded document',
       isCustom: true,
-      pdfBase64: pdfBase64 || undefined
+      pdfBase64: pdfBase64 || undefined,
+      segments: segments.length > 0 ? segments : undefined  // Store segments for project-wide AI context
     }
 
     // Update the project in localStorage
@@ -398,31 +400,73 @@ export default function FormDetailPage() {
         aiServiceUrl = `https://${aiServiceUrl}`
       }
 
-      // Build context from segments - group by page for better organization
-      const segmentsByPage: Record<number, typeof segments> = {}
-      segments.forEach(s => {
-        if (!segmentsByPage[s.page_number]) segmentsByPage[s.page_number] = []
-        segmentsByPage[s.page_number].push(s)
-      })
+      // Build context - include all forms from project if available
+      const projectId = searchParams.get('projectId')
+      let allFormsContext: { name: string; segments: Segment[] }[] = []
 
-      let formContext = `Form: ${formName || 'Uploaded PDF'}\nTotal Pages: ${Object.keys(segmentsByPage).length}\nTotal Fields: ${segments.filter(s => s.type === 'Form Field' || s.type === 'Checkbox' || s.type === 'Dropdown').length}\n\n`
+      // Add current form's segments
+      if (segments.length > 0) {
+        allFormsContext.push({ name: formName || 'Current Form', segments })
+      }
 
-      // Include all segments, organized by page (up to ~300 segments to stay within token limits)
+      // Load other forms from the project
+      if (projectId) {
+        const saved = localStorage.getItem('formfiller_projects')
+        if (saved) {
+          const allProjects: Project[] = JSON.parse(saved)
+          const project = allProjects.find(p => p.id === projectId)
+          if (project) {
+            project.forms.forEach(form => {
+              if (form.segments && form.segments.length > 0) {
+                // Don't duplicate current form
+                if (form.formName !== formName) {
+                  allFormsContext.push({ name: form.formName, segments: form.segments })
+                }
+              }
+            })
+          }
+        }
+      }
+
+      // Build combined context from all forms
+      let formContext = ''
       let segmentCount = 0
       const maxSegments = 300
+      const segmentsPerForm = Math.floor(maxSegments / Math.max(allFormsContext.length, 1))
 
-      for (const pageNum of Object.keys(segmentsByPage).map(Number).sort((a, b) => a - b)) {
-        if (segmentCount >= maxSegments) {
-          formContext += `\n[... additional content truncated for brevity ...]\n`
-          break
+      for (const formData of allFormsContext) {
+        if (segmentCount >= maxSegments) break
+
+        const segmentsByPage: Record<number, Segment[]> = {}
+        formData.segments.forEach(s => {
+          if (!segmentsByPage[s.page_number]) segmentsByPage[s.page_number] = []
+          segmentsByPage[s.page_number].push(s)
+        })
+
+        formContext += `\n========== ${formData.name} ==========\n`
+        formContext += `Total Pages: ${Object.keys(segmentsByPage).length}\n`
+        formContext += `Total Fields: ${formData.segments.filter(s => s.type === 'Form Field' || s.type === 'Checkbox' || s.type === 'Dropdown').length}\n`
+
+        let formSegmentCount = 0
+        for (const pageNum of Object.keys(segmentsByPage).map(Number).sort((a, b) => a - b)) {
+          if (segmentCount >= maxSegments || formSegmentCount >= segmentsPerForm) break
+          formContext += `\n--- Page ${pageNum} ---\n`
+          for (const seg of segmentsByPage[pageNum]) {
+            if (segmentCount >= maxSegments || formSegmentCount >= segmentsPerForm) break
+            const piiMarker = seg.is_pii ? ' [PII]' : ''
+            formContext += `[${seg.type}${piiMarker}] ${seg.text}\n`
+            segmentCount++
+            formSegmentCount++
+          }
         }
-        formContext += `\n--- Page ${pageNum} ---\n`
-        for (const seg of segmentsByPage[pageNum]) {
-          if (segmentCount >= maxSegments) break
-          const piiMarker = seg.is_pii ? ' [PII]' : ''
-          formContext += `[${seg.type}${piiMarker}] ${seg.text}\n`
-          segmentCount++
+
+        if (formSegmentCount >= segmentsPerForm && formData.segments.length > formSegmentCount) {
+          formContext += `[... ${formData.segments.length - formSegmentCount} more segments truncated ...]\n`
         }
+      }
+
+      if (allFormsContext.length > 1) {
+        formContext = `Project contains ${allFormsContext.length} forms:\n` + formContext
       }
 
       const response = await fetch(`${aiServiceUrl}/chat`, {
