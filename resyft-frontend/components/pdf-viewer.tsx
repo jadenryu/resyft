@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Button } from './ui/button'
-import { ZoomIn, ZoomOut, Upload, Highlighter, Type, Loader2, AlertTriangle, X, Download, StickyNote, TextCursor } from 'lucide-react'
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
-import { jsPDF } from 'jspdf'
+import { ZoomIn, ZoomOut, Upload, Highlighter, Loader2, AlertTriangle, X, StickyNote, TextCursor } from 'lucide-react'
 
 interface Segment {
   text: string
@@ -61,7 +59,6 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
   const [isDrawing, setIsDrawing] = useState(false)
   const [drawStart, setDrawStart] = useState<{ x: number; y: number; page: number } | null>(null)
   const [formFieldValues, setFormFieldValues] = useState<Map<string, string>>(new Map())
-  const [savingPdf, setSavingPdf] = useState(false)
   const viewerRef = useRef<HTMLDivElement>(null)
   const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map())
   const pageViewports = useRef<Map<number, any>>(new Map())
@@ -347,199 +344,6 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
       newMap.set(fieldKey, value)
       return newMap
     })
-  }
-
-  // Canvas-based PDF export (fallback method - captures rendered pages as images)
-  const exportAsCanvasPdf = async (): Promise<boolean> => {
-    if (!viewerRef.current || !numPages) return false
-
-    const pageContainers = viewerRef.current.querySelectorAll('.page-container')
-    if (pageContainers.length === 0) return false
-
-    // Get first page dimensions for PDF setup
-    const firstCanvas = pageContainers[0]?.querySelector('canvas')
-    if (!firstCanvas) return false
-
-    const pdf = new jsPDF({
-      orientation: firstCanvas.width > firstCanvas.height ? 'landscape' : 'portrait',
-      unit: 'px',
-      format: [firstCanvas.width, firstCanvas.height]
-    })
-
-    for (let i = 0; i < pageContainers.length; i++) {
-      const container = pageContainers[i] as HTMLElement
-      const canvas = container.querySelector('canvas') as HTMLCanvasElement
-      if (!canvas) continue
-
-      // Create a composite canvas with annotations
-      const compositeCanvas = document.createElement('canvas')
-      compositeCanvas.width = canvas.width
-      compositeCanvas.height = canvas.height
-      const ctx = compositeCanvas.getContext('2d')
-      if (!ctx) continue
-
-      // Draw the PDF page
-      ctx.drawImage(canvas, 0, 0)
-
-      // Draw annotations for this page
-      const pageNum = i + 1
-      const pageAnnotations = annotations.filter(a => a.page === pageNum)
-
-      for (const annotation of pageAnnotations) {
-        if (annotation.type === 'highlight') {
-          ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'
-          ctx.fillRect(annotation.x * scale, annotation.y * scale, annotation.width * scale, annotation.height * scale)
-        } else if (annotation.type === 'note' && annotation.text) {
-          if (annotation.style === 'sticky') {
-            ctx.fillStyle = 'rgba(255, 255, 200, 0.95)'
-            ctx.strokeStyle = '#e6cc00'
-            ctx.lineWidth = 1
-            ctx.fillRect(annotation.x * scale, annotation.y * scale, annotation.width * scale, annotation.height * scale)
-            ctx.strokeRect(annotation.x * scale, annotation.y * scale, annotation.width * scale, annotation.height * scale)
-          }
-          ctx.fillStyle = '#000'
-          ctx.font = `${9 * scale}px sans-serif`
-          ctx.fillText(annotation.text, (annotation.x + 4) * scale, (annotation.y + 14) * scale)
-        }
-      }
-
-      // Draw form field values
-      segments.forEach(segment => {
-        if ((segment.type === 'Form Field' || segment.type === 'Checkbox') && segment.page_number === pageNum) {
-          const fieldKey = `${segment.page_number}-${segment.left}-${segment.top}`
-          const value = formFieldValues.get(fieldKey)
-          if (value) {
-            ctx.fillStyle = '#000'
-            ctx.font = `${Math.min(segment.height - 4, 12) * scale}px sans-serif`
-            ctx.fillText(value, (segment.left + 2) * scale, (segment.top + segment.height - 4) * scale)
-          }
-        }
-      })
-
-      // Add page to PDF
-      if (i > 0) {
-        pdf.addPage([compositeCanvas.width, compositeCanvas.height],
-          compositeCanvas.width > compositeCanvas.height ? 'landscape' : 'portrait')
-      }
-
-      const imgData = compositeCanvas.toDataURL('image/jpeg', 0.95)
-      pdf.addImage(imgData, 'JPEG', 0, 0, compositeCanvas.width, compositeCanvas.height)
-    }
-
-    pdf.save('filled-form.pdf')
-    return true
-  }
-
-  // Primary PDF export using pdf-lib (preserves original PDF structure)
-  const exportWithPdfLib = async (): Promise<boolean> => {
-    if (!originalPdfBytes.current) return false
-
-    const pdfDoc = await PDFDocument.load(originalPdfBytes.current, { ignoreEncryption: true })
-    const form = pdfDoc.getForm()
-    const fields = form.getFields()
-    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica)
-
-    // Fill form fields
-    fields.forEach(field => {
-      const fieldName = field.getName()
-      formFieldValues.forEach((value) => {
-        if (value?.trim()) {
-          try {
-            const textField = form.getTextField(fieldName)
-            textField?.setText(value)
-          } catch {
-            try {
-              const checkBox = form.getCheckBox(fieldName)
-              if (checkBox && value === 'true') checkBox.check()
-            } catch { /* ignore */ }
-          }
-        }
-      })
-    })
-
-    // Add text overlays for non-AcroForm PDFs
-    if (fields.length === 0 && formFieldValues.size > 0) {
-      const pages = pdfDoc.getPages()
-      segments.forEach(segment => {
-        if (segment.type === 'Form Field' || segment.type === 'Checkbox') {
-          const fieldKey = `${segment.page_number}-${segment.left}-${segment.top}`
-          const value = formFieldValues.get(fieldKey)
-          if (value && segment.page_number <= pages.length) {
-            const page = pages[segment.page_number - 1]
-            const { height } = page.getSize()
-            page.drawText(value, {
-              x: segment.left + 2,
-              y: height - segment.top - segment.height + 2,
-              size: Math.min(segment.height - 4, 12),
-              font: helveticaFont,
-            })
-          }
-        }
-      })
-    }
-
-    // Add annotations
-    const pages = pdfDoc.getPages()
-    for (const annotation of annotations) {
-      if (annotation.page > pages.length) continue
-      const page = pages[annotation.page - 1]
-      const { width: pageWidth, height: pageHeight } = page.getSize()
-      const viewport = pageViewports.current.get(annotation.page)
-      if (!viewport) continue
-
-      const scaleX = pageWidth / viewport.width
-      const scaleY = pageHeight / viewport.height
-      const pdfX = annotation.x * scaleX
-      const pdfY = pageHeight - (annotation.y * scaleY) - (annotation.height * scaleY)
-      const pdfWidth = annotation.width * scaleX
-      const pdfHeight = annotation.height * scaleY
-
-      if (annotation.type === 'highlight') {
-        page.drawRectangle({ x: pdfX, y: pdfY, width: pdfWidth, height: pdfHeight, color: rgb(1, 1, 0), opacity: 0.3 })
-      } else if (annotation.type === 'note' && annotation.text) {
-        if (annotation.style === 'sticky') {
-          page.drawRectangle({ x: pdfX, y: pdfY, width: pdfWidth, height: pdfHeight, color: rgb(1, 1, 0.8), borderColor: rgb(0.9, 0.8, 0), borderWidth: 1 })
-        }
-        page.drawText(annotation.text, { x: pdfX + 4, y: pdfY + pdfHeight - 14, size: 9, font: helveticaFont, color: rgb(0, 0, 0) })
-      }
-    }
-
-    const pdfBytes = await pdfDoc.save()
-    const blob = new Blob([pdfBytes as BlobPart], { type: 'application/pdf' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'filled-form.pdf'
-    a.click()
-    URL.revokeObjectURL(url)
-    return true
-  }
-
-  const downloadFilledPdf = async () => {
-    if (!originalPdfBytes.current && !viewerRef.current) {
-      alert('No PDF loaded')
-      return
-    }
-
-    setSavingPdf(true)
-    try {
-      // Try pdf-lib first (preserves original PDF quality)
-      const success = await exportWithPdfLib()
-      if (success) return
-    } catch (err) {
-      console.warn('pdf-lib export failed, trying canvas fallback:', err)
-    }
-
-    try {
-      // Fallback to canvas-based export
-      const success = await exportAsCanvasPdf()
-      if (!success) throw new Error('Canvas export failed')
-    } catch (err) {
-      console.error('All export methods failed:', err)
-      alert('Could not export PDF. Please try again or use "Export Data" for form values.')
-    } finally {
-      setSavingPdf(false)
-    }
   }
 
   const exportFormData = () => {
@@ -912,24 +716,6 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
             PII ({piiCount})
           </Button>
         )}
-
-        <div className="h-6 w-px bg-gray-300 mx-2" />
-
-        {/* Download Button */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={downloadFilledPdf}
-          disabled={savingPdf || !pdfBase64}
-          className="text-green-600 border-green-300 hover:bg-green-50"
-        >
-          {savingPdf ? (
-            <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-          ) : (
-            <Download className="w-4 h-4 mr-1" />
-          )}
-          Download
-        </Button>
 
         <div className="flex-1" />
 
