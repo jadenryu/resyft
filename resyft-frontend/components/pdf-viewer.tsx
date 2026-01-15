@@ -57,6 +57,7 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
   const [showPiiOnly, setShowPiiOnly] = useState(false)
   const [annotations, setAnnotations] = useState<Annotation[]>([])
   const [editingNote, setEditingNote] = useState<string | null>(null)
+  const [selectedAnnotation, setSelectedAnnotation] = useState<{ id: string; x: number; y: number } | null>(null)
   const [isDrawing, setIsDrawing] = useState(false)
   const [drawStart, setDrawStart] = useState<{ x: number; y: number; page: number } | null>(null)
   const [formFieldValues, setFormFieldValues] = useState<Map<string, string>>(new Map())
@@ -293,9 +294,9 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
       icon.title = 'Personal Information Detected'
       overlay.appendChild(icon)
     } else {
-      // Regular segments hidden by default
-      overlay.className = `absolute pointer-events-auto cursor-pointer transition-all duration-200 ${
-        selectedSegment === index ? 'bg-blue-200/40 border-2 border-blue-500' : 'border-transparent'
+      // Regular segments - subtle hover effect for discoverability
+      overlay.className = `absolute pointer-events-auto cursor-pointer transition-all duration-200 hover:bg-blue-100/30 hover:border hover:border-blue-300 ${
+        selectedSegment === index ? 'bg-blue-200/40 border-2 border-blue-500' : 'border border-transparent'
       }`
     }
 
@@ -569,11 +570,23 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
       el.style.height = `${annotation.height}px`
 
       if (annotation.type === 'highlight') {
-        el.className += ' bg-yellow-300/50 border border-yellow-400 cursor-pointer hover:bg-yellow-400/50'
-        el.onclick = () => {
-          if (confirm('Delete this highlight?')) {
-            deleteAnnotation(annotation.id)
-          }
+        const color = annotation.color || 'yellow'
+        const colorClasses: Record<string, string> = {
+          yellow: 'bg-yellow-300/50 border-yellow-400 hover:bg-yellow-400/50',
+          green: 'bg-green-300/50 border-green-400 hover:bg-green-400/50',
+          blue: 'bg-blue-300/50 border-blue-400 hover:bg-blue-400/50',
+          pink: 'bg-pink-300/50 border-pink-400 hover:bg-pink-400/50',
+          orange: 'bg-orange-300/50 border-orange-400 hover:bg-orange-400/50',
+        }
+        el.className += ` ${colorClasses[color] || colorClasses.yellow} border cursor-pointer`
+        el.onclick = (e) => {
+          e.stopPropagation()
+          const rect = el.getBoundingClientRect()
+          setSelectedAnnotation({
+            id: annotation.id,
+            x: rect.left + rect.width / 2,
+            y: rect.top
+          })
         }
       } else if (annotation.type === 'note') {
         if (annotation.style === 'textbox') {
@@ -645,6 +658,13 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
 
   const updateAnnotationText = (id: string, text: string) => {
     setAnnotations(prev => prev.map(a => a.id === id ? { ...a, text } : a))
+  }
+
+  const updateAnnotationColor = (id: string, color: string) => {
+    setAnnotations(prev => prev.map(a => a.id === id ? { ...a, color } : a))
+    // Re-render annotations to show new color
+    setTimeout(() => renderAnnotations(), 0)
+    setSelectedAnnotation(null)
   }
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -951,6 +971,55 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
         )}
         <div ref={viewerRef} className="flex flex-col items-center min-h-full" />
       </div>
+
+      {/* Annotation Options Popover */}
+      {selectedAnnotation && (
+        <>
+          {/* Backdrop to close popover */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setSelectedAnnotation(null)}
+          />
+          {/* Popover */}
+          <div
+            className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-3 min-w-[200px]"
+            style={{
+              left: Math.min(selectedAnnotation.x - 100, window.innerWidth - 220),
+              top: Math.max(selectedAnnotation.y - 120, 10),
+            }}
+          >
+            <div className="text-xs font-medium text-gray-500 mb-2">Highlight Color</div>
+            <div className="flex gap-2 mb-3">
+              {[
+                { name: 'yellow', class: 'bg-yellow-400' },
+                { name: 'green', class: 'bg-green-400' },
+                { name: 'blue', class: 'bg-blue-400' },
+                { name: 'pink', class: 'bg-pink-400' },
+                { name: 'orange', class: 'bg-orange-400' },
+              ].map(color => (
+                <button
+                  key={color.name}
+                  className={`w-7 h-7 rounded-full ${color.class} hover:ring-2 hover:ring-offset-1 hover:ring-gray-400 transition-all`}
+                  onClick={() => updateAnnotationColor(selectedAnnotation.id, color.name)}
+                  title={color.name.charAt(0).toUpperCase() + color.name.slice(1)}
+                />
+              ))}
+            </div>
+            <div className="border-t pt-2">
+              <button
+                className="w-full text-left px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded flex items-center gap-2"
+                onClick={() => {
+                  deleteAnnotation(selectedAnnotation.id)
+                  setSelectedAnnotation(null)
+                }}
+              >
+                <X className="w-4 h-4" />
+                Delete Highlight
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

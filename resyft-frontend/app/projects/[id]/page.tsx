@@ -77,6 +77,9 @@ export default function ProjectDetailPage() {
   const [loading, setLoading] = useState(true)
   const [project, setProject] = useState<Project | null>(null)
   const [selectedForm, setSelectedForm] = useState<FormData | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editDescription, setEditDescription] = useState('')
 
   useEffect(() => {
     const checkUser = async () => {
@@ -124,6 +127,37 @@ export default function ProjectDetailPage() {
         localStorage.setItem('formfiller_projects', JSON.stringify(projects))
       }
     }
+  }
+
+  const handleOpenEditModal = () => {
+    if (!project) return
+    setEditName(project.name)
+    setEditDescription(project.description)
+    setShowEditModal(true)
+  }
+
+  const handleSaveProjectEdit = () => {
+    if (!project || !editName.trim()) return
+
+    const updatedProject = {
+      ...project,
+      name: editName.trim(),
+      description: editDescription.trim()
+    }
+    setProject(updatedProject)
+
+    // Update localStorage
+    const saved = localStorage.getItem('formfiller_projects')
+    if (saved) {
+      const projects: Project[] = JSON.parse(saved)
+      const idx = projects.findIndex(p => p.id === projectId)
+      if (idx !== -1) {
+        projects[idx] = updatedProject
+        localStorage.setItem('formfiller_projects', JSON.stringify(projects))
+      }
+    }
+
+    setShowEditModal(false)
   }
 
   const handleViewForm = (form: FormData) => {
@@ -185,10 +219,22 @@ export default function ProjectDetailPage() {
 
       {/* Project Description */}
       <div className="bg-white border-b px-6 py-4">
-        <p className="text-sm text-gray-600 max-w-3xl">{project.description}</p>
-        <p className="text-xs text-gray-400 mt-2">
-          Created on {new Date(project.createdAt).toLocaleDateString()}
-        </p>
+        <div className="flex items-start justify-between max-w-3xl">
+          <div>
+            <p className="text-sm text-gray-600">{project.description}</p>
+            <p className="text-xs text-gray-400 mt-2">
+              Created on {new Date(project.createdAt).toLocaleDateString()}
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleOpenEditModal}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <Edit2 className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Forms Grid */}
@@ -331,6 +377,68 @@ export default function ProjectDetailPage() {
                     Upload Form
                   </Button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Project Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Edit Project</h2>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Project Name
+                </label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  placeholder="Enter project name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                  rows={3}
+                  placeholder="Enter project description"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowEditModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  onClick={handleSaveProjectEdit}
+                  disabled={!editName.trim()}
+                >
+                  Save Changes
+                </Button>
               </div>
             </div>
           </div>
