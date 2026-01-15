@@ -431,7 +431,7 @@ export default function FormDetailPage() {
       // Build combined context from all forms
       let formContext = ''
       let segmentCount = 0
-      const maxSegments = 300
+      const maxSegments = 1000  // ~10-50k tokens, well within Claude's 200k limit
       const segmentsPerForm = Math.floor(maxSegments / Math.max(allFormsContext.length, 1))
 
       for (const formData of allFormsContext) {

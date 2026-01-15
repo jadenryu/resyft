@@ -326,13 +326,14 @@ async def chat(request: ChatRequest):
             {
                 "role": "system",
                 "content": f"""You are a helpful AI assistant that helps users understand and fill out forms.
-You have access to the following form content:
+You have access to the following form content (may include multiple forms from a project):
 
 {request.context}
 
-Help the user understand the form, explain what information is needed for each field,
-and provide guidance on how to complete it correctly. Be concise and helpful.
-If asked about something not in the form, politely explain that you can only help with the current form."""
+Help the user understand the forms, explain what information is needed for each field,
+and provide guidance on how to complete them correctly. Be concise and helpful.
+If the user asks about a specific form, focus on that form's content.
+If asked about something not in the provided forms, politely explain that you can only help with the available form content."""
             }
         ]
 
@@ -360,9 +361,9 @@ If asked about something not in the form, politely explain that you can only hel
                 json={
                     "model": os.getenv("OPENROUTER_MODEL", "anthropic/claude-3.5-sonnet"),
                     "messages": messages,
-                    "max_tokens": 500,
+                    "max_tokens": 1000,
                 },
-                timeout=30.0
+                timeout=60.0  # Increased timeout for larger contexts
             )
 
             if response.status_code == 200:
