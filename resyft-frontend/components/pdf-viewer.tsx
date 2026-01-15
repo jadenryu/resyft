@@ -78,10 +78,14 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
   }, [pdfUrl, pdfBase64, scale])
 
   // Separate effect for segment overlays (updates without re-rendering PDF)
+  // Use a small delay to ensure PDF rendering has completed
   useEffect(() => {
-    if (!isRenderingRef.current && viewerRef.current) {
-      updateSegmentOverlays()
-    }
+    const timer = setTimeout(() => {
+      if (viewerRef.current && segments.length > 0) {
+        updateSegmentOverlays()
+      }
+    }, 100)
+    return () => clearTimeout(timer)
   }, [segments, showPiiOnly, selectedSegment])
 
   const renderPDF = async () => {
@@ -180,13 +184,13 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
 
         // Add segment overlays container for this page (pointer-events-none, children will be auto)
         const segmentLayer = document.createElement('div')
-        segmentLayer.className = 'absolute inset-0 pointer-events-none'
+        segmentLayer.className = 'absolute inset-0 pointer-events-none z-10'
         segmentLayer.dataset.segmentLayer = String(pageNum)
         container.appendChild(segmentLayer)
 
-        // Add annotation layer for this page
+        // Add annotation layer for this page (z-20 to be above segment layer z-10)
         const annotationLayer = document.createElement('div')
-        annotationLayer.className = 'absolute inset-0 pointer-events-none'
+        annotationLayer.className = 'absolute inset-0 pointer-events-none z-20'
         annotationLayer.dataset.annotationLayer = String(pageNum)
         container.appendChild(annotationLayer)
 
@@ -294,9 +298,11 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
       icon.title = 'Personal Information Detected'
       overlay.appendChild(icon)
     } else {
-      // Regular segments - subtle hover effect for discoverability
-      overlay.className = `absolute pointer-events-auto cursor-pointer transition-all duration-200 hover:bg-blue-100/30 hover:border hover:border-blue-300 ${
-        selectedSegment === index ? 'bg-blue-200/40 border-2 border-blue-500' : 'border border-transparent'
+      // Regular segments - subtle dotted border for visibility, stronger on hover/select
+      overlay.className = `absolute pointer-events-auto cursor-pointer transition-all duration-200 ${
+        selectedSegment === index
+          ? 'bg-blue-200/40 border-2 border-blue-500'
+          : 'border border-dashed border-gray-300/50 hover:border-blue-400 hover:bg-blue-50/30'
       }`
     }
 
@@ -661,9 +667,21 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
   }
 
   const updateAnnotationColor = (id: string, color: string) => {
+    // Update the DOM element's classes directly for immediate feedback
+    const el = viewerRef.current?.querySelector(`[data-annotation-id="${id}"]`) as HTMLElement
+    if (el) {
+      const colorClasses: Record<string, string> = {
+        yellow: 'bg-yellow-300/50 border-yellow-400 hover:bg-yellow-400/50',
+        green: 'bg-green-300/50 border-green-400 hover:bg-green-400/50',
+        blue: 'bg-blue-300/50 border-blue-400 hover:bg-blue-400/50',
+        pink: 'bg-pink-300/50 border-pink-400 hover:bg-pink-400/50',
+        orange: 'bg-orange-300/50 border-orange-400 hover:bg-orange-400/50',
+      }
+      // Remove old color classes and add new ones
+      el.className = `absolute pointer-events-auto ${colorClasses[color] || colorClasses.yellow} border cursor-pointer`
+    }
+
     setAnnotations(prev => prev.map(a => a.id === id ? { ...a, color } : a))
-    // Re-render annotations to show new color
-    setTimeout(() => renderAnnotations(), 0)
     setSelectedAnnotation(null)
   }
 
