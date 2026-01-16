@@ -202,7 +202,7 @@ export default function LandingPage() {
               Trusted by professionals everywhere
             </h2>
             <p className="text-xl font-light text-gray-600 max-w-3xl mx-auto">
-              Join thousands of people simplifying their form workflow
+              Join thousands of people simplifying their form workflow.
             </p>
           </motion.div>
 
