@@ -311,8 +311,11 @@ export default function ProjectDetailPage() {
 
   const handleViewForm = (form: FormData) => {
     if (form.isCustom && form.pdfBase64) {
-      // Store the PDF in sessionStorage and navigate to form viewer
+      // Store the PDF and segments in sessionStorage and navigate to form viewer
       sessionStorage.setItem('viewerPdfBase64', form.pdfBase64)
+      if (form.segments) {
+        sessionStorage.setItem('viewerSegments', JSON.stringify(form.segments))
+      }
       router.push(`/forms/new?projectId=${projectId}`)
     } else {
       setSelectedForm(form)

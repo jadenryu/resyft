@@ -254,10 +254,21 @@ export default function FormDetailPage() {
 
       // Check for PDF in sessionStorage (coming from project view)
       const storedPdf = sessionStorage.getItem('viewerPdfBase64')
+      const storedSegments = sessionStorage.getItem('viewerSegments')
       if (storedPdf) {
         setPdfBase64(storedPdf)
+        // Also load segments if available
+        if (storedSegments) {
+          try {
+            const parsedSegments = JSON.parse(storedSegments)
+            setSegments(parsedSegments)
+          } catch (error) {
+            console.error('Failed to parse stored segments:', error)
+          }
+        }
         // Clear after loading so it doesn't persist incorrectly
         sessionStorage.removeItem('viewerPdfBase64')
+        sessionStorage.removeItem('viewerSegments')
       }
 
       setLoading(false)
