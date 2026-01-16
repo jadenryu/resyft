@@ -574,7 +574,7 @@ export default function FormDetailPage() {
         </div>
 
         {/* Sidebar */}
-        <div className="w-96 bg-white flex flex-col">
+        <div className="w-96 bg-white flex flex-col overflow-hidden">
           {/* Tabs */}
           <div className="flex border-b">
             <button
@@ -678,9 +678,9 @@ export default function FormDetailPage() {
               )}
             </div>
           ) : (
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col min-h-0">
               {/* Chat Messages */}
-              <div className="flex-1 overflow-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {chatMessages.length === 0 ? (
                   <div className="text-center py-8">
                     <Bot className="w-12 h-12 mx-auto text-gray-300 mb-3" />
