@@ -141,7 +141,7 @@ class DocumentProcessor:
             return result
 
         except Exception as e:
-            logger.error(f"❌ Document processing failed for {filename}: {e}")
+            logger.error(f"Document processing failed for {filename}: {e}")
             return {
                 "success": False,
                 "error": str(e),
@@ -196,7 +196,7 @@ class DocumentProcessor:
                     pass
 
         except Exception as e:
-            logger.error(f"❌ Text extraction failed: {e}")
+            logger.error(f"Text extraction failed: {e}")
             return {
                 "success": False,
                 "error": f"Text extraction failed: {str(e)}"
@@ -223,7 +223,7 @@ class DocumentProcessor:
                 doc.close()
 
             except Exception as pymupdf_error:
-                logger.warning(f"⚠️ PyMuPDF failed, trying PyPDF2: {pymupdf_error}")
+                logger.warning(f"PyMuPDF failed, trying PyPDF2: {pymupdf_error}")
 
                 # Fallback to PyPDF2
                 with open(file_path, 'rb') as file:
@@ -252,7 +252,7 @@ class DocumentProcessor:
             }
 
         except Exception as e:
-            logger.error(f"❌ PDF processing failed: {e}")
+            logger.error(f"PDF processing failed: {e}")
             return {
                 "success": False,
                 "error": f"PDF processing failed: {str(e)}"
@@ -295,7 +295,7 @@ class DocumentProcessor:
             }
 
         except Exception as e:
-            logger.error(f"❌ DOCX processing failed: {e}")
+            logger.error(f"DOCX processing failed: {e}")
             return {
                 "success": False,
                 "error": f"DOCX processing failed: {str(e)}"
@@ -336,7 +336,7 @@ class DocumentProcessor:
                 }
 
         except Exception as e:
-            logger.error(f"❌ Text processing failed: {e}")
+            logger.error(f"Text processing failed: {e}")
             return {
                 "success": False,
                 "error": f"Text processing failed: {str(e)}"
@@ -365,7 +365,7 @@ class DocumentProcessor:
             }
 
         except Exception as e:
-            logger.error(f"❌ Markdown processing failed: {e}")
+            logger.error(f"Markdown processing failed: {e}")
             return {
                 "success": False,
                 "error": f"Markdown processing failed: {str(e)}"
@@ -400,7 +400,7 @@ class DocumentProcessor:
             }
 
         except Exception as e:
-            logger.error(f"❌ HTML processing failed: {e}")
+            logger.error(f"HTML processing failed: {e}")
             return {
                 "success": False,
                 "error": f"HTML processing failed: {str(e)}"
@@ -444,7 +444,7 @@ class DocumentProcessor:
             return chunks
 
         except Exception as e:
-            logger.error(f"❌ Chunking failed: {e}")
+            logger.error(f"Chunking failed: {e}")
             # Fallback to simple chunking
             return self._chunk_academic_content(content)
 
@@ -598,7 +598,7 @@ class DocumentProcessor:
             }
 
         except Exception as e:
-            logger.error(f"❌ Document processor health check failed: {e}")
+            logger.error(f"Document processor health check failed: {e}")
             return {
                 "status": "unhealthy",
                 "error": str(e),
