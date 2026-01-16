@@ -1,7 +1,0 @@
-1. when a user enters the text for the creating a project, the natural language processing should generate some forms you need and a new project heading. the nlp should be a feature imported from the pull requests earlier
-with the modelnlp pr. let me know if ther eis any confusion.
-
-2. the other big feautre is to annotate personal identification information in forms, by pdf analysis. red highlightihng should indiciate the information that is personal, for example, triggger, flags regarding words like social security. 
-
-
-3. the third feature should be 
