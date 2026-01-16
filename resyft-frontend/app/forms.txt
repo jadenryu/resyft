@@ -1,0 +1,162 @@
+forms_dictionary = {
+    # MEDICAL CATEGORIES
+   
+    # Research
+    "Research_Informed_Consent": "https://researchservices.cornell.edu/forms/irb-consent-form-templates",
+    "Research_IRB_Protocol": "https://researchcompliance.stanford.edu/panels/hs/forms-templates/medical",
+    "Research_HIPAA_Authorization": "https://irb.ucsf.edu/consent-and-assent-form-templates",
+   
+    # Healthcare Admin
+    "Patient_Intake_Form": "https://esign.com/intake-forms/patient/",
+    "HIPAA_Notice_Privacy_Practices": "https://www.hipaajournal.com/hipaa-release-form/",
+    "Patient_Financial_Responsibility": "From Healthcare Provider",
+   
+    # Medical Records
+    "Medical_Records_Release": "https://www.hipaajournal.com/hipaa-release-form/",
+    "HIPAA_Authorization_Release": "https://eforms.com/release/medical-hipaa/",
+    "Medical_Records_Request_NY": "https://www.nycourts.gov/forms/hipaa_fillable.pdf",
+   
+    # Prescriptions
+    "Prescription_Refill_Request": "https://www.jotform.com/form-templates/prescription-refill-form-template",
+    "Prescription_Refill_Cognito": "https://www.cognitoforms.com/templates/584/prescription-refill-request-form",
+    "VA_Medication_Refill": "https://www.va.gov/vaforms/medical/pdf/vha-10-2478-fill.pdf",
+   
+    # Lab Results
+    "Laboratory_Request_Form": "https://www.medicalcenter.virginia.edu/medlabs/requisitions/",
+    "Lab_Requisition_Express": "https://www.expresslabidaho.com/lab-requisition-forms/",
+    "Public_Health_Lab_Request": "https://www.ruhealth.org/sites/default/files/Public Health Laboratory Services/CLI.CSR.FRM.002 V6 - Lab Test Request Form with Algorithm Fillable Protected.pdf",
+   
+    # BUSINESS CATEGORIES
+   
+    # Sales
+    "Sales_Order_Form": "From Business",
+    "Sales_Quote_Template": "From Business",
+    "Customer_Agreement": "From Business",
+   
+    # Marketing
+    "Marketing_Campaign_Brief": "From Business",
+    "Content_Calendar": "From Business",
+    "Marketing_Budget": "From Business",
+   
+    # Operations
+    "Standard_Operating_Procedure": "From Business",
+    "Process_Documentation": "From Business",
+    "Vendor_Application": "From Business",
+   
+    # HR
+    "Form_W-4": "https://www.irs.gov/forms-pubs/about-form-w-4",
+    "Form_I-9": "https://www.uscis.gov/i-9",
+    "Employee_Handbook_Acknowledgment": "From Employer",
+    "Direct_Deposit_Authorization": "From Employer",
+    "Emergency_Contact_Form": "From Employer",
+    "New_Hire_Reporting": "State-Specific from Employer",
+   
+    # Contracts
+    "Employment_Agreement": "From Employer",
+    "Non_Disclosure_Agreement": "From Business",
+    "Independent_Contractor_Agreement": "From Business",
+   
+    # Invoicing
+    "Invoice_Template": "https://invoicefly.com/free-resources/free-templates/free-invoice-templates/contractor-invoice-template/",
+    "1099_Invoice": "https://invoicer.ai/independent-contractor-1099-invoice-template",
+   
+    # FINANCE CATEGORIES
+   
+    # Banking
+    "Direct_Deposit_Form": "From Bank",
+    "Wire_Transfer_Form": "From Bank",
+    "Account_Application": "From Bank",
+   
+    # Investments
+    "Investment_Account_Application": "From Financial Institution",
+    "Beneficiary_Designation": "From Financial Institution",
+    "Trading_Authorization": "From Financial Institution",
+   
+    # Tax Forms
+    "Form_W-9": "https://www.irs.gov/forms-pubs/about-form-w-9",
+    "Form_1099-NEC": "https://www.irs.gov/forms-pubs/about-form-1099-nec",
+    "Form_1099-MISC": "https://www.irs.gov/forms-pubs/about-form-1099-misc",
+    "Form_1099-INT": "https://www.irs.gov/forms-pubs/about-form-1099-int",
+    "Form_1099-DIV": "https://www.irs.gov/forms-pubs/about-form-1099-div",
+    "Form_1040": "https://www.irs.gov/forms-pubs/about-form-1040",
+    "Schedule_C": "https://www.irs.gov/forms-pubs/about-schedule-c-form-1040",
+   
+    # Budgeting
+    "Budget_Template": "From Business/Personal",
+    "Expense_Report": "From Business",
+    "Monthly_Budget_Worksheet": "From Business/Personal",
+   
+    # Insurance
+    "Insurance_Claim_Form": "From Insurance Provider",
+    "COBRA_Election_Form": "From Employer",
+    "Health_Insurance_Application": "From Insurance Provider",
+   
+    # Accounting
+    "Chart_of_Accounts": "From Business",
+    "General_Ledger": "From Business",
+    "Accounts_Payable_Form": "From Business",
+   
+    # EDUCATION CATEGORIES
+   
+    # Student Records
+    "FERPA_Release_Form": "From Educational Institution",
+    "Transcript_Request": "From Educational Institution",
+    "Student_Information_Form": "From Educational Institution",
+   
+    # Grading
+    "Grade_Change_Form": "From Educational Institution",
+    "Gradebook_Template": "From Educational Institution",
+    "Academic_Progress_Report": "From Educational Institution",
+   
+    # Curriculum
+    "Lesson_Plan_Template": "From Educational Institution",
+    "Curriculum_Map": "From Educational Institution",
+    "Course_Syllabus_Template": "From Educational Institution",
+   
+    # Attendance
+    "Attendance_Sheet": "From Educational Institution",
+    "Absence_Excuse_Form": "From Educational Institution",
+    "Tardy_Report": "From Educational Institution",
+   
+    # Enrollment
+    "Enrollment_Application": "From Educational Institution",
+    "Registration_Form": "From Educational Institution",
+    "Emergency_Contact_Form_School": "From Educational Institution",
+   
+    # Scholarships
+    "Scholarship_Application": "From Educational Institution",
+    "Financial_Aid_Form_FAFSA": "https://studentaid.gov/h/apply-for-aid/fafsa",
+    "Scholarship_Award_Letter": "From Educational Institution",
+   
+    # PERSONAL CATEGORIES
+   
+    # Travel
+    "Passport_Application_DS-11": "https://travel.state.gov/content/travel/en/passports/have-passport/apply-in-person.html",
+    "TSA_PreCheck_Application": "https://www.tsa.gov/precheck",
+    "Travel_Itinerary": "Personal/Travel Agency",
+   
+    # Events
+    "Event_Registration_Form": "From Event Organizer",
+    "RSVP_Form": "From Event Organizer",
+    "Venue_Rental_Agreement": "From Venue",
+   
+    # Surveys
+    "Survey_Consent_Form": "From Survey Organization",
+    "Questionnaire_Template": "From Survey Organization",
+    "Feedback_Form": "From Organization",
+   
+    # Applications
+    "Job_Application": "From Employer",
+    "College_Application": "From Educational Institution",
+    "Loan_Application": "From Financial Institution",
+   
+    # Registration
+    "Voter_Registration": "State-Specific from Election Office",
+    "Vehicle_Registration": "From DMV",
+    "Business_Registration": "From State/Local Government",
+   
+    # Memberships
+    "Membership_Application": "From Organization",
+    "Gym_Membership_Agreement": "From Fitness Center",
+    "Professional_Association_Form": "From Professional Organization"
+}

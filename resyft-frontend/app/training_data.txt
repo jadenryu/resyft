@@ -1,0 +1,690 @@
+training_data = {
+    # MEDICAL CATEGORIES
+   
+    "Research": [
+        {
+            "text": "I'm participating in a clinical trial for a new cancer treatment at Hopkins. They need me to sign consent forms.",
+            "labels": {"research_informed_consent": 1, "research_hipaa_authorization": 1}
+        },
+        {
+            "text": "Volunteering for a diabetes study. They want access to my medical history and blood work results.",
+            "labels": {"research_informed_consent": 1, "research_hipaa_authorization": 1, "hipaa": 1}
+        },
+        {
+            "text": "Enrolled in a vaccine trial. Need to understand what data they'll collect and how it's used.",
+            "labels": {"research_informed_consent": 1, "research_irb_protocol": 1}
+        },
+        {
+            "text": "My son is joining a pediatric asthma research study at the university.",
+            "labels": {"research_informed_consent": 1, "research_hipaa_authorization": 1, "dependents": 1}
+        },
+        {
+            "text": "Participating in a mental health research project. They need permission to contact me for follow-ups.",
+            "labels": {"research_informed_consent": 1}
+        }
+    ],
+   
+    "Healthcare_Admin": [
+        {
+            "text": "First time visiting this doctor's office. They want me to fill out new patient paperwork.",
+            "labels": {"patient_intake_form": 1}
+        },
+        {
+            "text": "Switching to a new primary care physician. Need to complete intake forms and insurance information.",
+            "labels": {"patient_intake_form": 1, "patient_financial_responsibility": 1}
+        },
+        {
+            "text": "Hospital wants me to sign forms about how they'll use my health information.",
+            "labels": {"hipaa_notice_privacy_practices": 1}
+        },
+        {
+            "text": "Getting surgery next week. They're asking me to review and sign financial responsibility documents.",
+            "labels": {"patient_financial_responsibility": 1}
+        },
+        {
+            "text": "New dentist office needs my medical history, insurance card, and emergency contact.",
+            "labels": {"patient_intake_form": 1}
+        }
+    ],
+   
+    "Medical_Records": [
+        {
+            "text": "Moving to a new state. Need my complete medical records sent to my new doctor.",
+            "labels": {"medical_records_release": 1, "hipaa_authorization_release": 1}
+        },
+        {
+            "text": "Applying for life insurance and they're requesting 10 years of medical history.",
+            "labels": {"medical_records_release": 1, "hipaa_authorization_release": 1}
+        },
+        {
+            "text": "My daughter's pediatrician needs her vaccination records from our old clinic.",
+            "labels": {"medical_records_release": 1, "dependents": 1}
+        },
+        {
+            "text": "Personal injury lawyer needs my ER records and imaging from the accident.",
+            "labels": {"medical_records_release": 1, "hipaa_authorization_release": 1}
+        },
+        {
+            "text": "Second opinion oncologist wants my pathology reports and treatment history.",
+            "labels": {"medical_records_release": 1}
+        }
+    ],
+   
+    "Prescriptions": [
+        {
+            "text": "My blood pressure medication is running low. Need to request a refill from my doctor.",
+            "labels": {"prescription_refill_request": 1}
+        },
+        {
+            "text": "Can't reach my doctor's office. Need to refill my insulin prescription urgently.",
+            "labels": {"prescription_refill_request": 1}
+        },
+        {
+            "text": "Moving pharmacies. Need to transfer all my prescriptions to the new location.",
+            "labels": {"prescription_refill_request": 1}
+        },
+        {
+            "text": "VA patient needing refills on three medications for PTSD and hypertension.",
+            "labels": {"va_medication_refill": 1}
+        },
+        {
+            "text": "My antidepressant prescription expired. Doctor's office wants me to fill out a refill request form.",
+            "labels": {"prescription_refill_request": 1}
+        }
+    ],
+   
+    "Lab_Results": [
+        {
+            "text": "Doctor ordered bloodwork. Lab needs me to complete requisition forms before drawing blood.",
+            "labels": {"laboratory_request_form": 1}
+        },
+        {
+            "text": "Getting annual physical. Need forms for cholesterol panel and diabetes screening.",
+            "labels": {"laboratory_request_form": 1}
+        },
+        {
+            "text": "Oncologist ordered tumor markers and CBC. Going to an independent lab for testing.",
+            "labels": {"lab_requisition_express": 1}
+        },
+        {
+            "text": "Health department referred me for STD testing. They gave me paperwork to take to the lab.",
+            "labels": {"public_health_lab_request": 1}
+        },
+        {
+            "text": "Pre-surgical testing required. Need comprehensive metabolic panel and coagulation studies.",
+            "labels": {"laboratory_request_form": 1}
+        }
+    ],
+   
+    # BUSINESS CATEGORIES
+   
+    "Sales": [
+        {
+            "text": "Customer wants to purchase 500 units. Need to generate an official sales order.",
+            "labels": {"sales_order_form": 1}
+        },
+        {
+            "text": "Providing a quote for construction services. Client needs it in writing with payment terms.",
+            "labels": {"sales_quote_template": 1}
+        },
+        {
+            "text": "New client signed on. Need customer agreement outlining service terms and pricing.",
+            "labels": {"customer_agreement": 1}
+        },
+        {
+            "text": "Bulk order from corporate client. They require formal purchase documentation.",
+            "labels": {"sales_order_form": 1, "customer_agreement": 1}
+        },
+        {
+            "text": "Potential customer requested detailed pricing for annual software subscription.",
+            "labels": {"sales_quote_template": 1}
+        }
+    ],
+   
+    "Marketing": [
+        {
+            "text": "Launching new product campaign. Need to document strategy, budget, and timeline.",
+            "labels": {"marketing_campaign_brief": 1, "marketing_budget": 1}
+        },
+        {
+            "text": "Planning social media posts for Q4. Need to organize content schedule.",
+            "labels": {"content_calendar": 1}
+        },
+        {
+            "text": "Boss approved $50k for digital advertising. Need to break down spending by channel.",
+            "labels": {"marketing_budget": 1}
+        },
+        {
+            "text": "Email campaign targeting new subscribers. Creating brief with objectives and KPIs.",
+            "labels": {"marketing_campaign_brief": 1}
+        },
+        {
+            "text": "Managing blog posts, videos, and newsletters across three months.",
+            "labels": {"content_calendar": 1}
+        }
+    ],
+   
+    "Operations": [
+        {
+            "text": "Training new employees on our quality control process. Need written procedures.",
+            "labels": {"standard_operating_procedure": 1}
+        },
+        {
+            "text": "Documenting our order fulfillment workflow from receipt to shipping.",
+            "labels": {"process_documentation": 1}
+        },
+        {
+            "text": "New supplier wants to work with us. They need to complete our vendor application.",
+            "labels": {"vendor_application": 1}
+        },
+        {
+            "text": "ISO audit next month. Updating all our standard operating procedures.",
+            "labels": {"standard_operating_procedure": 1}
+        },
+        {
+            "text": "Onboarding new vendor for office supplies. They're filling out application forms.",
+            "labels": {"vendor_application": 1}
+        }
+    ],
+   
+    "HR": [
+        {
+            "text": "Just hired. Employer needs me to fill out tax withholding paperwork.",
+            "labels": {"form_w4": 1}
+        },
+        {
+            "text": "New job starts Monday. They sent me employment eligibility verification documents.",
+            "labels": {"form_i9": 1}
+        },
+        {
+            "text": "First day orientation. Need to sign that I received and read the employee handbook.",
+            "labels": {"employee_handbook_acknowledgment": 1}
+        },
+        {
+            "text": "Setting up paycheck direct deposit to my checking account.",
+            "labels": {"direct_deposit_authorization": 1}
+        },
+        {
+            "text": "HR needs emergency contact information in case something happens at work.",
+            "labels": {"emergency_contact_form": 1}
+        },
+        {
+            "text": "Starting new position. Need to complete tax forms, I-9, and provide two forms of ID.",
+            "labels": {"form_w4": 1, "form_i9": 1}
+        }
+    ],
+   
+    "Contracts": [
+        {
+            "text": "Accepted job offer. They're sending over the formal employment agreement to sign.",
+            "labels": {"employment_agreement": 1}
+        },
+        {
+            "text": "Client wants me to sign NDA before discussing their proprietary technology.",
+            "labels": {"non_disclosure_agreement": 1}
+        },
+        {
+            "text": "Hired as 1099 contractor. They need signed independent contractor agreement.",
+            "labels": {"independent_contractor_agreement": 1}
+        },
+        {
+            "text": "New employer sent offer letter with salary, benefits, and non-compete clause.",
+            "labels": {"employment_agreement": 1}
+        },
+        {
+            "text": "Freelance web design project. Client wants contract specifying deliverables and payment.",
+            "labels": {"independent_contractor_agreement": 1}
+        }
+    ],
+   
+    "Invoicing": [
+        {
+            "text": "Completed consulting project. Need to bill client for 40 hours of work.",
+            "labels": {"invoice_template": 1}
+        },
+        {
+            "text": "Independent contractor. Need to invoice company and make sure it's 1099 compliant.",
+            "labels": {"1099_invoice": 1}
+        },
+        {
+            "text": "Freelance graphic designer. Finished logo design and need to request payment.",
+            "labels": {"invoice_template": 1}
+        },
+        {
+            "text": "Contract work done. Company needs proper invoice for their accounts payable.",
+            "labels": {"1099_invoice": 1, "invoice_template": 1}
+        },
+        {
+            "text": "Monthly retainer client. Billing for services rendered in December.",
+            "labels": {"invoice_template": 1}
+        }
+    ],
+   
+    # FINANCE CATEGORIES
+   
+    "Banking": [
+        {
+            "text": "New employer needs my bank info to set up direct deposit payroll.",
+            "labels": {"direct_deposit_form": 1}
+        },
+        {
+            "text": "Sending money to family overseas. Bank needs me to complete wire transfer paperwork.",
+            "labels": {"wire_transfer_form": 1}
+        },
+        {
+            "text": "Opening checking and savings accounts. Need to fill out new account applications.",
+            "labels": {"account_application": 1}
+        },
+        {
+            "text": "Refinancing mortgage. Bank requires direct deposit setup for automatic payments.",
+            "labels": {"direct_deposit_form": 1}
+        },
+        {
+            "text": "Wiring down payment for house purchase. Need to complete transfer authorization.",
+            "labels": {"wire_transfer_form": 1}
+        }
+    ],
+   
+    "Investments": [
+        {
+            "text": "Opening Roth IRA. Brokerage needs completed application and beneficiary designation.",
+            "labels": {"investment_account_application": 1, "beneficiary_designation": 1}
+        },
+        {
+            "text": "Want my spouse to be able to trade in my investment account. Need authorization forms.",
+            "labels": {"trading_authorization": 1}
+        },
+        {
+            "text": "Just had a baby. Updating beneficiaries on my 401k and brokerage accounts.",
+            "labels": {"beneficiary_designation": 1, "dependents": 1}
+        },
+        {
+            "text": "Starting new brokerage account for day trading. They need personal and financial information.",
+            "labels": {"investment_account_application": 1}
+        },
+        {
+            "text": "Giving my financial advisor power to execute trades on my behalf.",
+            "labels": {"trading_authorization": 1}
+        }
+    ],
+   
+    "Tax_Forms": [
+        {
+            "text": "New freelance client needs my tax ID and signature before paying me.",
+            "labels": {"form_w9": 1}
+        },
+        {
+            "text": "Hired contractor for home renovation. Need to send him 1099 form for tax year.",
+            "labels": {"form_1099_nec": 1}
+        },
+        {
+            "text": "Bank sent form showing interest earned on savings account this year.",
+            "labels": {"form_1099_int": 1}
+        },
+        {
+            "text": "Got dividends from stock investments. Brokerage sent tax form in January.",
+            "labels": {"form_1099_div": 1}
+        },
+        {
+            "text": "Self-employed. Filing taxes and need to report business income and expenses.",
+            "labels": {"form_1040": 1, "schedule_c": 1}
+        },
+        {
+            "text": "Paid freelance photographer $3,000 last year. Need to issue 1099.",
+            "labels": {"form_1099_nec": 1}
+        },
+        {
+            "text": "Tax season. Filing individual return and reporting my small business profits.",
+            "labels": {"form_1040": 1, "schedule_c": 1}
+        }
+    ],
+   
+    "Budgeting": [
+        {
+            "text": "Starting new business. Need to create monthly budget for first year operations.",
+            "labels": {"budget_template": 1}
+        },
+        {
+            "text": "Business trip last week. Submitting hotel, meals, and transportation costs for reimbursement.",
+            "labels": {"expense_report": 1}
+        },
+        {
+            "text": "Trying to save for house down payment. Creating personal monthly budget.",
+            "labels": {"monthly_budget_worksheet": 1}
+        },
+        {
+            "text": "Boss wants breakdown of department spending for Q1 budget planning.",
+            "labels": {"budget_template": 1}
+        },
+        {
+            "text": "Conference attendance last month. Need to document expenses and submit for payment.",
+            "labels": {"expense_report": 1}
+        }
+    ],
+   
+    "Insurance": [
+        {
+            "text": "Car accident last month. Need to file claim with insurance company for repairs.",
+            "labels": {"insurance_claim_form": 1}
+        },
+        {
+            "text": "Lost job and need to continue health insurance through COBRA for my family.",
+            "labels": {"cobra_election_form": 1, "dependents": 1}
+        },
+        {
+            "text": "Shopping for health insurance on marketplace. Filling out application for coverage.",
+            "labels": {"health_insurance_application": 1}
+        },
+        {
+            "text": "House flooded. Filing homeowners insurance claim for water damage.",
+            "labels": {"insurance_claim_form": 1}
+        },
+        {
+            "text": "Job ended. Have spouse and one child on insurance. Need continuation coverage.",
+            "labels": {"cobra_election_form": 1, "dependents": 1}
+        }
+    ],
+   
+    "Accounting": [
+        {
+            "text": "Starting LLC. Accountant needs chart of accounts set up for bookkeeping.",
+            "labels": {"chart_of_accounts": 1}
+        },
+        {
+            "text": "Year-end closing. Recording all financial transactions in general ledger.",
+            "labels": {"general_ledger": 1}
+        },
+        {
+            "text": "Vendor sent invoice for $5,000. Processing payment through accounts payable.",
+            "labels": {"accounts_payable_form": 1}
+        },
+        {
+            "text": "CPA doing annual audit. Needs organized general ledger for review.",
+            "labels": {"general_ledger": 1}
+        },
+        {
+            "text": "Multiple supplier invoices due this month. Managing payment schedule.",
+            "labels": {"accounts_payable_form": 1}
+        }
+    ],
+   
+    # EDUCATION CATEGORIES
+   
+    "Student_Records": [
+        {
+            "text": "Transferring colleges. New school needs official transcripts sent from current university.",
+            "labels": {"transcript_request": 1}
+        },
+        {
+            "text": "Grad school application requires transcript release from undergraduate institution.",
+            "labels": {"transcript_request": 1, "ferpa_release_form": 1}
+        },
+        {
+            "text": "Employer wants to verify my degree. Need to authorize university to share my records.",
+            "labels": {"ferpa_release_form": 1}
+        },
+        {
+            "text": "Enrolling child in middle school. They need immunization and academic records from elementary.",
+            "labels": {"student_information_form": 1, "dependents": 1}
+        },
+        {
+            "text": "Applying for professional license. Board needs my college transcripts.",
+            "labels": {"transcript_request": 1}
+        }
+    ],
+   
+    "Grading": [
+        {
+            "text": "Professor made error calculating my final grade. Need to submit grade change request.",
+            "labels": {"grade_change_form": 1}
+        },
+        {
+            "text": "Teaching high school. Setting up gradebook for semester grades and assignments.",
+            "labels": {"gradebook_template": 1}
+        },
+        {
+            "text": "Student failing two classes. Creating academic progress report for parents.",
+            "labels": {"academic_progress_report": 1}
+        },
+        {
+            "text": "Midterm grades wrong in system. Department chair needs documentation for correction.",
+            "labels": {"grade_change_form": 1}
+        },
+        {
+            "text": "Parent-teacher conferences next week. Preparing progress reports for all students.",
+            "labels": {"academic_progress_report": 1}
+        }
+    ],
+   
+    "Curriculum": [
+        {
+            "text": "Developing new unit on American History. Creating detailed lesson plans for three weeks.",
+            "labels": {"lesson_plan_template": 1}
+        },
+        {
+            "text": "First year teaching biology. Mapping out curriculum for entire academic year.",
+            "labels": {"curriculum_map": 1}
+        },
+        {
+            "text": "Teaching college course. Students need syllabus with grading policy and schedule.",
+            "labels": {"course_syllabus_template": 1}
+        },
+        {
+            "text": "Substitute teacher tomorrow. Regular teacher left lesson plans for the day.",
+            "labels": {"lesson_plan_template": 1}
+        },
+        {
+            "text": "Department updating math curriculum. Outlining learning objectives by grade level.",
+            "labels": {"curriculum_map": 1}
+        }
+    ],
+   
+    "Attendance": [
+        {
+            "text": "Taking attendance daily for my classroom. Need organized tracking system.",
+            "labels": {"attendance_sheet": 1}
+        },
+        {
+            "text": "Child was sick last week. School needs doctor's note to excuse absences.",
+            "labels": {"absence_excuse_form": 1, "dependents": 1}
+        },
+        {
+            "text": "Student late to class five times this month. Documenting tardiness for records.",
+            "labels": {"tardy_report": 1}
+        },
+        {
+            "text": "My son missed three days with flu. Submitting excuse form to attendance office.",
+            "labels": {"absence_excuse_form": 1, "dependents": 1}
+        },
+        {
+            "text": "Tracking student attendance patterns for intervention program eligibility.",
+            "labels": {"attendance_sheet": 1}
+        }
+    ],
+   
+    "Enrollment": [
+        {
+            "text": "Enrolling daughter in kindergarten for fall. School needs registration paperwork.",
+            "labels": {"enrollment_application": 1, "registration_form": 1, "dependents": 1}
+        },
+        {
+            "text": "Transferring son to different elementary school. Completing enrollment application.",
+            "labels": {"enrollment_application": 1, "dependents": 1}
+        },
+        {
+            "text": "New to district. Registering two kids for school and providing emergency contacts.",
+            "labels": {"registration_form": 1, "emergency_contact_form_school": 1, "dependents": 1}
+        },
+        {
+            "text": "Moving across town. Need to re-enroll children in new school zone.",
+            "labels": {"enrollment_application": 1, "dependents": 1}
+        },
+        {
+            "text": "School requires updated emergency contact information for student file.",
+            "labels": {"emergency_contact_form_school": 1}
+        }
+    ],
+   
+    "Scholarships": [
+        {
+            "text": "Applying for merit scholarship at state university. Need to submit application.",
+            "labels": {"scholarship_application": 1}
+        },
+        {
+            "text": "Completing FAFSA for financial aid. Need tax returns and income information.",
+            "labels": {"financial_aid_form_fafsa": 1, "income": 1}
+        },
+        {
+            "text": "Received notification I won $5,000 scholarship. They sent award letter.",
+            "labels": {"scholarship_award_letter": 1}
+        },
+        {
+            "text": "Daughter applying for college. Filling out FAFSA with family financial information.",
+            "labels": {"financial_aid_form_fafsa": 1, "income": 1, "dependents": 1}
+        },
+        {
+            "text": "Local organization offering scholarship for community service. Submitting application.",
+            "labels": {"scholarship_application": 1}
+        }
+    ],
+   
+    # PERSONAL CATEGORIES
+   
+    "Travel": [
+        {
+            "text": "Planning international trip. Never had passport before and need to apply.",
+            "labels": {"passport_application_ds11": 1}
+        },
+        {
+            "text": "Frequent flyer. Applying for TSA PreCheck to speed up airport security.",
+            "labels": {"tsa_precheck_application": 1}
+        },
+        {
+            "text": "Booking European vacation. Creating itinerary with flights, hotels, and activities.",
+            "labels": {"travel_itinerary": 1}
+        },
+        {
+            "text": "First time leaving the country. Need passport application for Mexico trip.",
+            "labels": {"passport_application_ds11": 1}
+        },
+        {
+            "text": "Business trip next month. Organizing travel schedule with meetings and reservations.",
+            "labels": {"travel_itinerary": 1}
+        }
+    ],
+   
+    "Events": [
+        {
+            "text": "Registering for charity 5K race. Need to complete registration form online.",
+            "labels": {"event_registration_form": 1}
+        },
+        {
+            "text": "Invited to wedding. Sending RSVP to let them know I'm attending plus one.",
+            "labels": {"rsvp_form": 1}
+        },
+        {
+            "text": "Planning company party. Reserving banquet hall and signing rental agreement.",
+            "labels": {"venue_rental_agreement": 1}
+        },
+        {
+            "text": "Attending conference. Completing registration with meal preferences and sessions.",
+            "labels": {"event_registration_form": 1}
+        },
+        {
+            "text": "Wedding reception venue requires signed contract and deposit.",
+            "labels": {"venue_rental_agreement": 1}
+        }
+    ],
+   
+    "Surveys": [
+        {
+            "text": "Participating in medical research survey. They need consent before I answer questions.",
+            "labels": {"survey_consent_form": 1}
+        },
+        {
+            "text": "Company wants employee feedback on workplace culture. Filling out questionnaire.",
+            "labels": {"questionnaire_template": 1}
+        },
+        {
+            "text": "Restaurant asked me to complete customer satisfaction survey after dining.",
+            "labels": {"feedback_form": 1}
+        },
+        {
+            "text": "University study on consumer habits. Agreeing to participate and signing consent.",
+            "labels": {"survey_consent_form": 1}
+        },
+        {
+            "text": "Product purchased last week. Company sent feedback form about experience.",
+            "labels": {"feedback_form": 1}
+        }
+    ],
+   
+    "Applications": [
+        {
+            "text": "Applying for software engineer position. Submitting resume and job application.",
+            "labels": {"job_application": 1}
+        },
+        {
+            "text": "High school senior. Completing college applications for five universities.",
+            "labels": {"college_application": 1}
+        },
+        {
+            "text": "Need car loan. Bank requires completed application with income and credit info.",
+            "labels": {"loan_application": 1, "income": 1}
+        },
+        {
+            "text": "Applying for mortgage. Lender needs detailed financial application with tax returns.",
+            "labels": {"loan_application": 1, "income": 1}
+        },
+        {
+            "text": "Saw job posting on LinkedIn. Filling out online application and uploading documents.",
+            "labels": {"job_application": 1}
+        }
+    ],
+   
+    "Registration": [
+        {
+            "text": "Turning 18 next month. Registering to vote before election deadline.",
+            "labels": {"voter_registration": 1}
+        },
+        {
+            "text": "Bought used car. Need to register it with DMV and get new license plates.",
+            "labels": {"vehicle_registration": 1}
+        },
+        {
+            "text": "Starting LLC. Filing business registration with state corporation commission.",
+            "labels": {"business_registration": 1}
+        },
+        {
+            "text": "Moved to new state. Need to register to vote and update voter information.",
+            "labels": {"voter_registration": 1}
+        },
+        {
+            "text": "Vehicle registration expired. Renewing with DMV and paying annual fees.",
+            "labels": {"vehicle_registration": 1}
+        }
+    ],
+   
+    "Memberships": [
+        {
+            "text": "Joining professional engineering society. Need to complete membership application.",
+            "labels": {"membership_application": 1, "professional_association_form": 1}
+        },
+        {
+            "text": "Signing up for gym membership. They require agreement signature and payment info.",
+            "labels": {"gym_membership_agreement": 1}
+        },
+        {
+            "text": "Becoming member of local chamber of commerce. Filling out business membership form.",
+            "labels": {"membership_application": 1}
+        },
+        {
+            "text": "Joining fitness center near work. Reading membership terms and signing contract.",
+            "labels": {"gym_membership_agreement": 1}
+        },
+        {
+            "text": "Applying for AMA membership as licensed physician. Submitting credentials.",
+            "labels": {"professional_association_form": 1}
+        }
+    ]
+}
