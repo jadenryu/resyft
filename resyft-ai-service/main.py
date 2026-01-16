@@ -5,8 +5,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional
+from supabase import create_client, Client
 
 app = FastAPI()
+
+# Initialize Supabase client
+def get_supabase() -> Optional[Client]:
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_SERVICE_KEY")  # Use service key for backend operations
+    if url and key:
+        return create_client(url, key)
+    return None
 
 # CORS - allow all origins
 app.add_middleware(
@@ -51,6 +60,67 @@ PII_KEYWORDS = ['social security', 'ssn', 'date of birth', 'dob', 'driver licens
 
 def check_pii(text: str) -> bool:
     return any(kw in text.lower() for kw in PII_KEYWORDS)
+
+# Embedding models
+class EmbeddingSegment(BaseModel):
+    text: str
+    type: str
+    page_number: int
+    is_pii: bool = False
+
+class StoreEmbeddingsRequest(BaseModel):
+    user_id: str
+    project_id: str
+    form_id: str
+    form_name: str
+    segments: List[EmbeddingSegment]
+
+class StoreEmbeddingsResponse(BaseModel):
+    success: bool
+    stored_count: int = 0
+    error: Optional[str] = None
+
+class ChatMessageBase(BaseModel):
+    role: str
+    content: str
+
+class RAGChatRequest(BaseModel):
+    user_id: str
+    project_id: str
+    message: str
+    history: List[ChatMessageBase] = []
+
+class RAGChatResponse(BaseModel):
+    success: bool
+    response: Optional[str] = None
+    sources: List[str] = []
+    error: Optional[str] = None
+
+async def generate_embeddings(texts: List[str]) -> List[List[float]]:
+    """Generate embeddings using OpenAI API via OpenRouter"""
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    if not api_key:
+        raise Exception("OPENROUTER_API_KEY not configured")
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://openrouter.ai/api/v1/embeddings",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "openai/text-embedding-ada-002",
+                "input": texts
+            },
+            timeout=60.0
+        )
+
+        if response.status_code == 200:
+            data = response.json()
+            return [item["embedding"] for item in data["data"]]
+        else:
+            raise Exception(f"Embedding API error: {response.status_code}")
 
 @app.get("/")
 def root():
@@ -381,3 +451,193 @@ If asked about something not in the provided forms, politely explain that you ca
             success=False,
             error=str(e)
         )
+
+
+# ============== RAG Endpoints ==============
+
+@app.options("/store-embeddings")
+async def options_store_embeddings():
+    return JSONResponse(content={}, headers={
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+    })
+
+@app.post("/store-embeddings")
+async def store_embeddings(request: StoreEmbeddingsRequest):
+    """Store segment embeddings in Supabase for RAG retrieval"""
+    try:
+        supabase = get_supabase()
+        if not supabase:
+            return StoreEmbeddingsResponse(
+                success=False,
+                error="Supabase not configured. Set SUPABASE_URL and SUPABASE_SERVICE_KEY."
+            )
+
+        # Filter out very short segments
+        valid_segments = [s for s in request.segments if len(s.text.strip()) > 10]
+        if not valid_segments:
+            return StoreEmbeddingsResponse(success=True, stored_count=0)
+
+        # Generate embeddings in batches of 100
+        batch_size = 100
+        total_stored = 0
+
+        for i in range(0, len(valid_segments), batch_size):
+            batch = valid_segments[i:i + batch_size]
+            texts = [s.text for s in batch]
+
+            try:
+                embeddings = await generate_embeddings(texts)
+            except Exception as e:
+                print(f"Embedding generation error: {e}")
+                continue
+
+            # Prepare records for insertion
+            records = []
+            for seg, embedding in zip(batch, embeddings):
+                records.append({
+                    "user_id": request.user_id,
+                    "project_id": request.project_id,
+                    "form_id": request.form_id,
+                    "form_name": request.form_name,
+                    "segment_text": seg.text,
+                    "segment_type": seg.type,
+                    "page_number": seg.page_number,
+                    "is_pii": seg.is_pii,
+                    "embedding": embedding
+                })
+
+            # Insert into Supabase
+            result = supabase.table("segment_embeddings").insert(records).execute()
+            total_stored += len(records)
+
+        return StoreEmbeddingsResponse(success=True, stored_count=total_stored)
+
+    except Exception as e:
+        print(f"Store embeddings error: {e}")
+        return StoreEmbeddingsResponse(success=False, error=str(e))
+
+
+@app.options("/rag-chat")
+async def options_rag_chat():
+    return JSONResponse(content={}, headers={
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+    })
+
+@app.post("/rag-chat")
+async def rag_chat(request: RAGChatRequest):
+    """Chat with RAG - retrieves relevant segments via semantic search"""
+    try:
+        supabase = get_supabase()
+        api_key = os.getenv("OPENROUTER_API_KEY")
+
+        if not api_key:
+            return RAGChatResponse(success=False, error="OPENROUTER_API_KEY not configured")
+
+        context_segments = []
+        sources = []
+
+        # If Supabase is configured, do semantic search
+        if supabase:
+            try:
+                # Generate embedding for the query
+                query_embedding = (await generate_embeddings([request.message]))[0]
+
+                # Search for similar segments
+                result = supabase.rpc(
+                    "search_segments",
+                    {
+                        "query_embedding": query_embedding,
+                        "match_project_id": request.project_id,
+                        "match_user_id": request.user_id,
+                        "match_count": 30
+                    }
+                ).execute()
+
+                if result.data:
+                    for row in result.data:
+                        pii_marker = " [PII]" if row.get("is_pii") else ""
+                        context_segments.append(
+                            f"[{row['form_name']} - Page {row['page_number']}] [{row['segment_type']}{pii_marker}] {row['segment_text']}"
+                        )
+                        if row['form_name'] not in sources:
+                            sources.append(row['form_name'])
+
+            except Exception as e:
+                print(f"RAG search error: {e}")
+                # Fall back to no context if search fails
+
+        # Build context from retrieved segments
+        if context_segments:
+            context = "Relevant information from your forms:\n\n" + "\n".join(context_segments)
+        else:
+            context = "No relevant form content found. Please make sure forms have been uploaded and indexed."
+
+        # Build messages for LLM
+        messages = [
+            {
+                "role": "system",
+                "content": f"""You are a helpful AI assistant that helps users understand and fill out forms.
+You have access to the following relevant form content retrieved via semantic search:
+
+{context}
+
+Help the user understand the forms, explain what information is needed for each field,
+and provide guidance on how to complete them correctly. Be concise and helpful.
+Cite which form the information comes from when relevant."""
+            }
+        ]
+
+        # Add conversation history
+        for msg in request.history:
+            messages.append({"role": msg.role, "content": msg.content})
+
+        messages.append({"role": "user", "content": request.message})
+
+        # Call LLM
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": os.getenv("YOUR_SITE_URL", "http://localhost:3000"),
+                },
+                json={
+                    "model": os.getenv("OPENROUTER_MODEL", "anthropic/claude-3.5-sonnet"),
+                    "messages": messages,
+                    "max_tokens": 1000,
+                },
+                timeout=60.0
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                reply = data["choices"][0]["message"]["content"]
+                return RAGChatResponse(success=True, response=reply, sources=sources)
+            else:
+                return RAGChatResponse(success=False, error=f"API error: {response.status_code}")
+
+    except Exception as e:
+        print(f"RAG chat error: {e}")
+        return RAGChatResponse(success=False, error=str(e))
+
+
+@app.delete("/clear-embeddings/{project_id}")
+async def clear_embeddings(project_id: str, user_id: str):
+    """Clear all embeddings for a project"""
+    try:
+        supabase = get_supabase()
+        if not supabase:
+            return {"success": False, "error": "Supabase not configured"}
+
+        supabase.table("segment_embeddings").delete().eq(
+            "project_id", project_id
+        ).eq("user_id", user_id).execute()
+
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "error": str(e)}

@@ -346,7 +346,7 @@ export default function FormDetailPage() {
     setSelectedSegment(segment)
   }
 
-  const handleSaveToProject = () => {
+  const handleSaveToProject = async () => {
     if (!formName.trim()) {
       alert('Please enter a form name')
       return
@@ -358,13 +358,14 @@ export default function FormDetailPage() {
 
     setSaving(true)
 
+    const formId = `form-${Date.now()}`
     const newForm: FormData = {
       formName: formName.trim(),
       purpose: formPurpose.trim() || 'Custom uploaded form',
       accessibility: formNotes.trim() || 'User uploaded document',
       isCustom: true,
       pdfBase64: pdfBase64 || undefined,
-      segments: segments.length > 0 ? segments : undefined  // Store segments for project-wide AI context
+      segments: segments.length > 0 ? segments : undefined
     }
 
     // Update the project in localStorage
@@ -376,6 +377,36 @@ export default function FormDetailPage() {
         allProjects[projectIdx].forms.push(newForm)
         localStorage.setItem('formfiller_projects', JSON.stringify(allProjects))
         setProjects(allProjects)
+      }
+    }
+
+    // Store embeddings in Supabase for RAG
+    if (segments.length > 0 && user) {
+      try {
+        let aiServiceUrl = process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:8001'
+        if (aiServiceUrl && !aiServiceUrl.startsWith('http://') && !aiServiceUrl.startsWith('https://')) {
+          aiServiceUrl = `https://${aiServiceUrl}`
+        }
+
+        await fetch(`${aiServiceUrl}/store-embeddings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: user.id,
+            project_id: selectedProjectId,
+            form_id: formId,
+            form_name: formName.trim(),
+            segments: segments.map(s => ({
+              text: s.text,
+              type: s.type,
+              page_number: s.page_number,
+              is_pii: s.is_pii || false
+            }))
+          })
+        })
+      } catch (error) {
+        console.error('Failed to store embeddings:', error)
+        // Don't block saving - embeddings are optional enhancement
       }
     }
 
@@ -400,94 +431,63 @@ export default function FormDetailPage() {
         aiServiceUrl = `https://${aiServiceUrl}`
       }
 
-      // Build context - include all forms from project if available
       const projectId = searchParams.get('projectId')
-      let allFormsContext: { name: string; segments: Segment[] }[] = []
 
-      // Add current form's segments
-      if (segments.length > 0) {
-        allFormsContext.push({ name: formName || 'Current Form', segments })
-      }
-
-      // Load other forms from the project
-      if (projectId) {
-        const saved = localStorage.getItem('formfiller_projects')
-        if (saved) {
-          const allProjects: Project[] = JSON.parse(saved)
-          const project = allProjects.find(p => p.id === projectId)
-          if (project) {
-            project.forms.forEach(form => {
-              if (form.segments && form.segments.length > 0) {
-                // Don't duplicate current form
-                if (form.formName !== formName) {
-                  allFormsContext.push({ name: form.formName, segments: form.segments })
-                }
-              }
-            })
-          }
-        }
-      }
-
-      // Build combined context from all forms
-      let formContext = ''
-      let segmentCount = 0
-      const maxSegments = 1000  // ~10-50k tokens, well within Claude's 200k limit
-      const segmentsPerForm = Math.floor(maxSegments / Math.max(allFormsContext.length, 1))
-
-      for (const formData of allFormsContext) {
-        if (segmentCount >= maxSegments) break
-
-        const segmentsByPage: Record<number, Segment[]> = {}
-        formData.segments.forEach(s => {
-          if (!segmentsByPage[s.page_number]) segmentsByPage[s.page_number] = []
-          segmentsByPage[s.page_number].push(s)
+      // Use RAG chat if we have a project and user (semantic search)
+      if (projectId && user) {
+        const response = await fetch(`${aiServiceUrl}/rag-chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: user.id,
+            project_id: projectId,
+            message: userMessage,
+            history: chatMessages.slice(-10)
+          })
         })
 
-        formContext += `\n========== ${formData.name} ==========\n`
-        formContext += `Total Pages: ${Object.keys(segmentsByPage).length}\n`
-        formContext += `Total Fields: ${formData.segments.filter(s => s.type === 'Form Field' || s.type === 'Checkbox' || s.type === 'Dropdown').length}\n`
-
-        let formSegmentCount = 0
-        for (const pageNum of Object.keys(segmentsByPage).map(Number).sort((a, b) => a - b)) {
-          if (segmentCount >= maxSegments || formSegmentCount >= segmentsPerForm) break
-          formContext += `\n--- Page ${pageNum} ---\n`
-          for (const seg of segmentsByPage[pageNum]) {
-            if (segmentCount >= maxSegments || formSegmentCount >= segmentsPerForm) break
-            const piiMarker = seg.is_pii ? ' [PII]' : ''
-            formContext += `[${seg.type}${piiMarker}] ${seg.text}\n`
-            segmentCount++
-            formSegmentCount++
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.response) {
+            let responseText = data.response
+            // Add sources if available
+            if (data.sources && data.sources.length > 0) {
+              responseText += `\n\n*Sources: ${data.sources.join(', ')}*`
+            }
+            setChatMessages(prev => [...prev, { role: 'assistant', content: responseText }])
+          } else {
+            setChatMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }])
           }
-        }
-
-        if (formSegmentCount >= segmentsPerForm && formData.segments.length > formSegmentCount) {
-          formContext += `[... ${formData.segments.length - formSegmentCount} more segments truncated ...]\n`
-        }
-      }
-
-      if (allFormsContext.length > 1) {
-        formContext = `Project contains ${allFormsContext.length} forms:\n` + formContext
-      }
-
-      const response = await fetch(`${aiServiceUrl}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: userMessage,
-          context: formContext,
-          history: chatMessages.slice(-10) // Last 10 messages for context
-        })
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success && data.response) {
-          setChatMessages(prev => [...prev, { role: 'assistant', content: data.response }])
         } else {
-          setChatMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }])
+          setChatMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, the AI service is unavailable. Please try again later.' }])
         }
       } else {
-        setChatMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, the AI service is unavailable. Please try again later.' }])
+        // Fallback to regular chat with current form context only
+        const formContext = segments.slice(0, 300).map(s => {
+          const piiMarker = s.is_pii ? ' [PII]' : ''
+          return `[${s.type}${piiMarker}] ${s.text}`
+        }).join('\n')
+
+        const response = await fetch(`${aiServiceUrl}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: userMessage,
+            context: formContext,
+            history: chatMessages.slice(-10)
+          })
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.response) {
+            setChatMessages(prev => [...prev, { role: 'assistant', content: data.response }])
+          } else {
+            setChatMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }])
+          }
+        } else {
+          setChatMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, the AI service is unavailable. Please try again later.' }])
+        }
       }
     } catch (error) {
       console.error('Chat error:', error)
