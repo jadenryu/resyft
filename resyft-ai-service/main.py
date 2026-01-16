@@ -89,6 +89,7 @@ class RAGChatRequest(BaseModel):
     project_id: str
     message: str
     history: List[ChatMessageBase] = []
+    current_form_context: Optional[str] = None  # Current form segments for immediate context
 
 class RAGChatResponse(BaseModel):
     success: bool
@@ -570,23 +571,34 @@ async def rag_chat(request: RAGChatRequest):
                 print(f"RAG search error: {e}")
                 # Fall back to no context if search fails
 
-        # Build context from retrieved segments
+        # Build context from retrieved segments and current form
+        context_parts = []
+
+        # Add current form context if provided (immediate context for the form being viewed)
+        if request.current_form_context:
+            context_parts.append("Current form content:\n" + request.current_form_context)
+
+        # Add RAG-retrieved segments from other forms
         if context_segments:
-            context = "Relevant information from your forms:\n\n" + "\n".join(context_segments)
+            context_parts.append("Related information from other forms in this project:\n" + "\n".join(context_segments))
+
+        if context_parts:
+            context = "\n\n".join(context_parts)
         else:
-            context = "No relevant form content found. Please make sure forms have been uploaded and indexed."
+            context = "No form content available. Please upload a form to get started."
 
         # Build messages for LLM
         messages = [
             {
                 "role": "system",
                 "content": f"""You are a helpful AI assistant that helps users understand and fill out forms.
-You have access to the following relevant form content retrieved via semantic search:
+You have access to the following form content:
 
 {context}
 
 Help the user understand the forms, explain what information is needed for each field,
 and provide guidance on how to complete them correctly. Be concise and helpful.
+When answering questions, prioritize information from the current form being viewed.
 Cite which form the information comes from when relevant."""
             }
         ]

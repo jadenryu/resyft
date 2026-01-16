@@ -503,6 +503,12 @@ export default function FormDetailPage() {
 
       // Use RAG chat if we have a project and user (semantic search)
       if (projectId && user) {
+        // Also include current form segments for immediate context
+        const currentFormContext = segments.slice(0, 300).map(s => {
+          const piiMarker = s.is_pii ? ' [PII]' : ''
+          return `[${s.type}${piiMarker}] ${s.text}`
+        }).join('\n')
+
         const response = await fetch(`${aiServiceUrl}/rag-chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -510,7 +516,8 @@ export default function FormDetailPage() {
             user_id: user.id,
             project_id: projectId,
             message: userMessage,
-            history: chatMessages.slice(-10)
+            history: chatMessages.slice(-10),
+            current_form_context: currentFormContext  // Add current form segments
           })
         })
 
