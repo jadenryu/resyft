@@ -59,6 +59,8 @@ interface Project {
   description: string
   forms: FormData[]
   createdAt: string
+  owner_id?: string
+  role?: 'owner' | 'editor' | 'viewer'
 }
 
 interface ChatMessage {
@@ -202,11 +204,47 @@ export default function FormDetailPage() {
       }
       setUser(user)
 
-      // Load projects from localStorage
-      const saved = localStorage.getItem('formfiller_projects')
-      if (saved) {
-        setProjects(JSON.parse(saved))
-      }
+      // Load projects from Supabase
+      const { data: ownedProjects } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('owner_id', user.id)
+        .order('created_at', { ascending: false })
+
+      // Load shared projects (accepted invitations) where user can edit
+      const { data: sharedAccess } = await supabase
+        .from('project_shares')
+        .select(`
+          role,
+          projects (*)
+        `)
+        .eq('shared_with_id', user.id)
+        .eq('status', 'accepted')
+        .in('role', ['editor']) // Only show projects user can edit in save modal
+
+      const owned: Project[] = (ownedProjects || []).map(p => ({
+        id: p.id,
+        name: p.name,
+        description: p.description || '',
+        forms: p.forms || [],
+        createdAt: p.created_at,
+        owner_id: p.owner_id,
+        role: 'owner' as const
+      }))
+
+      const shared: Project[] = (sharedAccess || [])
+        .filter(s => s.projects)
+        .map(s => ({
+          id: (s.projects as any).id,
+          name: (s.projects as any).name,
+          description: (s.projects as any).description || '',
+          forms: (s.projects as any).forms || [],
+          createdAt: (s.projects as any).created_at,
+          owner_id: (s.projects as any).owner_id,
+          role: s.role as 'editor'
+        }))
+
+      setProjects([...owned, ...shared])
 
       // Check if projectId is in URL params
       const projectId = searchParams.get('projectId')
@@ -368,17 +406,36 @@ export default function FormDetailPage() {
       segments: segments.length > 0 ? segments : undefined
     }
 
-    // Update the project in localStorage
-    const saved = localStorage.getItem('formfiller_projects')
-    if (saved) {
-      const allProjects: Project[] = JSON.parse(saved)
-      const projectIdx = allProjects.findIndex(p => p.id === selectedProjectId)
-      if (projectIdx !== -1) {
-        allProjects[projectIdx].forms.push(newForm)
-        localStorage.setItem('formfiller_projects', JSON.stringify(allProjects))
-        setProjects(allProjects)
-      }
+    // Get the current project from Supabase
+    const { data: currentProject, error: fetchError } = await supabase
+      .from('projects')
+      .select('forms')
+      .eq('id', selectedProjectId)
+      .single()
+
+    if (fetchError) {
+      alert('Failed to load project. Please try again.')
+      setSaving(false)
+      return
     }
+
+    // Update the project in Supabase
+    const updatedForms = [...(currentProject.forms || []), newForm]
+    const { error: updateError } = await supabase
+      .from('projects')
+      .update({ forms: updatedForms, updated_at: new Date().toISOString() })
+      .eq('id', selectedProjectId)
+
+    if (updateError) {
+      alert('Failed to save form. Please try again.')
+      setSaving(false)
+      return
+    }
+
+    // Update local state
+    setProjects(prev => prev.map(p =>
+      p.id === selectedProjectId ? { ...p, forms: updatedForms } : p
+    ))
 
     // Store embeddings in Supabase for RAG
     if (segments.length > 0 && user) {

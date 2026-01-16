@@ -16,7 +16,12 @@ import {
   X,
   Info,
   Trash2,
-  Edit2
+  Edit2,
+  Share2,
+  Users,
+  Mail,
+  Check,
+  AlertCircle
 } from 'lucide-react'
 
 interface Segment {
@@ -47,6 +52,16 @@ interface Project {
   description: string
   forms: FormData[]
   createdAt: string
+  owner_id?: string
+  isShared?: boolean
+  role?: 'owner' | 'editor' | 'viewer'
+}
+
+interface SharedUser {
+  id: string
+  email: string
+  role: 'editor' | 'viewer'
+  status: 'pending' | 'accepted' | 'declined'
 }
 
 // Form resources - where to find actual forms
@@ -94,6 +109,81 @@ export default function ProjectDetailPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [editName, setEditName] = useState('')
   const [editDescription, setEditDescription] = useState('')
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [shareEmail, setShareEmail] = useState('')
+  const [shareRole, setShareRole] = useState<'editor' | 'viewer'>('viewer')
+  const [sharedUsers, setSharedUsers] = useState<SharedUser[]>([])
+  const [shareLoading, setShareLoading] = useState(false)
+  const [shareError, setShareError] = useState('')
+  const [shareSuccess, setShareSuccess] = useState('')
+
+  const loadProject = async (userId: string) => {
+    // First try to load as owner
+    const { data: ownedProject, error: ownedError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', projectId)
+      .eq('owner_id', userId)
+      .single()
+
+    if (ownedProject) {
+      setProject({
+        id: ownedProject.id,
+        name: ownedProject.name,
+        description: ownedProject.description || '',
+        forms: ownedProject.forms || [],
+        createdAt: ownedProject.created_at,
+        owner_id: ownedProject.owner_id,
+        role: 'owner'
+      })
+      return true
+    }
+
+    // If not owner, check if shared with user
+    const { data: sharedAccess, error: sharedError } = await supabase
+      .from('project_shares')
+      .select(`
+        role,
+        projects (*)
+      `)
+      .eq('project_id', projectId)
+      .eq('shared_with_id', userId)
+      .eq('status', 'accepted')
+      .single()
+
+    if (sharedAccess && sharedAccess.projects) {
+      const p = sharedAccess.projects as any
+      setProject({
+        id: p.id,
+        name: p.name,
+        description: p.description || '',
+        forms: p.forms || [],
+        createdAt: p.created_at,
+        owner_id: p.owner_id,
+        isShared: true,
+        role: sharedAccess.role as 'editor' | 'viewer'
+      })
+      return true
+    }
+
+    return false
+  }
+
+  const loadSharedUsers = async () => {
+    const { data, error } = await supabase
+      .from('project_shares')
+      .select('id, shared_with_email, role, status')
+      .eq('project_id', projectId)
+
+    if (data) {
+      setSharedUsers(data.map(d => ({
+        id: d.id,
+        email: d.shared_with_email,
+        role: d.role as 'editor' | 'viewer',
+        status: d.status as 'pending' | 'accepted' | 'declined'
+      })))
+    }
+  }
 
   useEffect(() => {
     const checkUser = async () => {
@@ -104,14 +194,9 @@ export default function ProjectDetailPage() {
       }
       setUser(user)
 
-      // Load project from localStorage
-      const saved = localStorage.getItem('formfiller_projects')
-      if (saved) {
-        const projects: Project[] = JSON.parse(saved)
-        const found = projects.find(p => p.id === projectId)
-        if (found) {
-          setProject(found)
-        }
+      const found = await loadProject(user.id)
+      if (found) {
+        await loadSharedUsers()
       }
 
       setLoading(false)
@@ -123,55 +208,105 @@ export default function ProjectDetailPage() {
     return formResources[formName] || null
   }
 
-  const handleDeleteForm = (formIndex: number) => {
-    if (!project) return
+  const canEdit = project?.role === 'owner' || project?.role === 'editor'
+
+  const handleDeleteForm = async (formIndex: number) => {
+    if (!project || !canEdit) return
     if (!confirm('Are you sure you want to remove this form from the project?')) return
 
     const updatedForms = project.forms.filter((_, idx) => idx !== formIndex)
-    const updatedProject = { ...project, forms: updatedForms }
-    setProject(updatedProject)
 
-    // Update localStorage
-    const saved = localStorage.getItem('formfiller_projects')
-    if (saved) {
-      const projects: Project[] = JSON.parse(saved)
-      const idx = projects.findIndex(p => p.id === projectId)
-      if (idx !== -1) {
-        projects[idx] = updatedProject
-        localStorage.setItem('formfiller_projects', JSON.stringify(projects))
-      }
+    const { error } = await supabase
+      .from('projects')
+      .update({ forms: updatedForms, updated_at: new Date().toISOString() })
+      .eq('id', projectId)
+
+    if (!error) {
+      setProject({ ...project, forms: updatedForms })
     }
   }
 
   const handleOpenEditModal = () => {
-    if (!project) return
+    if (!project || project.role !== 'owner') return
     setEditName(project.name)
     setEditDescription(project.description)
     setShowEditModal(true)
   }
 
-  const handleSaveProjectEdit = () => {
+  const handleSaveProjectEdit = async () => {
     if (!project || !editName.trim()) return
 
-    const updatedProject = {
-      ...project,
-      name: editName.trim(),
-      description: editDescription.trim()
-    }
-    setProject(updatedProject)
+    const { error } = await supabase
+      .from('projects')
+      .update({
+        name: editName.trim(),
+        description: editDescription.trim(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', projectId)
 
-    // Update localStorage
-    const saved = localStorage.getItem('formfiller_projects')
-    if (saved) {
-      const projects: Project[] = JSON.parse(saved)
-      const idx = projects.findIndex(p => p.id === projectId)
-      if (idx !== -1) {
-        projects[idx] = updatedProject
-        localStorage.setItem('formfiller_projects', JSON.stringify(projects))
-      }
+    if (!error) {
+      setProject({
+        ...project,
+        name: editName.trim(),
+        description: editDescription.trim()
+      })
     }
 
     setShowEditModal(false)
+  }
+
+  const handleShareProject = async () => {
+    if (!shareEmail.trim() || !user) return
+
+    setShareLoading(true)
+    setShareError('')
+    setShareSuccess('')
+
+    // Check if already shared with this email
+    if (sharedUsers.some(u => u.email.toLowerCase() === shareEmail.toLowerCase())) {
+      setShareError('This user already has access to this project')
+      setShareLoading(false)
+      return
+    }
+
+    // Check if trying to share with self
+    if (shareEmail.toLowerCase() === user.email?.toLowerCase()) {
+      setShareError('You cannot share a project with yourself')
+      setShareLoading(false)
+      return
+    }
+
+    const { error } = await supabase
+      .from('project_shares')
+      .insert({
+        project_id: projectId,
+        owner_id: user.id,
+        shared_with_email: shareEmail.toLowerCase(),
+        role: shareRole,
+        status: 'pending'
+      })
+
+    if (error) {
+      setShareError('Failed to send invitation. Please try again.')
+    } else {
+      setShareSuccess(`Invitation sent to ${shareEmail}`)
+      setShareEmail('')
+      await loadSharedUsers()
+    }
+
+    setShareLoading(false)
+  }
+
+  const handleRemoveShare = async (shareId: string) => {
+    const { error } = await supabase
+      .from('project_shares')
+      .delete()
+      .eq('id', shareId)
+
+    if (!error) {
+      setSharedUsers(prev => prev.filter(u => u.id !== shareId))
+    }
   }
 
   const handleViewForm = (form: FormData) => {
@@ -217,17 +352,38 @@ export default function ProjectDetailPage() {
             </Button>
             <div className="h-6 w-px bg-gray-300" />
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">{project.name}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-semibold text-gray-900">{project.name}</h1>
+                {project.isShared && (
+                  <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
+                    <Users className="w-3 h-3 mr-1" />
+                    {project.role}
+                  </Badge>
+                )}
+              </div>
               <p className="text-xs text-gray-500">{project.forms.length} forms</p>
             </div>
           </div>
-          <Button
-            className="bg-blue-600 hover:bg-blue-700"
-            onClick={() => router.push(`/forms/new?projectId=${projectId}`)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Form
-          </Button>
+          <div className="flex items-center gap-2">
+            {project.role === 'owner' && (
+              <Button
+                variant="outline"
+                onClick={() => setShowShareModal(true)}
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
+            )}
+            {canEdit && (
+              <Button
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={() => router.push(`/forms/new?projectId=${projectId}`)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Form
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -240,14 +396,16 @@ export default function ProjectDetailPage() {
               Created on {new Date(project.createdAt).toLocaleDateString()}
             </p>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleOpenEditModal}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <Edit2 className="w-4 h-4" />
-          </Button>
+          {project.role === 'owner' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleOpenEditModal}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <Edit2 className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -258,15 +416,17 @@ export default function ProjectDetailPage() {
             <FileText className="w-16 h-16 mx-auto text-gray-300 mb-4" />
             <h2 className="text-xl font-semibold text-gray-700 mb-2">No forms in this project</h2>
             <p className="text-gray-500 mb-6">
-              Add forms to organize your documents
+              {canEdit ? 'Add forms to organize your documents' : 'This project has no forms yet'}
             </p>
-            <Button
-              onClick={() => router.push(`/forms/new?projectId=${projectId}`)}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your First Form
-            </Button>
+            {canEdit && (
+              <Button
+                onClick={() => router.push(`/forms/new?projectId=${projectId}`)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Your First Form
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -293,15 +453,17 @@ export default function ProjectDetailPage() {
                       </div>
                       <p className="text-sm text-gray-500 mt-1">{form.purpose}</p>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => handleDeleteForm(idx)}
-                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                        title="Remove from project"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                    {canEdit && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleDeleteForm(idx)}
+                          className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                          title="Remove from project"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className="mt-3 pt-3 border-t flex items-center justify-between">
                     <p className="text-xs text-blue-600">
@@ -454,6 +616,141 @@ export default function ProjectDetailPage() {
                   Save Changes
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Project Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-md mx-4 overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center gap-2">
+                <Share2 className="w-5 h-5 text-blue-600" />
+                <h2 className="text-lg font-semibold text-gray-900">Share Project</h2>
+              </div>
+              <button
+                onClick={() => {
+                  setShowShareModal(false)
+                  setShareError('')
+                  setShareSuccess('')
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              {/* Invite form */}
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Invite by email
+                  </label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="email"
+                        value={shareEmail}
+                        onChange={(e) => setShareEmail(e.target.value)}
+                        placeholder="colleague@example.com"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Role
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShareRole('viewer')}
+                      className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                        shareRole === 'viewer'
+                          ? 'bg-blue-50 border-blue-300 text-blue-700'
+                          : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      Viewer
+                      <p className="text-xs font-normal text-gray-500 mt-0.5">Can view only</p>
+                    </button>
+                    <button
+                      onClick={() => setShareRole('editor')}
+                      className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                        shareRole === 'editor'
+                          ? 'bg-blue-50 border-blue-300 text-blue-700'
+                          : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      Editor
+                      <p className="text-xs font-normal text-gray-500 mt-0.5">Can edit forms</p>
+                    </button>
+                  </div>
+                </div>
+
+                {shareError && (
+                  <div className="flex items-center gap-2 p-2 bg-red-50 rounded-lg text-sm text-red-700">
+                    <AlertCircle className="w-4 h-4" />
+                    {shareError}
+                  </div>
+                )}
+
+                {shareSuccess && (
+                  <div className="flex items-center gap-2 p-2 bg-green-50 rounded-lg text-sm text-green-700">
+                    <Check className="w-4 h-4" />
+                    {shareSuccess}
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleShareProject}
+                  disabled={!shareEmail.trim() || shareLoading}
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                >
+                  {shareLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <Mail className="w-4 h-4 mr-2" />
+                  )}
+                  Send Invitation
+                </Button>
+              </div>
+
+              {/* Shared users list */}
+              {sharedUsers.length > 0 && (
+                <div className="border-t pt-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Shared with</h3>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {sharedUsers.map(user => (
+                      <div key={user.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <Users className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{user.email}</p>
+                            <p className="text-xs text-gray-500 capitalize">
+                              {user.role} • {user.status}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveShare(user.id)}
+                          className="text-gray-400 hover:text-red-500 p-1"
+                          title="Remove access"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

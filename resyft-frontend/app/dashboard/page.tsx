@@ -17,7 +17,11 @@ import {
   X,
   Info,
   Menu,
-  ChevronLeft
+  ChevronLeft,
+  Bell,
+  Users,
+  Check,
+  XCircle
 } from "lucide-react"
 import { classifyHealthInsuranceQuery, generateProjectName } from "../modelWorking"
 
@@ -33,6 +37,18 @@ interface Project {
   description: string
   forms: FormData[]
   createdAt: string
+  owner_id?: string
+  isShared?: boolean
+  role?: 'owner' | 'editor' | 'viewer'
+}
+
+interface ProjectInvitation {
+  id: string
+  project_id: string
+  project_name: string
+  owner_email: string
+  role: 'editor' | 'viewer'
+  created_at: string
 }
 
 // Form resources - where to find actual forms
@@ -77,6 +93,108 @@ export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([])
   const [selectedForm, setSelectedForm] = useState<FormData | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [invitations, setInvitations] = useState<ProjectInvitation[]>([])
+  const [processingInvitation, setProcessingInvitation] = useState<string | null>(null)
+
+  const loadProjects = async (userId: string, userEmail: string) => {
+    // Load owned projects from Supabase
+    const { data: ownedProjects, error: ownedError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('owner_id', userId)
+      .order('created_at', { ascending: false })
+
+    // Load shared projects (accepted invitations)
+    const { data: sharedAccess, error: sharedError } = await supabase
+      .from('project_shares')
+      .select(`
+        role,
+        projects (*)
+      `)
+      .eq('shared_with_id', userId)
+      .eq('status', 'accepted')
+
+    const owned: Project[] = (ownedProjects || []).map(p => ({
+      id: p.id,
+      name: p.name,
+      description: p.description || '',
+      forms: p.forms || [],
+      createdAt: p.created_at,
+      owner_id: p.owner_id,
+      role: 'owner' as const
+    }))
+
+    const shared: Project[] = (sharedAccess || [])
+      .filter(s => s.projects)
+      .map(s => ({
+        id: (s.projects as any).id,
+        name: (s.projects as any).name,
+        description: (s.projects as any).description || '',
+        forms: (s.projects as any).forms || [],
+        createdAt: (s.projects as any).created_at,
+        owner_id: (s.projects as any).owner_id,
+        isShared: true,
+        role: s.role as 'editor' | 'viewer'
+      }))
+
+    setProjects([...owned, ...shared])
+
+    // Also check for any localStorage projects to migrate
+    const savedLocal = localStorage.getItem('formfiller_projects')
+    if (savedLocal) {
+      const localProjects = JSON.parse(savedLocal)
+      if (localProjects.length > 0) {
+        // Migrate localStorage projects to Supabase
+        for (const p of localProjects) {
+          await supabase.from('projects').insert({
+            owner_id: userId,
+            name: p.name,
+            description: p.description,
+            forms: p.forms,
+            created_at: p.createdAt
+          })
+        }
+        localStorage.removeItem('formfiller_projects')
+        // Reload after migration
+        loadProjects(userId, userEmail)
+      }
+    }
+  }
+
+  const loadInvitations = async (userEmail: string) => {
+    const { data, error } = await supabase
+      .from('project_shares')
+      .select(`
+        id,
+        project_id,
+        role,
+        created_at,
+        projects!inner (name, owner_id)
+      `)
+      .eq('shared_with_email', userEmail)
+      .eq('status', 'pending')
+
+    if (data) {
+      // Get owner emails for display
+      const ownerIds = [...new Set(data.map(d => (d.projects as any)?.owner_id).filter(Boolean))]
+      const { data: owners } = await supabase
+        .from('projects')
+        .select('owner_id')
+        .in('owner_id', ownerIds)
+
+      const invitationsWithNames: ProjectInvitation[] = data.map(d => ({
+        id: d.id,
+        project_id: d.project_id,
+        project_name: (d.projects as any)?.name || 'Unknown Project',
+        owner_email: 'A team member', // We can't easily get email from auth.users
+        role: d.role as 'editor' | 'viewer',
+        created_at: d.created_at
+      }))
+
+      setInvitations(invitationsWithNames)
+    }
+  }
 
   useEffect(() => {
     const checkUser = async () => {
@@ -87,11 +205,8 @@ export default function Dashboard() {
       }
       setUser(user)
 
-      // Load saved projects from localStorage
-      const saved = localStorage.getItem('formfiller_projects')
-      if (saved) {
-        setProjects(JSON.parse(saved))
-      }
+      await loadProjects(user.id, user.email || '')
+      await loadInvitations(user.email || '')
 
       setLoading(false)
     }
@@ -103,28 +218,70 @@ export default function Dashboard() {
     router.push('/login')
   }
 
-  const handleCreateProject = () => {
-    if (!projectText.trim()) return
+  const handleCreateProject = async () => {
+    if (!projectText.trim() || !user) return
 
     const forms = classifyHealthInsuranceQuery(projectText)
-
-    // Generate a smart project name based on the description
     const projectName = generateProjectName(projectText)
 
-    const newProject: Project = {
-      id: Date.now().toString(),
-      name: projectName,
-      description: projectText,
-      forms,
-      createdAt: new Date().toISOString()
-    }
+    const { data, error } = await supabase
+      .from('projects')
+      .insert({
+        owner_id: user.id,
+        name: projectName,
+        description: projectText,
+        forms: forms
+      })
+      .select()
+      .single()
 
-    const updated = [...projects, newProject]
-    setProjects(updated)
-    localStorage.setItem('formfiller_projects', JSON.stringify(updated))
+    if (data) {
+      const newProject: Project = {
+        id: data.id,
+        name: data.name,
+        description: data.description || '',
+        forms: data.forms || [],
+        createdAt: data.created_at,
+        owner_id: data.owner_id,
+        role: 'owner'
+      }
+      setProjects([newProject, ...projects])
+    }
 
     setProjectText("")
     setShowPopup(false)
+  }
+
+  const handleAcceptInvitation = async (invitationId: string) => {
+    setProcessingInvitation(invitationId)
+
+    const { error } = await supabase.rpc('accept_project_invitation', {
+      invitation_id: invitationId
+    })
+
+    if (!error) {
+      setInvitations(prev => prev.filter(i => i.id !== invitationId))
+      // Reload projects to include the newly accepted one
+      if (user) {
+        await loadProjects(user.id, user.email || '')
+      }
+    }
+
+    setProcessingInvitation(null)
+  }
+
+  const handleDeclineInvitation = async (invitationId: string) => {
+    setProcessingInvitation(invitationId)
+
+    const { error } = await supabase.rpc('decline_project_invitation', {
+      invitation_id: invitationId
+    })
+
+    if (!error) {
+      setInvitations(prev => prev.filter(i => i.id !== invitationId))
+    }
+
+    setProcessingInvitation(null)
   }
 
   const handleFormClick = (form: FormData) => {
@@ -163,6 +320,79 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600">{user?.email}</span>
+
+          {/* Notifications Bell */}
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="text-gray-600 hover:bg-gray-100 relative"
+            >
+              <Bell className="w-5 h-5" />
+              {invitations.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  {invitations.length}
+                </span>
+              )}
+            </Button>
+
+            {/* Notifications Dropdown */}
+            {showNotifications && (
+              <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
+                <div className="p-3 border-b">
+                  <h3 className="font-semibold text-gray-900">Notifications</h3>
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  {invitations.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      No pending invitations
+                    </div>
+                  ) : (
+                    invitations.map(invitation => (
+                      <div key={invitation.id} className="p-3 border-b hover:bg-gray-50">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <Users className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-gray-900">
+                              <span className="font-medium">{invitation.owner_email}</span> invited you to
+                            </p>
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {invitation.project_name}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Role: <span className="capitalize">{invitation.role}</span>
+                            </p>
+                            <div className="flex gap-2 mt-2">
+                              <button
+                                onClick={() => handleAcceptInvitation(invitation.id)}
+                                disabled={processingInvitation === invitation.id}
+                                className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                              >
+                                <Check className="w-3 h-3" />
+                                Accept
+                              </button>
+                              <button
+                                onClick={() => handleDeclineInvitation(invitation.id)}
+                                disabled={processingInvitation === invitation.id}
+                                className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50"
+                              >
+                                <XCircle className="w-3 h-3" />
+                                Decline
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           <Button
             variant="ghost"
             size="sm"
@@ -275,9 +505,17 @@ export default function Dashboard() {
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
-                          {project.name}
-                        </h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
+                            {project.name}
+                          </h3>
+                          {project.isShared && (
+                            <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
+                              <Users className="w-3 h-3 mr-1" />
+                              {project.role}
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-sm text-gray-500 mt-1 line-clamp-2">{project.description}</p>
                       </div>
                       <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0" />
