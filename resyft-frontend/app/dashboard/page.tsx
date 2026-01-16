@@ -98,7 +98,9 @@ export default function Dashboard() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [invitations, setInvitations] = useState<ProjectInvitation[]>([])
   const [processingInvitation, setProcessingInvitation] = useState<string | null>(null)
-  const [projectMenuOpen, setProjectMenuOpen] = useState<string | null>(null)
+  const [sidebarMenuOpen, setSidebarMenuOpen] = useState<string | null>(null)
+  const [cardMenuOpen, setCardMenuOpen] = useState<string | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null)
 
   const loadProjects = async (userId: string, userEmail: string) => {
     // Load owned projects from Supabase
@@ -216,14 +218,17 @@ export default function Dashboard() {
     checkUser()
   }, [router, supabase])
 
-  // Close project menu when clicking outside
+  // Close project menus when clicking outside
   useEffect(() => {
-    const handleClickOutside = () => setProjectMenuOpen(null)
-    if (projectMenuOpen) {
+    const handleClickOutside = () => {
+      setSidebarMenuOpen(null)
+      setCardMenuOpen(null)
+    }
+    if (sidebarMenuOpen || cardMenuOpen) {
       document.addEventListener('click', handleClickOutside)
       return () => document.removeEventListener('click', handleClickOutside)
     }
-  }, [projectMenuOpen])
+  }, [sidebarMenuOpen, cardMenuOpen])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -297,11 +302,6 @@ export default function Dashboard() {
   }
 
   const handleDeleteProject = async (projectId: string) => {
-    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
-      setProjectMenuOpen(null)
-      return
-    }
-
     const { error } = await supabase
       .from('projects')
       .delete()
@@ -311,7 +311,13 @@ export default function Dashboard() {
       setProjects(prev => prev.filter(p => p.id !== projectId))
     }
 
-    setProjectMenuOpen(null)
+    setDeleteConfirm(null)
+  }
+
+  const openDeleteConfirm = (project: Project) => {
+    setSidebarMenuOpen(null)
+    setCardMenuOpen(null)
+    setDeleteConfirm({ id: project.id, name: project.name })
   }
 
   const handleFormClick = (form: FormData) => {
@@ -494,32 +500,32 @@ export default function Dashboard() {
                   projects.map(project => (
                     <div
                       key={project.id}
-                      className="relative group/item"
+                      className="relative group/item flex items-center"
                     >
                       <button
-                        className="w-full text-left p-2 rounded hover:bg-blue-50 hover:text-blue-600 transition-colors pr-8"
+                        className="flex-1 text-left p-2 rounded hover:bg-blue-50 hover:text-blue-600 transition-colors"
                         onClick={() => router.push(`/projects/${project.id}`)}
                       >
                         <p className="text-sm font-medium truncate">{project.name}</p>
                         <p className="text-xs text-gray-500">{project.forms.length} forms</p>
                       </button>
                       {project.role === 'owner' && (
-                        <div className="absolute right-1 top-1/2 -translate-y-1/2">
+                        <div className="relative">
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
-                              setProjectMenuOpen(projectMenuOpen === project.id ? null : project.id)
+                              setSidebarMenuOpen(sidebarMenuOpen === project.id ? null : project.id)
                             }}
                             className="p-1 rounded opacity-0 group-hover/item:opacity-100 hover:bg-gray-200 transition-all"
                           >
                             <MoreVertical className="w-4 h-4 text-gray-500" />
                           </button>
-                          {projectMenuOpen === project.id && (
+                          {sidebarMenuOpen === project.id && (
                             <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border z-50 py-1 min-w-[120px]">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  handleDeleteProject(project.id)
+                                  openDeleteConfirm(project)
                                 }}
                                 className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                               >
@@ -584,18 +590,18 @@ export default function Dashboard() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
-                              setProjectMenuOpen(projectMenuOpen === project.id ? null : project.id)
+                              setCardMenuOpen(cardMenuOpen === project.id ? null : project.id)
                             }}
                             className="p-1 rounded hover:bg-gray-100 transition-colors"
                           >
                             <MoreVertical className="w-5 h-5 text-gray-400" />
                           </button>
-                          {projectMenuOpen === project.id && (
+                          {cardMenuOpen === project.id && (
                             <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border z-50 py-1 min-w-[120px]">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  handleDeleteProject(project.id)
+                                  openDeleteConfirm(project)
                                 }}
                                 className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                               >
@@ -727,6 +733,44 @@ export default function Dashboard() {
                   </Button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Delete Project</h2>
+                <p className="text-sm text-gray-500">This action cannot be undone</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to delete <span className="font-medium text-gray-900">"{deleteConfirm.name}"</span>?
+              All forms and data in this project will be permanently removed.
+            </p>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setDeleteConfirm(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                onClick={() => handleDeleteProject(deleteConfirm.id)}
+              >
+                Delete
+              </Button>
             </div>
           </div>
         </div>
