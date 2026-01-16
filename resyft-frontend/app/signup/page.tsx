@@ -3,13 +3,13 @@ import { SignupForm } from "../../components/signup-form"
 export default function SignUp() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="bg-white relative hidden lg:block">
+      <a href="/" className="bg-white relative hidden lg:block cursor-pointer">
         <img
           src="/1.png"
           alt="Resyft"
           className="w-full h-full object-cover"
         />
-      </div>
+      </a>
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex justify-center gap-2 md:justify-start">
           <a href="/" className="flex items-center gap-2 merriweather-regular">
