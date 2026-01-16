@@ -29,7 +29,7 @@ export default function HeroContent() {
         <p className="text-xs font-light text-white/70 mb-6 leading-relaxed">
           Tell us what you need to do, and we&apos;ll recommend the exact forms you need.
           AI-powered form analysis for medical, business, finance, and more.
-          <br />* All testimonies within this page are shown for illustrative purposes and do not reflect the words of any individual, living or dead
+          <br /><br />* All testimonies within this page are shown for illustrative purposes and do not reflect the words of any individual, living or dead
         </p>
 
         <div className="mb-6">
