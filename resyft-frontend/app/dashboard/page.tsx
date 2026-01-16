@@ -21,7 +21,9 @@ import {
   Bell,
   Users,
   Check,
-  XCircle
+  XCircle,
+  MoreVertical,
+  Trash2
 } from "lucide-react"
 import { classifyHealthInsuranceQuery, generateProjectName } from "../modelWorking"
 
@@ -96,6 +98,7 @@ export default function Dashboard() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [invitations, setInvitations] = useState<ProjectInvitation[]>([])
   const [processingInvitation, setProcessingInvitation] = useState<string | null>(null)
+  const [projectMenuOpen, setProjectMenuOpen] = useState<string | null>(null)
 
   const loadProjects = async (userId: string, userEmail: string) => {
     // Load owned projects from Supabase
@@ -213,6 +216,15 @@ export default function Dashboard() {
     checkUser()
   }, [router, supabase])
 
+  // Close project menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setProjectMenuOpen(null)
+    if (projectMenuOpen) {
+      document.addEventListener('click', handleClickOutside)
+      return () => document.removeEventListener('click', handleClickOutside)
+    }
+  }, [projectMenuOpen])
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/login')
@@ -282,6 +294,24 @@ export default function Dashboard() {
     }
 
     setProcessingInvitation(null)
+  }
+
+  const handleDeleteProject = async (projectId: string) => {
+    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+      setProjectMenuOpen(null)
+      return
+    }
+
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', projectId)
+
+    if (!error) {
+      setProjects(prev => prev.filter(p => p.id !== projectId))
+    }
+
+    setProjectMenuOpen(null)
   }
 
   const handleFormClick = (form: FormData) => {
@@ -462,14 +492,45 @@ export default function Dashboard() {
                   <p className="text-sm text-gray-400 py-2">No projects yet</p>
                 ) : (
                   projects.map(project => (
-                    <button
+                    <div
                       key={project.id}
-                      className="w-full text-left p-2 rounded hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                      onClick={() => router.push(`/projects/${project.id}`)}
+                      className="relative group/item"
                     >
-                      <p className="text-sm font-medium truncate">{project.name}</p>
-                      <p className="text-xs text-gray-500">{project.forms.length} forms</p>
-                    </button>
+                      <button
+                        className="w-full text-left p-2 rounded hover:bg-blue-50 hover:text-blue-600 transition-colors pr-8"
+                        onClick={() => router.push(`/projects/${project.id}`)}
+                      >
+                        <p className="text-sm font-medium truncate">{project.name}</p>
+                        <p className="text-xs text-gray-500">{project.forms.length} forms</p>
+                      </button>
+                      {project.role === 'owner' && (
+                        <div className="absolute right-1 top-1/2 -translate-y-1/2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setProjectMenuOpen(projectMenuOpen === project.id ? null : project.id)
+                            }}
+                            className="p-1 rounded opacity-0 group-hover/item:opacity-100 hover:bg-gray-200 transition-all"
+                          >
+                            <MoreVertical className="w-4 h-4 text-gray-500" />
+                          </button>
+                          {projectMenuOpen === project.id && (
+                            <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border z-50 py-1 min-w-[120px]">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleDeleteProject(project.id)
+                                }}
+                                className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   ))
                 )}
               </div>
@@ -499,12 +560,12 @@ export default function Dashboard() {
               {projects.map(project => (
                 <Card
                   key={project.id}
-                  className="hover:shadow-lg transition-all cursor-pointer group border-2 hover:border-blue-300"
+                  className="hover:shadow-lg transition-all cursor-pointer group border-2 hover:border-blue-300 relative"
                   onClick={() => router.push(`/projects/${project.id}`)}
                 >
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
+                      <div className="flex-1 pr-8">
                         <div className="flex items-center gap-2">
                           <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
                             {project.name}
@@ -518,7 +579,35 @@ export default function Dashboard() {
                         </div>
                         <p className="text-sm text-gray-500 mt-1 line-clamp-2">{project.description}</p>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0" />
+                      {project.role === 'owner' ? (
+                        <div className="relative flex-shrink-0">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setProjectMenuOpen(projectMenuOpen === project.id ? null : project.id)
+                            }}
+                            className="p-1 rounded hover:bg-gray-100 transition-colors"
+                          >
+                            <MoreVertical className="w-5 h-5 text-gray-400" />
+                          </button>
+                          {projectMenuOpen === project.id && (
+                            <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border z-50 py-1 min-w-[120px]">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleDeleteProject(project.id)
+                                }}
+                                className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0" />
+                      )}
                     </div>
                     <div className="flex items-center justify-between pt-3 border-t">
                       <Badge variant="outline" className="text-xs">
