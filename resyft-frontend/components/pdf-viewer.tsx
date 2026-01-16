@@ -58,6 +58,7 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
   const [selectedAnnotation, setSelectedAnnotation] = useState<{ id: string; x: number; y: number } | null>(null)
   const [isDrawing, setIsDrawing] = useState(false)
   const [drawStart, setDrawStart] = useState<{ x: number; y: number; page: number } | null>(null)
+  const [draggingAnnotation, setDraggingAnnotation] = useState<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>(null)
   const [formFieldValues, setFormFieldValues] = useState<Map<string, string>>(new Map())
   const viewerRef = useRef<HTMLDivElement>(null)
   const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map())
@@ -379,6 +380,26 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
       el.style.width = `${annotation.width}px`
       el.style.height = `${annotation.height}px`
 
+      // Add drag handle for all annotation types
+      const addDragBehavior = (element: HTMLElement, handleEl?: HTMLElement) => {
+        const dragTarget = handleEl || element
+        dragTarget.style.cursor = 'grab'
+
+        dragTarget.addEventListener('mousedown', (e: MouseEvent) => {
+          if ((e.target as HTMLElement).closest('.delete-btn, .note-input, .note-text, input')) return
+          e.preventDefault()
+          e.stopPropagation()
+          dragTarget.style.cursor = 'grabbing'
+          setDraggingAnnotation({
+            id: annotation.id,
+            startX: e.clientX,
+            startY: e.clientY,
+            origX: annotation.x,
+            origY: annotation.y
+          })
+        })
+      }
+
       if (annotation.type === 'highlight') {
         const color = annotation.color || 'yellow'
         const colorClasses: Record<string, string> = {
@@ -388,7 +409,7 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
           pink: 'bg-pink-300/50 border-pink-400 hover:bg-pink-400/50',
           orange: 'bg-orange-300/50 border-orange-400 hover:bg-orange-400/50',
         }
-        el.className += ` ${colorClasses[color] || colorClasses.yellow} border cursor-pointer`
+        el.className += ` ${colorClasses[color] || colorClasses.yellow} border cursor-grab`
         el.onclick = (e) => {
           e.stopPropagation()
           const rect = el.getBoundingClientRect()
@@ -398,42 +419,65 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
             y: rect.top
           })
         }
+        addDragBehavior(el)
       } else if (annotation.type === 'note') {
         if (annotation.style === 'textbox') {
-          // Clear textbox style - minimal, like a text input
-          el.className += ' bg-white/90 border border-gray-300 rounded cursor-text'
+          // Clear textbox style - hidden by default, shows on focus
+          el.className += ' bg-transparent rounded cursor-grab group'
           el.style.minWidth = '120px'
           el.style.minHeight = '24px'
           el.style.padding = '4px 8px'
           el.innerHTML = `
             <div class="flex items-center gap-1">
-              <input type="text" class="flex-1 text-sm bg-transparent border-none outline-none note-input"
+              <input type="text" class="flex-1 text-sm bg-transparent border-none outline-none note-input peer"
                      placeholder="Type here..." value="${annotation.text || ''}" />
-              <button class="text-gray-400 hover:text-red-500 delete-btn flex-shrink-0" title="Delete">
+              <button class="text-gray-400 hover:text-red-500 delete-btn flex-shrink-0 opacity-0 peer-focus:opacity-100 group-hover:opacity-100 transition-opacity" title="Delete">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M18 6L6 18M6 6l12 12"/>
                 </svg>
               </button>
             </div>
           `
+          // Add border classes that show on hover/focus
+          el.style.border = '1px solid transparent'
+          el.addEventListener('mouseenter', () => {
+            el.style.border = '1px solid #d1d5db'
+            el.style.background = 'rgba(255,255,255,0.9)'
+          })
+          el.addEventListener('mouseleave', () => {
+            if (document.activeElement !== el.querySelector('.note-input')) {
+              el.style.border = '1px solid transparent'
+              el.style.background = 'transparent'
+            }
+          })
+          const noteInput = el.querySelector('.note-input') as HTMLInputElement
+          noteInput?.addEventListener('focus', () => {
+            el.style.border = '1px solid #3b82f6'
+            el.style.background = 'rgba(255,255,255,0.95)'
+          })
+          noteInput?.addEventListener('blur', () => {
+            el.style.border = '1px solid transparent'
+            el.style.background = 'transparent'
+          })
           const deleteBtn = el.querySelector('.delete-btn')
           deleteBtn?.addEventListener('click', (e) => {
             e.stopPropagation()
             deleteAnnotation(annotation.id)
           })
-          const noteInput = el.querySelector('.note-input') as HTMLInputElement
           noteInput?.addEventListener('change', (e) => {
             const target = e.target as HTMLInputElement
             updateAnnotationText(annotation.id, target.value)
           })
+          addDragBehavior(el)
         } else {
-          // Sticky note style - colorful with header
-          el.className += ' bg-yellow-100 border-2 border-yellow-400 rounded shadow-lg cursor-pointer'
+          // Sticky note style - colorful with header that hides when typing
+          el.className += ' bg-yellow-100 border-2 border-yellow-400 rounded shadow-lg'
           el.style.minWidth = '150px'
           el.style.minHeight = '80px'
           el.style.padding = '8px'
+          const hasText = annotation.text && annotation.text.trim() !== ''
           el.innerHTML = `
-            <div class="flex justify-between items-start mb-1">
+            <div class="note-header flex justify-between items-start mb-1 cursor-grab ${hasText ? 'hidden' : ''}">
               <span class="text-xs font-semibold text-yellow-700">Note</span>
               <button class="text-gray-400 hover:text-red-500 delete-btn" title="Delete note">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -441,18 +485,47 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
                 </svg>
               </button>
             </div>
-            <div class="text-sm text-gray-700 note-text" contenteditable="true">${annotation.text || 'Click to add note...'}</div>
+            <button class="delete-btn-floating absolute top-1 right-1 text-gray-400 hover:text-red-500 ${hasText ? '' : 'hidden'}" title="Delete note">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+            <div class="text-sm text-gray-700 note-text outline-none ${hasText ? '' : 'text-gray-400'}" contenteditable="true">${hasText ? annotation.text : 'Click to add note...'}</div>
           `
+          el.style.position = 'relative'
           const deleteBtn = el.querySelector('.delete-btn')
+          const deleteBtnFloating = el.querySelector('.delete-btn-floating')
           deleteBtn?.addEventListener('click', (e) => {
             e.stopPropagation()
             deleteAnnotation(annotation.id)
           })
-          const noteText = el.querySelector('.note-text')
+          deleteBtnFloating?.addEventListener('click', (e) => {
+            e.stopPropagation()
+            deleteAnnotation(annotation.id)
+          })
+          const noteText = el.querySelector('.note-text') as HTMLElement
+          const noteHeader = el.querySelector('.note-header') as HTMLElement
+          noteText?.addEventListener('focus', () => {
+            if (noteText.innerText === 'Click to add note...') {
+              noteText.innerText = ''
+              noteText.classList.remove('text-gray-400')
+            }
+            noteHeader?.classList.add('hidden')
+            deleteBtnFloating?.classList.remove('hidden')
+          })
           noteText?.addEventListener('blur', (e) => {
             const target = e.target as HTMLElement
-            updateAnnotationText(annotation.id, target.innerText)
+            const text = target.innerText.trim()
+            if (!text) {
+              noteText.innerText = 'Click to add note...'
+              noteText.classList.add('text-gray-400')
+              noteHeader?.classList.remove('hidden')
+              deleteBtnFloating?.classList.add('hidden')
+            }
+            updateAnnotationText(annotation.id, text)
           })
+          // Add drag behavior to header or whole element
+          addDragBehavior(el, noteHeader || el)
         }
       }
 
@@ -635,6 +708,53 @@ export function PDFViewer({ pdfUrl, pdfBase64, segments = [], onSegmentClick }: 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [currentTool])
+
+  // Handle annotation dragging
+  useEffect(() => {
+    if (!draggingAnnotation) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const dx = e.clientX - draggingAnnotation.startX
+      const dy = e.clientY - draggingAnnotation.startY
+      const newX = draggingAnnotation.origX + dx
+      const newY = draggingAnnotation.origY + dy
+
+      // Update DOM element position immediately for smooth dragging
+      const el = viewerRef.current?.querySelector(`[data-annotation-id="${draggingAnnotation.id}"]`) as HTMLElement
+      if (el) {
+        el.style.left = `${newX}px`
+        el.style.top = `${newY}px`
+      }
+    }
+
+    const handleMouseUp = (e: MouseEvent) => {
+      const dx = e.clientX - draggingAnnotation.startX
+      const dy = e.clientY - draggingAnnotation.startY
+      const newX = draggingAnnotation.origX + dx
+      const newY = draggingAnnotation.origY + dy
+
+      // Update state with final position
+      setAnnotations(prev => prev.map(a =>
+        a.id === draggingAnnotation.id ? { ...a, x: newX, y: newY } : a
+      ))
+
+      // Reset cursor
+      const el = viewerRef.current?.querySelector(`[data-annotation-id="${draggingAnnotation.id}"]`) as HTMLElement
+      if (el) {
+        el.style.cursor = 'grab'
+      }
+
+      setDraggingAnnotation(null)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [draggingAnnotation])
 
   // Toggle segment overlay pointer-events based on current tool
   // When a tool is active, overlays become click-through so annotations can be placed
