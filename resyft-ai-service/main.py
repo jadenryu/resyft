@@ -276,6 +276,25 @@ class SummaryResponse(BaseModel):
     summary: Optional[str] = None
     error: Optional[str] = None
 
+class DetailedSummary(BaseModel):
+    """Summary for a specific page or section"""
+    id: str  # e.g., "page-1" or "section-1"
+    title: str  # e.g., "Page 1" or "Personal Information Section"
+    summary: str
+    segment_ids: List[int]  # Indices of segments in this section
+
+class DetailedSummaryRequest(BaseModel):
+    segments: List[FormSegment]
+    filename: str
+    num_pages: int
+
+class DetailedSummaryResponse(BaseModel):
+    success: bool
+    overall_summary: Optional[str] = None
+    detailed_summaries: List[DetailedSummary] = []
+    granularity: str = "page"  # "page" or "section"
+    error: Optional[str] = None
+
 @app.options("/summarize-form")
 async def options_summarize_form():
     return JSONResponse(content={}, headers={
@@ -355,6 +374,250 @@ Keep response under 100 words."""
 
     except Exception as e:
         return SummaryResponse(
+            success=False,
+            error=str(e)
+        )
+
+
+def group_segments_by_page(segments: List[FormSegment]) -> dict[int, List[tuple[int, FormSegment]]]:
+    """Group segments by page number with their original indices"""
+    pages = {}
+    for idx, seg in enumerate(segments):
+        page_num = seg.page_number
+        if page_num not in pages:
+            pages[page_num] = []
+        pages[page_num].append((idx, seg))
+    return pages
+
+
+def group_segments_by_section(segments: List[FormSegment]) -> List[tuple[str, List[tuple[int, FormSegment]]]]:
+    """
+    Group segments into semantic sections based on visual layout and content.
+    For forms < 5 pages, this creates paragraph/field-level groupings.
+    """
+    if not segments:
+        return []
+
+    sections = []
+    current_section = []
+    current_section_indices = []
+    last_y = None
+    section_counter = 0
+
+    # Sort segments by page, then by vertical position
+    indexed_segments = [(i, seg) for i, seg in enumerate(segments)]
+    indexed_segments.sort(key=lambda x: (x[1].page_number, x[1].top))
+
+    for idx, seg in indexed_segments:
+        # Start a new section if:
+        # 1. Significant vertical gap (> 50 units)
+        # 2. Section has 15+ segments (prevent overly large sections)
+        # 3. Header detected (all caps or ends with colon)
+
+        is_header = (seg.type in ["Header", "Title"] or
+                    seg.text.isupper() or
+                    seg.text.strip().endswith(':'))
+
+        vertical_gap = last_y is not None and abs(seg.top - last_y) > 50
+        section_too_large = len(current_section) >= 15
+
+        if (vertical_gap or section_too_large or (is_header and current_section)):
+            if current_section:
+                section_counter += 1
+                section_title = _generate_section_title(current_section, section_counter)
+                sections.append((section_title, list(zip(current_section_indices, current_section))))
+                current_section = []
+                current_section_indices = []
+
+        current_section.append(seg)
+        current_section_indices.append(idx)
+        last_y = seg.top
+
+    # Add final section
+    if current_section:
+        section_counter += 1
+        section_title = _generate_section_title(current_section, section_counter)
+        sections.append((section_title, list(zip(current_section_indices, current_section))))
+
+    return sections
+
+
+def _generate_section_title(segments: List[FormSegment], section_num: int) -> str:
+    """Generate a meaningful title for a section based on its content"""
+    # Look for headers or prominent text
+    for seg in segments[:3]:  # Check first 3 segments
+        if seg.type in ["Header", "Title"]:
+            return seg.text[:50]  # Truncate long headers
+        if seg.text.strip().endswith(':'):
+            return seg.text.replace(':', '').strip()[:50]
+
+    # Fallback to generic section name
+    return f"Section {section_num}"
+
+
+async def generate_summary_for_content(content: str, context: str, api_key: str) -> str:
+    """Generate a concise summary for given content"""
+    prompt = f"""Summarize the following {context} in 1-2 clear, concise sentences.
+Focus on what information is required and what the purpose is.
+
+Content:
+{content}
+
+Provide only the summary, no preamble."""
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": os.getenv("YOUR_SITE_URL", "http://localhost:3000"),
+            },
+            json={
+                "model": os.getenv("OPENROUTER_MODEL", "anthropic/claude-3.5-sonnet"),
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 150,
+            },
+            timeout=30.0
+        )
+
+        if response.status_code == 200:
+            data = response.json()
+            return data["choices"][0]["message"]["content"].strip()
+        else:
+            return "Summary unavailable"
+
+
+@app.options("/summarize-form-detailed")
+async def options_summarize_form_detailed():
+    return JSONResponse(content={}, headers={
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+    })
+
+
+@app.post("/summarize-form-detailed")
+async def summarize_form_detailed(request: DetailedSummaryRequest):
+    """
+    Generate hierarchical summaries for a form:
+    - Overall summary (always)
+    - Page-level summaries (if ≥ 5 pages)
+    - Section-level summaries (if < 5 pages)
+    """
+    try:
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            return DetailedSummaryResponse(
+                success=False,
+                error="OpenRouter API key not configured"
+            )
+
+        segments = request.segments
+        num_pages = request.num_pages
+
+        # Determine granularity based on page count
+        use_page_level = num_pages >= 5
+        granularity = "page" if use_page_level else "section"
+
+        # Generate overall summary (reuse existing logic)
+        text_content = [f"[{seg.type}] {seg.text}" for seg in segments[:100]]
+        pii_count = sum(1 for seg in segments if seg.is_pii)
+        field_count = sum(1 for seg in segments if seg.type in ["Form Field", "Checkbox", "Dropdown"])
+
+        overall_prompt = f"""Analyze this form and provide a brief, helpful summary in 2-3 sentences.
+
+Form: {request.filename}
+Pages: {num_pages}
+Content preview:
+{chr(10).join(text_content)}
+
+PII fields detected: {pii_count}
+Form fields detected: {field_count}
+
+Provide:
+1. What type of form this appears to be
+2. Its main purpose
+3. Any important notes about filling it out
+
+Keep response under 100 words."""
+
+        overall_summary = await generate_summary_for_content(
+            chr(10).join(text_content),
+            "form overview",
+            api_key
+        )
+
+        # Generate detailed summaries
+        detailed_summaries = []
+
+        if use_page_level:
+            # Group by page
+            pages = group_segments_by_page(segments)
+
+            for page_num in sorted(pages.keys()):
+                indexed_segs = pages[page_num]
+                page_segments = [seg for _, seg in indexed_segs]
+                segment_indices = [idx for idx, _ in indexed_segs]
+
+                # Build content for this page
+                page_content = "\n".join([f"[{seg.type}] {seg.text}" for seg in page_segments[:50]])
+
+                # Skip pages with very little content
+                if len(page_segments) < 3:
+                    continue
+
+                summary = await generate_summary_for_content(
+                    page_content,
+                    f"page {page_num} of the form",
+                    api_key
+                )
+
+                detailed_summaries.append(DetailedSummary(
+                    id=f"page-{page_num}",
+                    title=f"Page {page_num}",
+                    summary=summary,
+                    segment_ids=segment_indices
+                ))
+
+        else:
+            # Group by semantic sections
+            sections = group_segments_by_section(segments)
+
+            for section_idx, (section_title, indexed_segs) in enumerate(sections):
+                section_segments = [seg for _, seg in indexed_segs]
+                segment_indices = [idx for idx, _ in indexed_segs]
+
+                # Build content for this section
+                section_content = "\n".join([f"[{seg.type}] {seg.text}" for seg in section_segments])
+
+                # Skip very small sections
+                if len(section_segments) < 2:
+                    continue
+
+                summary = await generate_summary_for_content(
+                    section_content,
+                    f"section: {section_title}",
+                    api_key
+                )
+
+                detailed_summaries.append(DetailedSummary(
+                    id=f"section-{section_idx}",
+                    title=section_title,
+                    summary=summary,
+                    segment_ids=segment_indices
+                ))
+
+        return DetailedSummaryResponse(
+            success=True,
+            overall_summary=overall_summary,
+            detailed_summaries=detailed_summaries,
+            granularity=granularity
+        )
+
+    except Exception as e:
+        print(f"Detailed summary error: {e}")
+        return DetailedSummaryResponse(
             success=False,
             error=str(e)
         )
