@@ -2,6 +2,7 @@ interface FormData {
   formName: string;
   purpose: string;
   accessibility: string;
+  url?: string; // Optional URL to access the form
 }
 
 interface TrainingExample {
@@ -230,481 +231,534 @@ function normalizeFormName(formName: string): string {
   return formName.toLowerCase().replace(/-/g, '_');
 }
 
+// Helper to generate accessibility message based on source
+function getAccessibilityMessage(source: string): string {
+  if (source.startsWith('http://') || source.startsWith('https://')) {
+    return source; // It's a URL, return as-is
+  }
+
+  // Handle "From X" patterns professionally
+  if (source.startsWith('From ')) {
+    return `This form should be obtained from your ${source.substring(5).toLowerCase()}`;
+  }
+
+  if (source.startsWith('State-Specific')) {
+    return `This form should be obtained from your ${source.split('from ')[1]?.toLowerCase() || 'local office'}`;
+  }
+
+  // Handle compound sources like "From Business/Personal"
+  if (source.includes('/')) {
+    const parts = source.replace('From ', '').toLowerCase().split('/');
+    return `This form should be obtained from your ${parts.join(' or ')}`;
+  }
+
+  // Default fallback
+  return "This form should be obtained from the appropriate institution or organization";
+}
+
 // Form mapping with comprehensive categories
 const formMapping: Record<string, FormData> = {
   // MEDICAL CATEGORIES
   research_informed_consent: {
     formName: "Research Informed Consent",
     purpose: "Consent to participate in research studies",
-    accessibility: "Research Study Consent Guide"
+    accessibility: getAccessibilityMessage("https://researchservices.cornell.edu/forms/irb-consent-form-templates"),
+    url: "https://researchservices.cornell.edu/forms/irb-consent-form-templates"
   },
   research_irb_protocol: {
     formName: "Research IRB Protocol",
     purpose: "Institutional review board research documentation",
-    accessibility: "IRB Protocol Guide"
+    accessibility: getAccessibilityMessage("https://researchcompliance.stanford.edu/panels/hs/forms-templates/medical"),
+    url: "https://researchcompliance.stanford.edu/panels/hs/forms-templates/medical"
   },
   research_hipaa_authorization: {
     formName: "Research HIPAA Authorization",
     purpose: "Authorize research access to medical records",
-    accessibility: "Research HIPAA Guide"
+    accessibility: getAccessibilityMessage("https://irb.ucsf.edu/consent-and-assent-form-templates"),
+    url: "https://irb.ucsf.edu/consent-and-assent-form-templates"
   },
   patient_intake_form: {
     formName: "Patient Intake Form",
     purpose: "New patient registration and medical history",
-    accessibility: "Patient Registration Guide"
+    accessibility: getAccessibilityMessage("https://esign.com/intake-forms/patient/"),
+    url: "https://esign.com/intake-forms/patient/"
   },
   hipaa_notice_privacy_practices: {
     formName: "HIPAA Notice of Privacy Practices",
     purpose: "Understand how health information is used",
-    accessibility: "HIPAA Privacy Guide"
+    accessibility: getAccessibilityMessage("https://www.hipaajournal.com/hipaa-release-form/"),
+    url: "https://www.hipaajournal.com/hipaa-release-form/"
   },
   patient_financial_responsibility: {
     formName: "Patient Financial Responsibility",
     purpose: "Acknowledge financial obligations for care",
-    accessibility: "Financial Responsibility Guide"
+    accessibility: getAccessibilityMessage("From Healthcare Provider")
   },
   medical_records_release: {
     formName: "Medical Records Release",
     purpose: "Request transfer of medical records",
-    accessibility: "Records Release Guide"
+    accessibility: getAccessibilityMessage("https://www.hipaajournal.com/hipaa-release-form/"),
+    url: "https://www.hipaajournal.com/hipaa-release-form/"
   },
   hipaa_authorization_release: {
     formName: "HIPAA Authorization Release",
     purpose: "Authorize release of protected health information",
-    accessibility: "HIPAA Release Guide"
+    accessibility: getAccessibilityMessage("https://eforms.com/release/medical-hipaa/"),
+    url: "https://eforms.com/release/medical-hipaa/"
   },
   medical_records_request_ny: {
     formName: "Medical Records Request (NY)",
     purpose: "New York state medical records request",
-    accessibility: "NY Records Request Guide"
+    accessibility: getAccessibilityMessage("https://www.nycourts.gov/forms/hipaa_fillable.pdf"),
+    url: "https://www.nycourts.gov/forms/hipaa_fillable.pdf"
   },
   prescription_refill_request: {
     formName: "Prescription Refill Request",
     purpose: "Request medication refills from provider",
-    accessibility: "Prescription Refill Guide"
+    accessibility: getAccessibilityMessage("https://www.jotform.com/form-templates/prescription-refill-form-template"),
+    url: "https://www.jotform.com/form-templates/prescription-refill-form-template"
   },
   prescription_refill_cognito: {
     formName: "Prescription Refill (Cognito)",
     purpose: "Digital prescription refill request",
-    accessibility: "Online Refill Guide"
+    accessibility: getAccessibilityMessage("https://www.cognitoforms.com/templates/584/prescription-refill-request-form"),
+    url: "https://www.cognitoforms.com/templates/584/prescription-refill-request-form"
   },
   va_medication_refill: {
     formName: "VA Medication Refill",
     purpose: "Veterans Affairs medication refill",
-    accessibility: "VA Refill Guide"
+    accessibility: getAccessibilityMessage("https://www.va.gov/vaforms/medical/pdf/vha-10-2478-fill.pdf"),
+    url: "https://www.va.gov/vaforms/medical/pdf/vha-10-2478-fill.pdf"
   },
   laboratory_request_form: {
     formName: "Laboratory Request Form",
     purpose: "Order laboratory tests and procedures",
-    accessibility: "Lab Request Guide"
+    accessibility: getAccessibilityMessage("https://www.medicalcenter.virginia.edu/medlabs/requisitions/"),
+    url: "https://www.medicalcenter.virginia.edu/medlabs/requisitions/"
   },
   lab_requisition_express: {
     formName: "Lab Requisition (Express)",
     purpose: "Express laboratory test requisition",
-    accessibility: "Express Lab Guide"
+    accessibility: getAccessibilityMessage("https://www.expresslabidaho.com/lab-requisition-forms/"),
+    url: "https://www.expresslabidaho.com/lab-requisition-forms/"
   },
   public_health_lab_request: {
     formName: "Public Health Lab Request",
     purpose: "Public health laboratory testing",
-    accessibility: "Public Health Lab Guide"
+    accessibility: getAccessibilityMessage("https://www.ruhealth.org/sites/default/files/Public Health Laboratory Services/CLI.CSR.FRM.002 V6 - Lab Test Request Form with Algorithm Fillable Protected.pdf"),
+    url: "https://www.ruhealth.org/sites/default/files/Public Health Laboratory Services/CLI.CSR.FRM.002 V6 - Lab Test Request Form with Algorithm Fillable Protected.pdf"
   },
 
   // BUSINESS CATEGORIES
   sales_order_form: {
     formName: "Sales Order Form",
     purpose: "Document customer purchase orders",
-    accessibility: "Sales Order Guide"
+    accessibility: getAccessibilityMessage("From Business")
   },
   sales_quote_template: {
     formName: "Sales Quote Template",
     purpose: "Provide pricing quotes to customers",
-    accessibility: "Sales Quote Guide"
+    accessibility: getAccessibilityMessage("From Business")
   },
   customer_agreement: {
     formName: "Customer Agreement",
     purpose: "Formalize customer service terms",
-    accessibility: "Customer Agreement Guide"
+    accessibility: getAccessibilityMessage("From Business")
   },
   marketing_campaign_brief: {
     formName: "Marketing Campaign Brief",
     purpose: "Plan marketing campaign strategy",
-    accessibility: "Campaign Planning Guide"
+    accessibility: getAccessibilityMessage("From Business")
   },
   content_calendar: {
     formName: "Content Calendar",
     purpose: "Schedule content publication",
-    accessibility: "Content Planning Guide"
+    accessibility: getAccessibilityMessage("From Business")
   },
   marketing_budget: {
     formName: "Marketing Budget",
     purpose: "Plan marketing expenditures",
-    accessibility: "Budget Planning Guide"
+    accessibility: getAccessibilityMessage("From Business")
   },
   standard_operating_procedure: {
     formName: "Standard Operating Procedure",
     purpose: "Document operational processes",
-    accessibility: "SOP Documentation Guide"
+    accessibility: getAccessibilityMessage("From Business")
   },
   process_documentation: {
     formName: "Process Documentation",
     purpose: "Record workflow procedures",
-    accessibility: "Process Guide"
+    accessibility: getAccessibilityMessage("From Business")
   },
   vendor_application: {
     formName: "Vendor Application",
     purpose: "Onboard new vendor or supplier",
-    accessibility: "Vendor Onboarding Guide"
+    accessibility: getAccessibilityMessage("From Business")
   },
   form_w4: {
     formName: "Form W-4",
     purpose: "Employee tax withholding allowance",
-    accessibility: "IRS W-4 Guide"
+    accessibility: getAccessibilityMessage("https://www.irs.gov/forms-pubs/about-form-w-4"),
+    url: "https://www.irs.gov/forms-pubs/about-form-w-4"
   },
   form_i9: {
     formName: "Form I-9",
     purpose: "Employment eligibility verification",
-    accessibility: "USCIS I-9 Guide"
+    accessibility: getAccessibilityMessage("https://www.uscis.gov/i-9"),
+    url: "https://www.uscis.gov/i-9"
   },
   employee_handbook_acknowledgment: {
     formName: "Employee Handbook Acknowledgment",
     purpose: "Confirm receipt of employee handbook",
-    accessibility: "Handbook Acknowledgment Guide"
+    accessibility: getAccessibilityMessage("From Employer")
   },
   direct_deposit_authorization: {
     formName: "Direct Deposit Authorization",
     purpose: "Set up payroll direct deposit",
-    accessibility: "Direct Deposit Guide"
+    accessibility: getAccessibilityMessage("From Employer")
   },
   emergency_contact_form: {
     formName: "Emergency Contact Form",
     purpose: "Provide emergency contact information",
-    accessibility: "Emergency Contact Guide"
+    accessibility: getAccessibilityMessage("From Employer")
   },
   new_hire_reporting: {
     formName: "New Hire Reporting",
     purpose: "Report new employee to state",
-    accessibility: "New Hire Guide"
+    accessibility: getAccessibilityMessage("State-Specific from Employer")
   },
   employment_agreement: {
     formName: "Employment Agreement",
     purpose: "Formalize employment terms",
-    accessibility: "Employment Contract Guide"
+    accessibility: getAccessibilityMessage("From Employer")
   },
   non_disclosure_agreement: {
     formName: "Non-Disclosure Agreement",
     purpose: "Protect confidential information",
-    accessibility: "NDA Guide"
+    accessibility: getAccessibilityMessage("From Business")
   },
   independent_contractor_agreement: {
     formName: "Independent Contractor Agreement",
     purpose: "Establish contractor relationship",
-    accessibility: "Contractor Agreement Guide"
+    accessibility: getAccessibilityMessage("From Business")
   },
   invoice_template: {
     formName: "Invoice Template",
     purpose: "Bill clients for services",
-    accessibility: "Invoicing Guide"
+    accessibility: getAccessibilityMessage("https://invoicefly.com/free-resources/free-templates/free-invoice-templates/contractor-invoice-template/"),
+    url: "https://invoicefly.com/free-resources/free-templates/free-invoice-templates/contractor-invoice-template/"
   },
   "1099_invoice": {
     formName: "1099 Invoice",
     purpose: "1099-compliant contractor invoice",
-    accessibility: "1099 Invoicing Guide"
+    accessibility: getAccessibilityMessage("https://invoicer.ai/independent-contractor-1099-invoice-template"),
+    url: "https://invoicer.ai/independent-contractor-1099-invoice-template"
   },
 
   // FINANCE CATEGORIES
   direct_deposit_form: {
     formName: "Direct Deposit Form",
     purpose: "Set up direct bank deposit",
-    accessibility: "Direct Deposit Setup Guide"
+    accessibility: getAccessibilityMessage("From Bank")
   },
   wire_transfer_form: {
     formName: "Wire Transfer Form",
     purpose: "Initiate wire transfer",
-    accessibility: "Wire Transfer Guide"
+    accessibility: getAccessibilityMessage("From Bank")
   },
   account_application: {
     formName: "Account Application",
     purpose: "Open bank account",
-    accessibility: "Account Opening Guide"
+    accessibility: getAccessibilityMessage("From Bank")
   },
   investment_account_application: {
     formName: "Investment Account Application",
     purpose: "Open investment or brokerage account",
-    accessibility: "Investment Account Guide"
+    accessibility: getAccessibilityMessage("From Financial Institution")
   },
   beneficiary_designation: {
     formName: "Beneficiary Designation",
     purpose: "Designate account beneficiaries",
-    accessibility: "Beneficiary Guide"
+    accessibility: getAccessibilityMessage("From Financial Institution")
   },
   trading_authorization: {
     formName: "Trading Authorization",
     purpose: "Authorize trading on behalf",
-    accessibility: "Trading Authorization Guide"
+    accessibility: getAccessibilityMessage("From Financial Institution")
   },
   form_w9: {
     formName: "Form W-9",
     purpose: "Request for taxpayer identification",
-    accessibility: "IRS W-9 Guide"
+    accessibility: getAccessibilityMessage("https://www.irs.gov/forms-pubs/about-form-w-9"),
+    url: "https://www.irs.gov/forms-pubs/about-form-w-9"
   },
   form_1099_nec: {
     formName: "Form 1099-NEC",
     purpose: "Nonemployee compensation reporting",
-    accessibility: "IRS 1099-NEC Guide"
+    accessibility: getAccessibilityMessage("https://www.irs.gov/forms-pubs/about-form-1099-nec"),
+    url: "https://www.irs.gov/forms-pubs/about-form-1099-nec"
   },
   form_1099_misc: {
     formName: "Form 1099-MISC",
     purpose: "Miscellaneous income reporting",
-    accessibility: "IRS 1099-MISC Guide"
+    accessibility: getAccessibilityMessage("https://www.irs.gov/forms-pubs/about-form-1099-misc"),
+    url: "https://www.irs.gov/forms-pubs/about-form-1099-misc"
   },
   form_1099_int: {
     formName: "Form 1099-INT",
     purpose: "Interest income reporting",
-    accessibility: "IRS 1099-INT Guide"
+    accessibility: getAccessibilityMessage("https://www.irs.gov/forms-pubs/about-form-1099-int"),
+    url: "https://www.irs.gov/forms-pubs/about-form-1099-int"
   },
   form_1099_div: {
     formName: "Form 1099-DIV",
     purpose: "Dividends and distributions",
-    accessibility: "IRS 1099-DIV Guide"
+    accessibility: getAccessibilityMessage("https://www.irs.gov/forms-pubs/about-form-1099-div"),
+    url: "https://www.irs.gov/forms-pubs/about-form-1099-div"
   },
   form_1040: {
     formName: "Form 1040",
     purpose: "U.S. individual income tax return",
-    accessibility: "IRS 1040 Guide"
+    accessibility: getAccessibilityMessage("https://www.irs.gov/forms-pubs/about-form-1040"),
+    url: "https://www.irs.gov/forms-pubs/about-form-1040"
   },
   schedule_c: {
     formName: "Schedule C",
     purpose: "Profit or loss from business",
-    accessibility: "IRS Schedule C Guide"
+    accessibility: getAccessibilityMessage("https://www.irs.gov/forms-pubs/about-schedule-c-form-1040"),
+    url: "https://www.irs.gov/forms-pubs/about-schedule-c-form-1040"
   },
   budget_template: {
     formName: "Budget Template",
     purpose: "Plan financial budget",
-    accessibility: "Budgeting Guide"
+    accessibility: getAccessibilityMessage("From Business/Personal")
   },
   expense_report: {
     formName: "Expense Report",
     purpose: "Submit business expenses",
-    accessibility: "Expense Reporting Guide"
+    accessibility: getAccessibilityMessage("From Business")
   },
   monthly_budget_worksheet: {
     formName: "Monthly Budget Worksheet",
     purpose: "Track monthly finances",
-    accessibility: "Monthly Budget Guide"
+    accessibility: getAccessibilityMessage("From Business/Personal")
   },
   insurance_claim_form: {
     formName: "Insurance Claim Form",
     purpose: "File insurance claim",
-    accessibility: "Claims Filing Guide"
+    accessibility: getAccessibilityMessage("From Insurance Provider")
   },
   cobra_election_form: {
     formName: "COBRA Election Form",
     purpose: "Continue health insurance after job loss",
-    accessibility: "COBRA Coverage Guide"
+    accessibility: getAccessibilityMessage("From Employer")
   },
   health_insurance_application: {
     formName: "Health Insurance Application",
     purpose: "Apply for health insurance coverage",
-    accessibility: "Health Insurance Guide"
+    accessibility: getAccessibilityMessage("From Insurance Provider")
   },
   chart_of_accounts: {
     formName: "Chart of Accounts",
     purpose: "Organize accounting categories",
-    accessibility: "Accounting Guide"
+    accessibility: getAccessibilityMessage("From Business")
   },
   general_ledger: {
     formName: "General Ledger",
     purpose: "Record all financial transactions",
-    accessibility: "Ledger Guide"
+    accessibility: getAccessibilityMessage("From Business")
   },
   accounts_payable_form: {
     formName: "Accounts Payable Form",
     purpose: "Manage vendor payments",
-    accessibility: "Accounts Payable Guide"
+    accessibility: getAccessibilityMessage("From Business")
   },
 
   // EDUCATION CATEGORIES
   ferpa_release_form: {
     formName: "FERPA Release Form",
     purpose: "Authorize education record release",
-    accessibility: "FERPA Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
   transcript_request: {
     formName: "Transcript Request",
     purpose: "Request official transcripts",
-    accessibility: "Transcript Request Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
   student_information_form: {
     formName: "Student Information Form",
     purpose: "Provide student enrollment information",
-    accessibility: "Student Info Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
   grade_change_form: {
     formName: "Grade Change Form",
     purpose: "Request grade correction",
-    accessibility: "Grade Change Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
   gradebook_template: {
     formName: "Gradebook Template",
     purpose: "Track student grades",
-    accessibility: "Gradebook Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
   academic_progress_report: {
     formName: "Academic Progress Report",
     purpose: "Report student academic progress",
-    accessibility: "Progress Report Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
   lesson_plan_template: {
     formName: "Lesson Plan Template",
     purpose: "Plan instructional lessons",
-    accessibility: "Lesson Planning Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
   curriculum_map: {
     formName: "Curriculum Map",
     purpose: "Map curriculum objectives",
-    accessibility: "Curriculum Planning Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
   course_syllabus_template: {
     formName: "Course Syllabus Template",
     purpose: "Outline course structure and policies",
-    accessibility: "Syllabus Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
   attendance_sheet: {
     formName: "Attendance Sheet",
     purpose: "Track student attendance",
-    accessibility: "Attendance Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
   absence_excuse_form: {
     formName: "Absence Excuse Form",
     purpose: "Excuse student absences",
-    accessibility: "Absence Excuse Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
   tardy_report: {
     formName: "Tardy Report",
     purpose: "Document student tardiness",
-    accessibility: "Tardiness Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
   enrollment_application: {
     formName: "Enrollment Application",
     purpose: "Enroll in educational institution",
-    accessibility: "Enrollment Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
   registration_form: {
     formName: "Registration Form",
     purpose: "Register for classes or programs",
-    accessibility: "Registration Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
   emergency_contact_form_school: {
     formName: "Emergency Contact Form (School)",
     purpose: "Provide school emergency contacts",
-    accessibility: "School Emergency Contact Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
   scholarship_application: {
     formName: "Scholarship Application",
     purpose: "Apply for scholarship funding",
-    accessibility: "Scholarship Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
   financial_aid_form_fafsa: {
     formName: "FAFSA (Financial Aid Form)",
     purpose: "Apply for federal student aid",
-    accessibility: "FAFSA Guide"
+    accessibility: getAccessibilityMessage("https://studentaid.gov/h/apply-for-aid/fafsa"),
+    url: "https://studentaid.gov/h/apply-for-aid/fafsa"
   },
   scholarship_award_letter: {
     formName: "Scholarship Award Letter",
     purpose: "Document scholarship award",
-    accessibility: "Award Letter Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
 
   // PERSONAL CATEGORIES
   passport_application_ds11: {
     formName: "Passport Application (DS-11)",
     purpose: "Apply for U.S. passport",
-    accessibility: "Passport Application Guide"
+    accessibility: getAccessibilityMessage("https://travel.state.gov/content/travel/en/passports/have-passport/apply-in-person.html"),
+    url: "https://travel.state.gov/content/travel/en/passports/have-passport/apply-in-person.html"
   },
   tsa_precheck_application: {
     formName: "TSA PreCheck Application",
     purpose: "Apply for TSA PreCheck",
-    accessibility: "TSA PreCheck Guide"
+    accessibility: getAccessibilityMessage("https://www.tsa.gov/precheck"),
+    url: "https://www.tsa.gov/precheck"
   },
   travel_itinerary: {
     formName: "Travel Itinerary",
     purpose: "Plan travel schedule",
-    accessibility: "Travel Planning Guide"
+    accessibility: getAccessibilityMessage("Personal/Travel Agency")
   },
   event_registration_form: {
     formName: "Event Registration Form",
     purpose: "Register for events",
-    accessibility: "Event Registration Guide"
+    accessibility: getAccessibilityMessage("From Event Organizer")
   },
   rsvp_form: {
     formName: "RSVP Form",
     purpose: "Respond to event invitation",
-    accessibility: "RSVP Guide"
+    accessibility: getAccessibilityMessage("From Event Organizer")
   },
   venue_rental_agreement: {
     formName: "Venue Rental Agreement",
     purpose: "Rent event venue",
-    accessibility: "Venue Rental Guide"
+    accessibility: getAccessibilityMessage("From Venue")
   },
   survey_consent_form: {
     formName: "Survey Consent Form",
     purpose: "Consent to survey participation",
-    accessibility: "Survey Consent Guide"
+    accessibility: getAccessibilityMessage("From Survey Organization")
   },
   questionnaire_template: {
     formName: "Questionnaire Template",
     purpose: "Collect survey responses",
-    accessibility: "Questionnaire Guide"
+    accessibility: getAccessibilityMessage("From Survey Organization")
   },
   feedback_form: {
     formName: "Feedback Form",
     purpose: "Provide feedback or reviews",
-    accessibility: "Feedback Guide"
+    accessibility: getAccessibilityMessage("From Organization")
   },
   job_application: {
     formName: "Job Application",
     purpose: "Apply for employment",
-    accessibility: "Job Application Guide"
+    accessibility: getAccessibilityMessage("From Employer")
   },
   college_application: {
     formName: "College Application",
     purpose: "Apply for college admission",
-    accessibility: "College Application Guide"
+    accessibility: getAccessibilityMessage("From Educational Institution")
   },
   loan_application: {
     formName: "Loan Application",
     purpose: "Apply for financial loan",
-    accessibility: "Loan Application Guide"
+    accessibility: getAccessibilityMessage("From Financial Institution")
   },
   voter_registration: {
     formName: "Voter Registration",
     purpose: "Register to vote",
-    accessibility: "Voter Registration Guide"
+    accessibility: getAccessibilityMessage("State-Specific from Election Office")
   },
   vehicle_registration: {
     formName: "Vehicle Registration",
     purpose: "Register motor vehicle",
-    accessibility: "Vehicle Registration Guide"
+    accessibility: getAccessibilityMessage("From DMV")
   },
   business_registration: {
     formName: "Business Registration",
     purpose: "Register new business entity",
-    accessibility: "Business Registration Guide"
+    accessibility: getAccessibilityMessage("From State/Local Government")
   },
   membership_application: {
     formName: "Membership Application",
     purpose: "Apply for organization membership",
-    accessibility: "Membership Guide"
+    accessibility: getAccessibilityMessage("From Organization")
   },
   gym_membership_agreement: {
     formName: "Gym Membership Agreement",
     purpose: "Sign up for gym membership",
-    accessibility: "Gym Membership Guide"
+    accessibility: getAccessibilityMessage("From Fitness Center")
   },
   professional_association_form: {
     formName: "Professional Association Form",
     purpose: "Join professional organization",
-    accessibility: "Professional Association Guide"
+    accessibility: getAccessibilityMessage("From Professional Organization")
   }
 };
 

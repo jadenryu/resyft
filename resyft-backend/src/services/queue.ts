@@ -98,11 +98,11 @@ async function processExtractionJob(jobId: string, data: any) {
     job.state = 'completed'
     job.returnvalue = response.data
     
-    console.log(`✅ Job ${jobId}: Successfully completed extraction`)
-    console.log(`📊 Results: Methods: ${response.data.methods ? 'Yes' : 'No'}, Sample: ${response.data.sample_size || 'N/A'}`)
+    console.log(`Job ${jobId}: Successfully completed extraction`)
+    console.log(`Results: Methods: ${response.data.methods ? 'Yes' : 'No'}, Sample: ${response.data.sample_size || 'N/A'}`)
     
   } catch (error: any) {
-    console.error(`❌ Job ${jobId}: AI service error:`, error.message)
+    console.error(`Job ${jobId}: AI service error:`, error.message)
     
     job.progress = 100
     job.state = 'failed'

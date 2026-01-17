@@ -59,7 +59,7 @@ class DocumentProcessor:
         try:
             self.tokenizer = tiktoken.get_encoding("cl100k_base")  # GPT-4 tokenizer
         except Exception as e:
-            logger.warning(f"⚠️ Could not load tiktoken: {e}")
+            logger.warning(f"Could not load tiktoken: {e}")
             self.tokenizer = None
 
     async def process_document(
@@ -137,7 +137,7 @@ class DocumentProcessor:
                 "processing_time": processing_time
             }
 
-            logger.info(f"✅ Processed {filename}: {len(chunks)} chunks in {processing_time:.2f}s")
+            logger.info(f"Processed {filename}: {len(chunks)} chunks in {processing_time:.2f}s")
             return result
 
         except Exception as e:
