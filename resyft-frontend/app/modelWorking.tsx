@@ -126,6 +126,15 @@ const trainingData: TrainingExample[] = [
   { text: "Shopping for health insurance on marketplace. Filling out application for coverage.", labels: { health_insurance_application: 1 } },
   { text: "House flooded. Filing homeowners insurance claim for water damage.", labels: { insurance_claim_form: 1 } },
   { text: "Job ended. Have spouse and one child on insurance. Need continuation coverage.", labels: { cobra_election_form: 1 } },
+  { text: "I need health insurance.", labels: { health_insurance_application: 1 } },
+  { text: "Looking for health insurance coverage.", labels: { health_insurance_application: 1 } },
+  { text: "Need to get health insurance.", labels: { health_insurance_application: 1 } },
+  { text: "Want to apply for health insurance.", labels: { health_insurance_application: 1 } },
+  { text: "Need medical insurance coverage.", labels: { health_insurance_application: 1 } },
+  { text: "Getting health insurance for my family.", labels: { health_insurance_application: 1 } },
+  { text: "Lost my job need health insurance.", labels: { cobra_election_form: 1, health_insurance_application: 1 } },
+  { text: "Unemployed and need health coverage.", labels: { cobra_election_form: 1, health_insurance_application: 1 } },
+  { text: "Need to continue my health insurance after layoff.", labels: { cobra_election_form: 1 } },
 
   // FINANCE - Accounting
   { text: "Starting LLC. Accountant needs chart of accounts set up for bookkeeping.", labels: { chart_of_accounts: 1 } },
@@ -843,7 +852,7 @@ function predictNaiveBayes(text: string): ScoredLabel[] {
 
     const normalizedScore = score / (words.length + 1);
 
-    if (normalizedScore > 0.3) {
+    if (normalizedScore > 0.1) {
       scores.push({ label, score: normalizedScore });
     }
   });
