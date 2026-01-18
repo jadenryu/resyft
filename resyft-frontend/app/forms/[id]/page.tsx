@@ -81,7 +81,7 @@ interface DetailedSummaryData {
   granularity: 'page' | 'section'
 }
 
-// Simple markdown renderer for chat messages
+// Enhanced markdown renderer for chat messages
 function renderMarkdown(text: string): React.ReactNode {
   // Split by code blocks first
   const parts = text.split(/```([\s\S]*?)```/)
@@ -90,7 +90,7 @@ function renderMarkdown(text: string): React.ReactNode {
     // Odd indices are code blocks
     if (i % 2 === 1) {
       return (
-        <pre key={i} className="bg-gray-800 text-gray-100 rounded p-2 my-2 text-xs overflow-x-auto">
+        <pre key={i} className="bg-gray-800 text-gray-100 rounded p-3 my-2 text-xs overflow-x-auto">
           <code>{part.trim()}</code>
         </pre>
       )
@@ -99,28 +99,83 @@ function renderMarkdown(text: string): React.ReactNode {
     // Process inline formatting
     const lines = part.split('\n')
     return lines.map((line, lineIdx) => {
+      const trimmedLine = line.trim()
+
+      // Handle headings (###, ##, #)
+      const headingMatch = trimmedLine.match(/^(#{1,3})\s+(.+)$/)
+      if (headingMatch) {
+        const level = headingMatch[1].length
+        const content = headingMatch[2]
+        const HeadingTag = `h${level}` as keyof JSX.IntrinsicElements
+        const sizeClass = level === 1 ? 'text-xl font-bold mt-4 mb-2' :
+                         level === 2 ? 'text-lg font-bold mt-3 mb-2' :
+                         'text-base font-semibold mt-2 mb-1'
+        return (
+          <HeadingTag key={`h-${i}-${lineIdx}`} className={sizeClass}>
+            {content}
+          </HeadingTag>
+        )
+      }
+
       // Process the line for inline formatting
-      const processed: React.ReactNode[] = []
+      let processed: React.ReactNode[] = []
       let remaining = line
       let keyCounter = 0
 
-      // Handle bold **text**
-      while (remaining.includes('**')) {
-        const start = remaining.indexOf('**')
-        const end = remaining.indexOf('**', start + 2)
-        if (end === -1) break
+      // Handle bold **text** and italic *text*
+      while (remaining.length > 0) {
+        const boldMatch = remaining.match(/\*\*(.+?)\*\*/)
+        const italicMatch = remaining.match(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/)
+        const linkMatch = remaining.match(/\[(.+?)\]\((.+?)\)/)
 
-        if (start > 0) {
-          processed.push(remaining.slice(0, start))
+        // Find which comes first
+        const boldIdx = boldMatch ? remaining.indexOf(boldMatch[0]) : Infinity
+        const italicIdx = italicMatch ? remaining.indexOf(italicMatch[0]) : Infinity
+        const linkIdx = linkMatch ? remaining.indexOf(linkMatch[0]) : Infinity
+
+        const minIdx = Math.min(boldIdx, italicIdx, linkIdx)
+
+        if (minIdx === Infinity) {
+          // No more formatting
+          if (remaining) processed.push(remaining)
+          break
         }
-        processed.push(
-          <strong key={`b-${i}-${lineIdx}-${keyCounter++}`}>
-            {remaining.slice(start + 2, end)}
-          </strong>
-        )
-        remaining = remaining.slice(end + 2)
+
+        // Add text before the match
+        if (minIdx > 0) {
+          processed.push(remaining.slice(0, minIdx))
+        }
+
+        // Add the formatted element
+        if (minIdx === boldIdx && boldMatch) {
+          processed.push(
+            <strong key={`b-${i}-${lineIdx}-${keyCounter++}`} className="font-bold">
+              {boldMatch[1]}
+            </strong>
+          )
+          remaining = remaining.slice(minIdx + boldMatch[0].length)
+        } else if (minIdx === italicIdx && italicMatch) {
+          processed.push(
+            <em key={`i-${i}-${lineIdx}-${keyCounter++}`} className="italic">
+              {italicMatch[1]}
+            </em>
+          )
+          remaining = remaining.slice(minIdx + italicMatch[0].length)
+        } else if (minIdx === linkIdx && linkMatch) {
+          processed.push(
+            <a
+              key={`a-${i}-${lineIdx}-${keyCounter++}`}
+              href={linkMatch[2]}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              {linkMatch[1]}
+            </a>
+          )
+          remaining = remaining.slice(minIdx + linkMatch[0].length)
+        }
       }
-      if (remaining) processed.push(remaining)
 
       // Handle inline code `code` - process each node
       const finalProcessed: React.ReactNode[] = []
@@ -133,7 +188,7 @@ function renderMarkdown(text: string): React.ReactNode {
         codeParts.forEach((codePart, codeIdx) => {
           if (codeIdx % 2 === 1) {
             finalProcessed.push(
-              <code key={`c-${i}-${lineIdx}-${nodeIdx}-${codeIdx}`} className="bg-gray-200 px-1 rounded text-sm font-mono">
+              <code key={`c-${i}-${lineIdx}-${nodeIdx}-${codeIdx}`} className="bg-gray-200 px-1.5 py-0.5 rounded text-sm font-mono text-gray-800">
                 {codePart}
               </code>
             )
@@ -144,25 +199,30 @@ function renderMarkdown(text: string): React.ReactNode {
       })
 
       // Handle bullet points
-      const trimmedLine = line.trim()
       if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('• ')) {
+        const content = trimmedLine.replace(/^[-•]\s+/, '')
         return (
-          <div key={`l-${i}-${lineIdx}`} className="flex gap-2 ml-2">
-            <span>•</span>
-            <span>{finalProcessed}</span>
+          <div key={`l-${i}-${lineIdx}`} className="flex gap-2 ml-2 my-1">
+            <span className="text-gray-600">•</span>
+            <span className="flex-1">{renderInlineContent(content, i, lineIdx)}</span>
           </div>
         )
       }
 
       // Handle numbered lists
-      const numberedMatch = trimmedLine.match(/^(\d+)\.\s/)
+      const numberedMatch = trimmedLine.match(/^(\d+)\.\s+(.+)/)
       if (numberedMatch) {
         return (
-          <div key={`l-${i}-${lineIdx}`} className="flex gap-2 ml-2">
-            <span>{numberedMatch[1]}.</span>
-            <span>{finalProcessed}</span>
+          <div key={`l-${i}-${lineIdx}`} className="flex gap-2 ml-2 my-1">
+            <span className="text-gray-600">{numberedMatch[1]}.</span>
+            <span className="flex-1">{renderInlineContent(numberedMatch[2], i, lineIdx)}</span>
           </div>
         )
+      }
+
+      // Empty line
+      if (!trimmedLine) {
+        return <div key={`l-${i}-${lineIdx}`} className="h-2" />
       }
 
       return (
@@ -173,6 +233,59 @@ function renderMarkdown(text: string): React.ReactNode {
       )
     })
   })
+}
+
+// Helper function to render inline content with formatting
+function renderInlineContent(text: string, blockIdx: number, lineIdx: number): React.ReactNode {
+  let processed: React.ReactNode[] = []
+  let remaining = text
+  let keyCounter = 0
+
+  while (remaining.length > 0) {
+    const boldMatch = remaining.match(/\*\*(.+?)\*\*/)
+    const italicMatch = remaining.match(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/)
+    const codeMatch = remaining.match(/`([^`]+)`/)
+
+    const boldIdx = boldMatch ? remaining.indexOf(boldMatch[0]) : Infinity
+    const italicIdx = italicMatch ? remaining.indexOf(italicMatch[0]) : Infinity
+    const codeIdx = codeMatch ? remaining.indexOf(codeMatch[0]) : Infinity
+
+    const minIdx = Math.min(boldIdx, italicIdx, codeIdx)
+
+    if (minIdx === Infinity) {
+      if (remaining) processed.push(remaining)
+      break
+    }
+
+    if (minIdx > 0) {
+      processed.push(remaining.slice(0, minIdx))
+    }
+
+    if (minIdx === boldIdx && boldMatch) {
+      processed.push(
+        <strong key={`ib-${blockIdx}-${lineIdx}-${keyCounter++}`} className="font-bold">
+          {boldMatch[1]}
+        </strong>
+      )
+      remaining = remaining.slice(minIdx + boldMatch[0].length)
+    } else if (minIdx === italicIdx && italicMatch) {
+      processed.push(
+        <em key={`ii-${blockIdx}-${lineIdx}-${keyCounter++}`} className="italic">
+          {italicMatch[1]}
+        </em>
+      )
+      remaining = remaining.slice(minIdx + italicMatch[0].length)
+    } else if (minIdx === codeIdx && codeMatch) {
+      processed.push(
+        <code key={`ic-${blockIdx}-${lineIdx}-${keyCounter++}`} className="bg-gray-200 px-1.5 py-0.5 rounded text-sm font-mono text-gray-800">
+          {codeMatch[1]}
+        </code>
+      )
+      remaining = remaining.slice(minIdx + codeMatch[0].length)
+    }
+  }
+
+  return <>{processed}</>
 }
 
 export default function FormDetailPage() {
@@ -747,7 +860,7 @@ export default function FormDetailPage() {
                       <span>Generating summary...</span>
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-700 leading-relaxed">{aiSummary}</p>
+                    <div className="text-sm text-gray-700 leading-relaxed">{renderMarkdown(aiSummary || '')}</div>
                   )}
                 </div>
               )}
@@ -788,7 +901,7 @@ export default function FormDetailPage() {
                             </svg>
                           </summary>
                           <div className="px-3 pb-3 pt-1 bg-purple-50/30">
-                            <p className="text-sm text-gray-700 leading-relaxed">{detail.summary}</p>
+                            <div className="text-sm text-gray-700 leading-relaxed">{renderMarkdown(detail.summary)}</div>
                             <p className="text-xs text-gray-500 mt-2">
                               {detail.segment_ids.length} segment{detail.segment_ids.length !== 1 ? 's' : ''}
                             </p>
