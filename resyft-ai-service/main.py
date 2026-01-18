@@ -14,7 +14,11 @@ def get_supabase() -> Optional[Client]:
     url = os.getenv("SUPABASE_URL")
     key = os.getenv("SUPABASE_SERVICE_KEY")  # Use service key for backend operations
     if url and key:
+        print(f"Creating Supabase client with URL: {url}")
+        print(f"Service key present: {len(key)} characters")
         return create_client(url, key)
+    else:
+        print(f"Supabase not configured - URL: {bool(url)}, Key: {bool(key)}")
     return None
 
 # CORS - allow all origins
@@ -731,8 +735,10 @@ async def options_store_embeddings():
 async def store_embeddings(request: StoreEmbeddingsRequest):
     """Store segment embeddings in Supabase for RAG retrieval"""
     try:
+        print(f"Store embeddings called: user_id={request.user_id}, project_id={request.project_id}, form_name={request.form_name}, segments={len(request.segments)}")
         supabase = get_supabase()
         if not supabase:
+            print("ERROR: Supabase client not created")
             return StoreEmbeddingsResponse(
                 success=False,
                 error="Supabase not configured. Set SUPABASE_URL and SUPABASE_SERVICE_KEY."
@@ -773,8 +779,14 @@ async def store_embeddings(request: StoreEmbeddingsRequest):
                 })
 
             # Insert into Supabase
-            result = supabase.table("segment_embeddings").insert(records).execute()
-            total_stored += len(records)
+            try:
+                result = supabase.table("segment_embeddings").insert(records).execute()
+                print(f"Successfully stored {len(records)} embeddings. Result: {result}")
+                total_stored += len(records)
+            except Exception as insert_error:
+                print(f"Failed to insert batch: {insert_error}")
+                print(f"Records attempted: {len(records)}")
+                raise
 
         return StoreEmbeddingsResponse(success=True, stored_count=total_stored)
 
