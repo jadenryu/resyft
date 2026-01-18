@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { createClient } from '../../../lib/supabase'
 import { Button } from '../../../components/ui/button'
@@ -106,7 +106,7 @@ function renderMarkdown(text: string): React.ReactNode {
       if (headingMatch) {
         const level = headingMatch[1].length
         const content = headingMatch[2]
-        const HeadingTag = `h${level}` as keyof JSX.IntrinsicElements
+        const HeadingTag = `h${level}` as keyof React.JSX.IntrinsicElements
         const sizeClass = level === 1 ? 'text-xl font-bold mt-4 mb-2' :
                          level === 2 ? 'text-lg font-bold mt-3 mb-2' :
                          'text-base font-semibold mt-2 mb-1'
