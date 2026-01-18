@@ -19,7 +19,7 @@ export default function AuthCallback() {
           console.error('Auth callback error:', error)
           router.push('/login?error=auth_failed')
         } else {
-          router.push('/dashboard')
+          router.push('/')
         }
       } catch (err) {
         console.error('Unexpected error:', err)

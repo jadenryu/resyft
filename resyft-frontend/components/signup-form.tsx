@@ -60,10 +60,11 @@ export function SignupForm({
 
     if (error) {
       setMessage(error.message)
+      setLoading(false)
     } else {
-      setMessage('Check your email for the confirmation link!')
+      // Signup successful, redirect to dashboard
+      router.push('/dashboard')
     }
-    setLoading(false)
   }
 
   const canProceed = step === 1 ? (name && email && password) : selectedPurposes.length > 0

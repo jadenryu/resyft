@@ -31,10 +31,10 @@ export function LoginForm({
 
     if (error) {
       setMessage(error.message)
+      setLoading(false)
     } else {
-      router.push('/dashboard')
+      router.push('/')
     }
-    setLoading(false)
   }
 
   return (

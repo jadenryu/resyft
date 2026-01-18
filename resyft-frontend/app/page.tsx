@@ -32,11 +32,8 @@ export default function LandingPage() {
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        router.push('/dashboard')
-      } else {
-        setChecking(false)
-      }
+      // Always show home page, don't auto-redirect logged-in users
+      setChecking(false)
     }
     checkAuth()
   }, [router, supabase])
