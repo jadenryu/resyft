@@ -206,7 +206,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
             {[
               {
-                number: "10K+",
+                number: "100+",
                 label: "Forms Analyzed"
               },
               {
@@ -218,8 +218,8 @@ export default function LandingPage() {
                 label: "Average Response Time"
               },
               {
-                number: "1K+",
-                label: "Happy Users"
+                number: "92%",
+                label: "PDF Analysis Accuracy"
               }
             ].map((stat, index) => (
               <motion.div

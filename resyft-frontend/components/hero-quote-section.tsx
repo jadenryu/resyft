@@ -25,7 +25,7 @@ export function HeroQuoteSection() {
 
           {/* Quote Text */}
           <blockquote className="text-2xl md:text-3xl lg:text-4xl font-semibold leading-tight mb-10 text-gray-800 max-w-3xl mx-auto">
-            &ldquo;Resyft has completely changed how I handle paperwork. What used to take days of research now takes minutes, and I always get the right forms the first time.&rdquo;
+            &ldquo;Resyft can completely change how Americans handle paperwork. What used to take days of research now takes minutes, and users can always get the right forms the first time.&rdquo;
           </blockquote>
 
           {/* Author Info */}
@@ -35,10 +35,10 @@ export function HeroQuoteSection() {
             </div>
             <div className="text-left">
               <div className="text-lg font-bold text-gray-900">
-                Rachel Martinez
+                Jaden Ryu
               </div>
               <div className="text-sm text-gray-600 font-normal">
-                Operations Manager, Tech Startup
+                CTO, Resyft
               </div>
             </div>
           </div>

@@ -8,51 +8,51 @@ interface TestimonialProps {
 const testimonials: TestimonialProps[] = [
   {
     quote:
-      "The form recommendations saved me hours of research. I didn't know which insurance forms I needed, and it figured it out instantly.",
-    name: "A. Business",
-    company: "Business Professional",
+      "Resyft helps me keep my forms organized and with knowing what forms I need based on my situation",
+    name: "Devika Vivek",
+    company: "Resyft User",
     type: "large-blue",
   },
   {
     quote:
-      "Uploading my tax forms and having them automatically analyzed was incredible. No more manual data entry.",
-    name: "B. Creative",
-    company: "Creative Professional",
+      "The organizational AI from this website will allow me to simply input my files and have them neatly organized, saving hours of work",
+    name: "Syna Lodaya",
+    company: "College Student",
     type: "small-dark",
   },
   {
     quote:
-      "As a healthcare administrator, managing patient forms is a nightmare. This tool made it so much easier.",
-    name: "C. Healthcare",
-    company: "Healthcare Professional",
+      "As a student, Resyft can help me to find a good job or internship over the summer",
+    name: "Aarush Ravella",
+    company: "High School Student",
     type: "small-dark",
   },
   {
     quote:
-      "The AI understood exactly what forms I needed for my business incorporation. Saved me from hiring a consultant.",
+      "*The AI understood exactly what forms I needed for my business incorporation. Saved me from hiring a consultant.",
     name: "D. Founder",
     company: "Startup Professional",
     type: "small-dark",
   },
   {
     quote:
-      "Finally, a tool that understands the complexity of insurance paperwork. It recommended forms I didn't even know existed.",
-    name: "E. Insurance",
-    company: "Insurance Professional",
+      "Resyft is a great tool as a productivity software for any forms I need to fill out",
+    name: "Anjay Kannan",
+    company: "Resyft User",
     type: "small-dark",
   },
   {
     quote:
-      "The PDF analysis feature extracted all the fields perfectly. I was able to review and fill forms much faster.",
+      "*The PDF analysis feature extracted all the fields perfectly. I was able to review and fill forms much faster.",
     name: "F. Finance",
     company: "Finance Professional",
     type: "small-dark",
   },
   {
     quote:
-      "From form discovery to completion, this tool streamlines every step. It's become indispensable for my practice.",
-    name: "G. Legal",
-    company: "Legal Professional",
+      "I would definitely use this tool for research papers or for my school work",
+    name: "Lou Murphy",
+    company: "Student",
     type: "large-light",
   },
 ]
