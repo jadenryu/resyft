@@ -121,7 +121,7 @@ export function TestimonialGridSection() {
       <div className="self-stretch py-6 md:py-8 lg:py-16 flex flex-col justify-center items-center gap-2">
         <div className="flex flex-col justify-start items-center gap-6">
           <h2 className="text-center text-slate-900 text-3xl md:text-4xl lg:text-5xl font-bold leading-tight md:leading-tight lg:leading-[3.5rem]">
-            Trusted by professionals everywhere
+            Why people love to use Resyft
           </h2>
           <p className="self-stretch text-center text-slate-600 text-lg md:text-lg lg:text-xl font-light leading-relaxed max-w-4xl mx-auto">
             {"Real feedback from people using Resyft to simplify their work"} <br />{" "}
