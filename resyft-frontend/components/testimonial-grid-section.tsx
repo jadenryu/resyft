@@ -29,9 +29,9 @@ const testimonials: TestimonialProps[] = [
   },
   {
     quote:
-      "*The AI understood exactly what forms I needed for my business incorporation. Saved me from hiring a consultant.",
-    name: "D. Founder",
-    company: "Startup Professional",
+      "I love the concept of extra support it gives in research. It's user friendly and I would use this to find information I need for my school work.",
+    name: "Mariangel Mahomar Espinal",
+    company: "Resyft User",
     type: "small-dark",
   },
   {
@@ -43,9 +43,9 @@ const testimonials: TestimonialProps[] = [
   },
   {
     quote:
-      "*The PDF analysis feature extracted all the fields perfectly. I was able to review and fill forms much faster.",
-    name: "F. Finance",
-    company: "Finance Professional",
+      "It could help with filling out paperwork, specifically with young adults trying to navigate by themselves in cities.",
+    name: "Harika Akundi",
+    company: "College Student",
     type: "small-dark",
   },
   {
