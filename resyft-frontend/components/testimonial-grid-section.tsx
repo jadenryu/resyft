@@ -8,21 +8,21 @@ interface TestimonialProps {
 const testimonials: TestimonialProps[] = [
   {
     quote:
-      "Resyft helps me keep my forms organized and with knowing what forms I need based on my situation",
+      "Resyft helps me keep my forms organized and with knowing what forms I need based on my situation.",
     name: "Devika Vivek",
     company: "Resyft User",
     type: "large-blue",
   },
   {
     quote:
-      "The organizational AI from this website will allow me to simply input my files and have them neatly organized, saving hours of work",
+      "The organizational AI from this website will allow me to simply input my files and have them neatly organized, saving hours of work.",
     name: "Syna Lodaya",
     company: "College Student",
     type: "small-dark",
   },
   {
     quote:
-      "As a student, Resyft can help me to find a good job or internship over the summer",
+      "As a student, Resyft can help me to find a good job or internship over the summer.",
     name: "Aarush Ravella",
     company: "High School Student",
     type: "small-dark",
@@ -36,7 +36,7 @@ const testimonials: TestimonialProps[] = [
   },
   {
     quote:
-      "Resyft is a great tool as a productivity software for any forms I need to fill out",
+      "Resyft is a great tool as a productivity software for any forms I need to fill out.",
     name: "Anjay Kannan",
     company: "Resyft User",
     type: "small-dark",
@@ -50,7 +50,7 @@ const testimonials: TestimonialProps[] = [
   },
   {
     quote:
-      "I would definitely use this tool for research papers or for my school work",
+      "I would definitely use this tool for research papers or for my school work.",
     name: "Lou Murphy",
     company: "Student",
     type: "large-light",
