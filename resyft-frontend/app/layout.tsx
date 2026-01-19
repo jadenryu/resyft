@@ -28,12 +28,7 @@ export const metadata: Metadata = {
   title: "Resyft - Smart Form Management",
   description: "AI-powered form recommendations, PDF analysis, and intelligent document management",
   icons: {
-    icon: [
-      { url: '/icon.png', sizes: '32x32', type: 'image/png' },
-      { url: '/2.png', sizes: 'any', type: 'image/png' }
-    ],
-    shortcut: '/2.png',
-    apple: '/2.png',
+    icon: '/favicon.ico',
   },
 };
 
