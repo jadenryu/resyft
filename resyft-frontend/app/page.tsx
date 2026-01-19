@@ -278,7 +278,7 @@ export default function LandingPage() {
                 },
                 {
                   question: "Is my data secure?",
-                  answer: "Absolutely. All uploaded documents are processed securely and are never stored permanently. We use industry-standard encryption and your data is never shared with third parties."
+                  answer: "Absolutely. All uploaded documents are processed securely and stored temporarily. Your data is never shared with third parties."
                 },
                 {
                   question: "Do I need to create an account?",
@@ -298,7 +298,7 @@ export default function LandingPage() {
                 },
                 {
                   question: "How much does it cost?",
-                  answer: "Resyft is free to get started. We offer premium plans for power users who need to process large volumes of forms or need additional features."
+                  answer: "Resyft is free for all users. We do not offer premium plans or paid features!"
                 }
               ].map((faq, index) => (
                 <motion.div
