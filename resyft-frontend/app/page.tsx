@@ -196,10 +196,10 @@ export default function LandingPage() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Trusted by professionals everywhere
+              Trusted by citizens everywhere
             </h2>
             <p className="text-xl font-light text-gray-600 max-w-3xl mx-auto">
-              Join thousands of people simplifying their form workflow.
+              Simplify your form workflow today.
             </p>
           </motion.div>
 
